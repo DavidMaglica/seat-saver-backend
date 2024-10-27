@@ -3,7 +3,7 @@ package fipu.diplomski.dmaglica.repo.entity
 import jakarta.persistence.*
 
 @Entity
-@Table(name = "Users")
+@Table(name = "users")
 class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

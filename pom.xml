@@ -8,14 +8,14 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>3.3.5</version>
-        <relativePath/> <!-- lookup parent from repository -->
+        <relativePath/>
     </parent>
 
     <groupId>fipu.diplomski</groupId>
-    <artifactId>dmaglica-backend</artifactId>
+    <artifactId>table-reserver-backend</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>dmaglica-backend</name>
-    <description>Demo project for Spring Boot</description>
+    <name>table-reserver-backend</name>
+    <description/>
     <url/>
 
     <licenses>
@@ -39,9 +39,11 @@
         <java.version>21</java.version>
         <kotlin.version>2.0.21</kotlin.version>
         <spring-boot.version>3.3.5</spring-boot.version>
+        <spring.version>6.1.14</spring.version>
         <jackson.version>2.18.0</jackson.version>
         <h2.version>2.3.232</h2.version>
         <postgresql.version>42.7.4</postgresql.version>
+        <kluent.version>1.73</kluent.version>
     </properties>
 
     <dependencies>
@@ -81,6 +83,16 @@
             <artifactId>spring-boot-starter-data-rest</artifactId>
             <version>${spring-boot.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-webmvc</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -101,13 +113,19 @@
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <version>${h2.version}</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>${postgresql.version}</version>
             <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.amshove.kluent</groupId>
+            <artifactId>kluent</artifactId>
+            <version>${kluent.version}</version>
+            <scope>test</scope>
         </dependency>
         <!-- Misc end -->
     </dependencies>

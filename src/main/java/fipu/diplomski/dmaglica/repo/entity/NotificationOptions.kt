@@ -1,13 +1,12 @@
 package fipu.diplomski.dmaglica.repo.entity
 
-import jakarta.persistence.Entity
-import jakarta.persistence.Id
-import jakarta.persistence.Table
+import jakarta.persistence.*
 
 @Entity
-@Table(name = "Notification_options")
+@Table(name = "notification_options")
 class NotificationOptions {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long = 0
 
     var userId: Long = 0

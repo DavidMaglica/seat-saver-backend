@@ -5,6 +5,6 @@ data class User(
     val username: String,
     val password: String,
     val email: String,
-    val notificationOptions: NotificationOptions,
-    val role: Role,
+    val notificationOptions: NotificationOptions?,
+    val role: List<Role>?,
 )

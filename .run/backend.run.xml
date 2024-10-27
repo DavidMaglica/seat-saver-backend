@@ -1,0 +1,14 @@
+<component name="ProjectRunConfigurationManager">
+    <configuration default="false" name="backend" type="SpringBootApplicationConfigurationType"
+                   factoryName="Spring Boot">
+        <option name="ACTIVE_PROFILES" value="development"/>
+        <option name="ALTERNATIVE_JRE_PATH" value="21"/>
+        <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true"/>
+        <module name="table-reserver-backend"/>
+        <option name="SPRING_BOOT_MAIN_CLASS" value="fipu.diplomski.dmaglica.ApplicationKt"/>
+        <option name="VM_PARAMETERS" value=""/>
+        <method v="2">
+            <option name="Make" enabled="true"/>
+        </method>
+    </configuration>
+</component>
