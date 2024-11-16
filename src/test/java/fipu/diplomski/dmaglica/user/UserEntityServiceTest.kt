@@ -5,6 +5,9 @@ import fipu.diplomski.dmaglica.model.Role
 import fipu.diplomski.dmaglica.repo.NotificationOptionsRepository
 import fipu.diplomski.dmaglica.repo.RoleRepository
 import fipu.diplomski.dmaglica.repo.UserRepository
+import fipu.diplomski.dmaglica.repo.entity.NotificationOptionsEntity
+import fipu.diplomski.dmaglica.repo.entity.RoleEntity
+import fipu.diplomski.dmaglica.repo.entity.UserEntity
 import fipu.diplomski.dmaglica.service.UserService
 import org.amshove.kluent.`should be equal to`
 import org.amshove.kluent.`should not be`
@@ -18,19 +21,18 @@ import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.test.context.ActiveProfiles
 import java.sql.SQLException
-import fipu.diplomski.dmaglica.repo.entity.NotificationOptions as NotificationOptionsEntity
-import fipu.diplomski.dmaglica.repo.entity.Role as RoleEntity
-import fipu.diplomski.dmaglica.repo.entity.User as UserEntity
 
 @ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
-class UserServiceTest {
+class UserEntityServiceTest {
 
     companion object {
         private const val USER_ID = 1L
         private const val USER_EMAIL = "test@mail.com"
         private const val USER_USERNAME = "testUser"
         private const val USER_PASSWORD = "password"
+        private const val LAST_KNOWN_LATITUDE = 0.0
+        private const val LAST_KNOWN_LONGITUDE = 0.0
     }
 
     @Mock
@@ -50,7 +52,7 @@ class UserServiceTest {
         `when`(userRepository.findByEmail(anyString())).thenReturn(null)
 
         assertThrows<UserNotFoundException> {
-            userService.getUser(anyString())
+            userService.login(anyString(), anyString())
         }
 
         verify(userRepository, times(1)).findByEmail(anyString())
@@ -63,7 +65,7 @@ class UserServiceTest {
         `when`(userRepository.findByEmail(anyString())).thenThrow(RuntimeException())
 
         assertThrows<SQLException> {
-            userService.getUser(anyString())
+            userService.login(anyString(), anyString())
         }
 
         verify(userRepository, times(1)).findByEmail(anyString())
@@ -77,7 +79,7 @@ class UserServiceTest {
         `when`(roleRepository.findAllByUserId(USER_ID)).thenReturn(listOf(mockedRoleEntity()))
         `when`(notificationOptionsRepository.findByUserId(USER_ID)).thenReturn(mockedNotificationOptionsEntity())
 
-        val result = userService.getUser(USER_EMAIL)
+        val result = userService.login(USER_EMAIL, USER_PASSWORD)
 
         verify(userRepository, times(1)).findByEmail(anyString())
         verify(roleRepository, times(1)).findAllByUserId(anyLong())
@@ -89,11 +91,13 @@ class UserServiceTest {
         result.password `should be equal to` USER_PASSWORD
         result.role `should not be` null
         result.role!!.size `should be equal to` 1
-        result.role[0] `should be equal to` Role.USER
+        result.role!![0] `should be equal to` Role.USER
         result.notificationOptions `should not be` null
         result.notificationOptions!!.locationServicesTurnedOn `should be equal to` true
-        result.notificationOptions.emailNotificationsTurnedOn `should be equal to` true
-        result.notificationOptions.pushNotificationsTurnedOn `should be equal to` true
+        result.notificationOptions!!.emailNotificationsTurnedOn `should be equal to` true
+        result.notificationOptions!!.pushNotificationsTurnedOn `should be equal to` true
+        result.lastKnownLatitude `should be equal to` 0.0
+        result.lastKnownLongitude `should be equal to` 0.0
     }
 
     private fun mockedNotificationOptionsEntity(): NotificationOptionsEntity = NotificationOptionsEntity().also {
@@ -115,5 +119,7 @@ class UserServiceTest {
         it.email = USER_EMAIL
         it.username = USER_USERNAME
         it.password = USER_PASSWORD
+        it.lastKnownLatitude = LAST_KNOWN_LATITUDE
+        it.lastKnownLongitude = LAST_KNOWN_LONGITUDE
     }
 }

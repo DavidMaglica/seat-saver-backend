@@ -3,13 +3,13 @@ package fipu.diplomski.dmaglica.repo.entity
 import jakarta.persistence.*
 
 @Entity
-@Table(name = "users")
-class User {
+@Table(name = "roles")
+class RoleEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long = 0
 
-    var username: String = ""
-    var email: String = ""
-    var password: String = ""
+    var userId: Long = 0
+
+    var role: String = ""
 }

@@ -15,15 +15,21 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
         return ResponseEntity.internalServerError().body("Something went wrong: ${ex.message}")
     }
 
+    @ExceptionHandler(SQLException::class)
+    fun handleSqlException(ex: SQLException): ResponseEntity<String> {
+        logger.error("SQL exception occurred: ${ex.message}. Cause: ${ex.cause}")
+        return ResponseEntity.internalServerError().body("SQL exception occurred: ${ex.message}")
+    }
+
     @ExceptionHandler(UserNotFoundException::class)
     fun handleUserNotFoundException(ex: UserNotFoundException): ResponseEntity<String> {
         logger.error("User not found: ${ex.message}. Cause: ${ex.cause}")
         return ResponseEntity.internalServerError().body("User not found: ${ex.message}")
     }
 
-    @ExceptionHandler(SQLException::class)
-    fun handleSqlException(ex: SQLException): ResponseEntity<String> {
-        logger.error("SQL exception occurred: ${ex.message}. Cause: ${ex.cause}")
-        return ResponseEntity.internalServerError().body("SQL exception occurred: ${ex.message}")
+    @ExceptionHandler(UserAlreadyExistsException::class)
+    fun handleUserAlreadyExistsException(ex: UserAlreadyExistsException): ResponseEntity<String> {
+        logger.error("User already exists: ${ex.message}. Cause: ${ex.cause}")
+        return ResponseEntity.internalServerError().body("User already exists: ${ex.message}")
     }
 }
