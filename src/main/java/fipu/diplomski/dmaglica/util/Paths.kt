@@ -8,7 +8,9 @@ class Paths {
         const val LOGOUT = "/logout"
         const val CREATE_USER = "/create-user"
         const val GET_USER = "/get-user"
-        const val UPDATE_USER = "/update-user"
+        const val UPDATE_USER_EMAIL = "/update-user-email"
+        const val UPDATE_USER_USERNAME = "/update-user-username"
+        const val UPDATE_USER_PASSWORD = "/update-user-password"
         const val DELETE_USER = "/delete-user"
 
         const val VENUE = "/venue"
