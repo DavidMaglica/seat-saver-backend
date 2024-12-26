@@ -68,6 +68,20 @@ class UserService(
         return BasicResponse(true, "User with email $email successfully logged in")
     }
 
+    fun getNotificationOptions(email: String): NotificationOptions {
+        val user = withTryCatch("Error while fetching user with email $email") {
+            userRepository.getByEmail(email)
+        } ?: throw UserNotFoundException("User with email $email does not exist")
+
+        val notificationOptions = notificationOptionsRepository.getByUserId(user.id)
+
+        return NotificationOptions(
+            notificationOptions.pushNotificationsTurnedOn,
+            notificationOptions.emailNotificationsTurnedOn,
+            notificationOptions.locationServicesTurnedOn,
+        )
+    }
+
     fun updateEmail(email: String, newEmail: String): BasicResponse {
         val user = withTryCatch("Error while fetching user with email $email") {
             userRepository.getByEmail(email)
@@ -107,6 +121,42 @@ class UserService(
         return BasicResponse(true, "Password for user with email $email successfully updated")
     }
 
+    fun updateNotificationOptions(
+        email: String,
+        pushNotificationsTurnedOn: Boolean,
+        emailNotificationsTurnedOn: Boolean,
+        locationServicesTurnedOn: Boolean
+    ): BasicResponse {
+        val user = withTryCatch("Error while fetching user with email $email") {
+            userRepository.getByEmail(email)
+        } ?: throw UserNotFoundException("User with email $email does not exist")
+
+        val notificationOptions = notificationOptionsRepository.getByUserId(user.id)
+
+        notificationOptions.pushNotificationsTurnedOn = pushNotificationsTurnedOn
+        notificationOptions.emailNotificationsTurnedOn = emailNotificationsTurnedOn
+        notificationOptions.locationServicesTurnedOn = locationServicesTurnedOn
+        withTryCatch("Error while updating notification options for user with email $email") {
+            notificationOptionsRepository.saveAndFlush(notificationOptions)
+        }
+
+        return BasicResponse(true, "Notification options for user with email $email successfully updated")
+    }
+
+    fun updateLocation(email: String, latitude: Double, longitude: Double): BasicResponse {
+        val user = withTryCatch("Error while fetching user with email $email") {
+            userRepository.getByEmail(email)
+        } ?: throw UserNotFoundException("User with email $email does not exist")
+
+        user.lastKnownLatitude = latitude
+        user.lastKnownLongitude = longitude
+        withTryCatch("Error while updating location for user with email $email") {
+            userRepository.saveAndFlush(user)
+        }
+
+        return BasicResponse(true, "Location for user with email $email successfully updated")
+    }
+
     fun delete(email: String): BasicResponse {
         val user = withTryCatch("Error while fetching user with email $email") {
             userRepository.findByEmail(email)
@@ -124,7 +174,7 @@ class UserService(
             userRepository.findByEmail(email)
         } ?: throw UserNotFoundException("User with email $email does not exist")
 
-        val notificationOptions = notificationOptionsRepository.findByUserId(user.id).let {
+        val notificationOptions = notificationOptionsRepository.getByUserId(user.id).let {
             NotificationOptions(
                 it.locationServicesTurnedOn,
                 it.pushNotificationsTurnedOn,
@@ -132,7 +182,7 @@ class UserService(
             )
         }
 
-        val role = roleRepository.findAllByUserId(user.id).map { Role.valueOf(it.role) }
+        val role = roleRepository.getAllByUserId(user.id).map { Role.valueOf(it.role) }
 
         return User(
             user.id,
