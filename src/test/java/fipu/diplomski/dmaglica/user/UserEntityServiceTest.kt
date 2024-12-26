@@ -1,7 +1,6 @@
 package fipu.diplomski.dmaglica.user
 
 import fipu.diplomski.dmaglica.exception.UserNotFoundException
-import fipu.diplomski.dmaglica.model.Role
 import fipu.diplomski.dmaglica.repo.NotificationOptionsRepository
 import fipu.diplomski.dmaglica.repo.RoleRepository
 import fipu.diplomski.dmaglica.repo.UserRepository
@@ -10,7 +9,6 @@ import fipu.diplomski.dmaglica.repo.entity.RoleEntity
 import fipu.diplomski.dmaglica.repo.entity.UserEntity
 import fipu.diplomski.dmaglica.service.UserService
 import org.amshove.kluent.`should be equal to`
-import org.amshove.kluent.`should not be`
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
@@ -76,28 +74,17 @@ class UserEntityServiceTest {
     @Test
     fun `when user is found correct user should be returned`() {
         `when`(userRepository.findByEmail(USER_EMAIL)).thenReturn(mockedUserEntity())
-        `when`(roleRepository.findAllByUserId(USER_ID)).thenReturn(listOf(mockedRoleEntity()))
-        `when`(notificationOptionsRepository.findByUserId(USER_ID)).thenReturn(mockedNotificationOptionsEntity())
+        `when`(roleRepository.getAllByUserId(USER_ID)).thenReturn(listOf(mockedRoleEntity()))
+        `when`(notificationOptionsRepository.getByUserId(USER_ID)).thenReturn(mockedNotificationOptionsEntity())
 
         val result = userService.login(USER_EMAIL, USER_PASSWORD)
 
         verify(userRepository, times(1)).findByEmail(anyString())
-        verify(roleRepository, times(1)).findAllByUserId(anyLong())
-        verify(notificationOptionsRepository, times(1)).findByUserId(anyLong())
+        verify(roleRepository, times(1)).getAllByUserId(anyLong())
+        verify(notificationOptionsRepository, times(1)).getByUserId(anyLong())
 
-        result.id `should be equal to` USER_ID
-        result.email `should be equal to` USER_EMAIL
-        result.username `should be equal to` USER_USERNAME
-        result.password `should be equal to` USER_PASSWORD
-        result.role `should not be` null
-        result.role!!.size `should be equal to` 1
-        result.role!![0] `should be equal to` Role.USER
-        result.notificationOptions `should not be` null
-        result.notificationOptions!!.locationServicesTurnedOn `should be equal to` true
-        result.notificationOptions!!.emailNotificationsTurnedOn `should be equal to` true
-        result.notificationOptions!!.pushNotificationsTurnedOn `should be equal to` true
-        result.lastKnownLatitude `should be equal to` 0.0
-        result.lastKnownLongitude `should be equal to` 0.0
+        result.success `should be equal to` true
+        result.message `should be equal to` "User with email $USER_EMAIL successfully logged in"
     }
 
     private fun mockedNotificationOptionsEntity(): NotificationOptionsEntity = NotificationOptionsEntity().also {
