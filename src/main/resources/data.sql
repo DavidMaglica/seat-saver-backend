@@ -11,6 +11,8 @@ Create Table IF NOT EXISTS Users
     last_known_longitude DOUBLE
 );
 
+INSERT INTO Users (id, username, email, password) VALUES (1, 'david', 'david@mail.com', 'password');
+
 -- Roles table
 Create Table IF NOT EXISTS roles
 (
@@ -19,6 +21,8 @@ Create Table IF NOT EXISTS roles
     role    VARCHAR(50) NOT NULL,
     CONSTRAINT fk_user_role FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
 );
+
+INSERT INTO roles (id, user_id, role) VALUES (1, 1, 'USER');
 
 -- Notification options table
 CREATE TABLE IF NOT EXISTS notification_options
@@ -30,3 +34,6 @@ CREATE TABLE IF NOT EXISTS notification_options
     location_services_turned_on   BOOLEAN NOT NULL,
     CONSTRAINT fk_user_notification FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
 );
+
+INSERT INTO notification_options (id, user_id, push_notifications_turned_on, email_notifications_turned_on, location_services_turned_on)
+VALUES (1, 1, true, true, false);
