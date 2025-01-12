@@ -14,7 +14,7 @@ import java.sql.SQLException
 
 @ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
-class LoginTest : UserEntityServiceTest() {
+class LoginAbstract : AbstractUserServiceTest() {
 
     @Test
     fun `should throw UserNotFoundException when user is not found`() {

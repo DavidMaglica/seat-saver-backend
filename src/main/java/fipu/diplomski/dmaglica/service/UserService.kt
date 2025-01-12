@@ -1,10 +1,7 @@
 package fipu.diplomski.dmaglica.service
 
 import fipu.diplomski.dmaglica.exception.UserNotFoundException
-import fipu.diplomski.dmaglica.model.BasicResponse
-import fipu.diplomski.dmaglica.model.NotificationOptions
-import fipu.diplomski.dmaglica.model.Role
-import fipu.diplomski.dmaglica.model.User
+import fipu.diplomski.dmaglica.model.*
 import fipu.diplomski.dmaglica.repo.NotificationOptionsRepository
 import fipu.diplomski.dmaglica.repo.RoleRepository
 import fipu.diplomski.dmaglica.repo.UserRepository
@@ -80,6 +77,18 @@ class UserService(
             emailNotificationsTurnedOn = notificationOptions.emailNotificationsTurnedOn,
             locationServicesTurnedOn = notificationOptions.locationServicesTurnedOn,
         )
+    }
+
+    fun getLocation(email: String): UserLocation {
+        val user = dbActionWithTryCatch("Error while fetching user with email $email") {
+            userRepository.getByEmail(email)
+        } ?: throw UserNotFoundException("User with email $email does not exist")
+
+        if (user.lastKnownLatitude == null || user.lastKnownLongitude == null) {
+            throw SQLException("User with email $email does not have a last known location")
+        }
+
+        return UserLocation(latitude = user.lastKnownLatitude!!, longitude = user.lastKnownLongitude!!)
     }
 
     fun updateEmail(email: String, newEmail: String): BasicResponse {

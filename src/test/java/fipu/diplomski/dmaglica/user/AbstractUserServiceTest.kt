@@ -14,7 +14,7 @@ import org.springframework.test.context.ActiveProfiles
 
 @ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
-abstract class UserEntityServiceTest {
+abstract class AbstractUserServiceTest {
     companion object {
         const val USER_ID = 1L
         const val USER_EMAIL = "user1@mail.com"
@@ -25,19 +25,19 @@ abstract class UserEntityServiceTest {
     }
 
     @Mock
-    lateinit var userRepository: UserRepository
+    protected lateinit var userRepository: UserRepository
 
     @Mock
-    lateinit var roleRepository: RoleRepository
+    protected lateinit var roleRepository: RoleRepository
 
     @Mock
-    lateinit var notificationOptionsRepository: NotificationOptionsRepository
+    protected lateinit var notificationOptionsRepository: NotificationOptionsRepository
 
     @InjectMocks
-    lateinit var userService: UserService
+    protected lateinit var userService: UserService
 
     @AfterEach
-    fun tearDown() {
+    protected fun tearDown() {
         reset(userRepository, roleRepository, notificationOptionsRepository)
     }
 }
