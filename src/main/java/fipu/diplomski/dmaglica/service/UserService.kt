@@ -30,6 +30,7 @@ class UserService(
                     it.email = email
                     it.username = username
                     it.password = password
+                    it.role = Role.USER.name
                 }
             )
         }
@@ -42,14 +43,6 @@ class UserService(
                     it.locationServicesTurnedOn = false
                     it.pushNotificationsTurnedOn = false
                     it.emailNotificationsTurnedOn = false
-                }
-            )
-        }
-        dbActionWithTryCatch("Error while saving role for user with email $email") {
-            roleRepository.saveAndFlush(
-                RoleEntity().also {
-                    it.userId = user.id
-                    it.role = Role.USER.name
                 }
             )
         }
@@ -194,15 +187,13 @@ class UserService(
             )
         }
 
-        val role = roleRepository.getAllByUserId(user.id).map { Role.valueOf(it.role) }
-
         return User(
             id = user.id,
             username = user.username,
             password = user.password,
             email = user.email,
             notificationOptions = notificationOptions,
-            role = role,
+            role = Role.valueOf(user.role),
             lastKnownLatitude = user.lastKnownLatitude,
             lastKnownLongitude = user.lastKnownLongitude,
         )

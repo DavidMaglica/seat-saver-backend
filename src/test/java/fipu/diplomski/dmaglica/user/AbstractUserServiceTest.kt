@@ -1,5 +1,6 @@
 package fipu.diplomski.dmaglica.user
 
+import fipu.diplomski.dmaglica.model.Role
 import fipu.diplomski.dmaglica.repo.NotificationOptionsRepository
 import fipu.diplomski.dmaglica.repo.RoleRepository
 import fipu.diplomski.dmaglica.repo.UserRepository
@@ -22,6 +23,7 @@ abstract class AbstractUserServiceTest {
         const val USER_PASSWORD = "password"
         const val LAST_KNOWN_LATITUDE = 0.0
         const val LAST_KNOWN_LONGITUDE = 0.0
+        val USER_ROLE = Role.USER
     }
 
     @Mock

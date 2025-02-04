@@ -21,17 +21,12 @@ VALUES (4, 'user4', 'user4@mail.com', 'password');
 Create Table IF NOT EXISTS roles
 (
     id       BIGINT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT         NOT NULL,
     role    VARCHAR(50) NOT NULL,
-    CONSTRAINT fk_user_role FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-INSERT INTO roles (id, user_id, role)
-VALUES (1, 1, 'USER'),
-VALUES (2, 1, 'OWNER'),
-VALUES (3, 2, 'USER'),
-VALUES (4, 3, 'OWNER'),
-VALUES (5, 4, 'USER');
+INSERT INTO roles (id, role)
+VALUES (1, 'USER'),
+VALUES (2, 'OWNER'),
 
 -- Notification options table
 CREATE TABLE IF NOT EXISTS notification_options
