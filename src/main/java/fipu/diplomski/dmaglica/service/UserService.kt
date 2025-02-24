@@ -3,10 +3,8 @@ package fipu.diplomski.dmaglica.service
 import fipu.diplomski.dmaglica.exception.UserNotFoundException
 import fipu.diplomski.dmaglica.model.*
 import fipu.diplomski.dmaglica.repo.NotificationOptionsRepository
-import fipu.diplomski.dmaglica.repo.RoleRepository
 import fipu.diplomski.dmaglica.repo.UserRepository
 import fipu.diplomski.dmaglica.repo.entity.NotificationOptionsEntity
-import fipu.diplomski.dmaglica.repo.entity.RoleEntity
 import fipu.diplomski.dmaglica.repo.entity.UserEntity
 import org.springframework.stereotype.Service
 import java.sql.SQLException
@@ -15,7 +13,6 @@ import java.sql.SQLException
 class UserService(
     private val userRepository: UserRepository,
     private val notificationOptionsRepository: NotificationOptionsRepository,
-    private val roleRepository: RoleRepository,
 ) {
 
     fun signup(email: String, username: String, password: String): BasicResponse {
@@ -30,7 +27,7 @@ class UserService(
                     it.email = email
                     it.username = username
                     it.password = password
-                    it.role = Role.USER.name
+                    it.roleId = Role.USER.ordinal
                 }
             )
         }
@@ -193,7 +190,7 @@ class UserService(
             password = user.password,
             email = user.email,
             notificationOptions = notificationOptions,
-            role = Role.valueOf(user.role),
+            role = Role.entries[user.roleId],
             lastKnownLatitude = user.lastKnownLatitude,
             lastKnownLongitude = user.lastKnownLongitude,
         )

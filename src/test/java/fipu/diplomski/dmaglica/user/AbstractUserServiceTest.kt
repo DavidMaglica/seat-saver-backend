@@ -2,7 +2,6 @@ package fipu.diplomski.dmaglica.user
 
 import fipu.diplomski.dmaglica.model.Role
 import fipu.diplomski.dmaglica.repo.NotificationOptionsRepository
-import fipu.diplomski.dmaglica.repo.RoleRepository
 import fipu.diplomski.dmaglica.repo.UserRepository
 import fipu.diplomski.dmaglica.service.UserService
 import org.junit.jupiter.api.AfterEach
@@ -30,9 +29,6 @@ abstract class AbstractUserServiceTest {
     protected lateinit var userRepository: UserRepository
 
     @Mock
-    protected lateinit var roleRepository: RoleRepository
-
-    @Mock
     protected lateinit var notificationOptionsRepository: NotificationOptionsRepository
 
     @InjectMocks
@@ -40,6 +36,6 @@ abstract class AbstractUserServiceTest {
 
     @AfterEach
     protected fun tearDown() {
-        reset(userRepository, roleRepository, notificationOptionsRepository)
+        reset(userRepository, notificationOptionsRepository)
     }
 }

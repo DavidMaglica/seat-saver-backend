@@ -14,5 +14,5 @@ class UserEntity {
     var password: String = ""
     var lastKnownLatitude: Double? = null
     var lastKnownLongitude: Double? = null
-    var role: String = ""
+    var roleId: Int = 0
 }

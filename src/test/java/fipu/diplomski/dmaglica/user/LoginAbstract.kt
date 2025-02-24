@@ -59,6 +59,6 @@ class LoginAbstract : AbstractUserServiceTest() {
         it.password = USER_PASSWORD
         it.lastKnownLatitude = LAST_KNOWN_LATITUDE
         it.lastKnownLongitude = LAST_KNOWN_LONGITUDE
-        it.role = USER_ROLE.name
+        it.roleId = USER_ROLE.ordinal
     }
 }
