@@ -6,7 +6,7 @@ data class User(
     val password: String,
     val email: String,
     val notificationOptions: NotificationOptions?,
-    val role: List<Role>?,
+    val role: Role,
     val lastKnownLatitude: Double?,
     val lastKnownLongitude: Double?
 )

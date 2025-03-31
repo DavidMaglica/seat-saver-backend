@@ -7,6 +7,7 @@ class Paths {
         const val LOGIN = "/login"
         const val GET_USER = "/get-user"
         const val GET_USER_NOTIFICATION_OPTIONS = "/get-user-notification-options"
+        const val GET_USER_LOCATION = "/get-user-location"
         const val UPDATE_USER_EMAIL = "/update-user-email"
         const val UPDATE_USER_USERNAME = "/update-user-username"
         const val UPDATE_USER_PASSWORD = "/update-user-password"
@@ -25,5 +26,10 @@ class Paths {
         const val GET_RESERVATION = "/get-reservation"
         const val UPDATE_RESERVATION = "/update-reservation"
         const val DELETE_RESERVATION = "/delete-reservation"
+
+        const val GEOLOCATION = "/geolocation"
+        const val FETCH_GEOLOCATION = "/fetch-geolocation"
+        const val GET_GEOLOCATION = "/get-geolocation"
+        const val GET_NEARBY_CITIES = "/get-nearby-cities"
     }
 }

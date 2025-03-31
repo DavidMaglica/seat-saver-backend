@@ -3,6 +3,7 @@ package fipu.diplomski.dmaglica.controller
 import fipu.diplomski.dmaglica.model.BasicResponse
 import fipu.diplomski.dmaglica.model.NotificationOptions
 import fipu.diplomski.dmaglica.model.User
+import fipu.diplomski.dmaglica.model.UserLocation
 import fipu.diplomski.dmaglica.service.UserService
 import fipu.diplomski.dmaglica.util.Paths
 import org.springframework.web.bind.annotation.*
@@ -45,6 +46,9 @@ class UserController(private val userService: UserService) {
     @GetMapping(Paths.GET_USER_NOTIFICATION_OPTIONS)
     fun getUserNotificationOptions(@RequestParam("email") email: String): NotificationOptions =
         userService.getNotificationOptions(email)
+
+    @GetMapping(Paths.GET_USER_LOCATION)
+    fun getUserLocation(@RequestParam("email") email: String): UserLocation = userService.getLocation(email)
 
     @PatchMapping(Paths.UPDATE_USER_NOTIFICATION_OPTIONS)
     fun updateUserNotificationOptions(
