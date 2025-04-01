@@ -1,7 +1,7 @@
 package fipu.diplomski.dmaglica.model
 
 data class User(
-    val id: Long,
+    val id: Int,
     val username: String,
     val password: String,
     val email: String,

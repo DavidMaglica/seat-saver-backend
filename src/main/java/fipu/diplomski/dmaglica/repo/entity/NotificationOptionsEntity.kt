@@ -7,17 +7,14 @@ import jakarta.persistence.*
 class NotificationOptionsEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long = 0
+    var id: Int = 0
 
-    var userId: Long = 0
+    var userId: Int = 0
 
     var pushNotificationsTurnedOn = false
 
     var emailNotificationsTurnedOn = false
 
     var locationServicesTurnedOn = false
-
-    override fun toString(): String =
-        "NotificationOptions(id=$id, userId=$userId, pushNotificationsTurnedOn=$pushNotificationsTurnedOn, emailNotificationsTurnedOn=$emailNotificationsTurnedOn, locationServicesTurnedOn=$locationServicesTurnedOn)"
 
 }

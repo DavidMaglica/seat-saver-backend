@@ -6,6 +6,7 @@ import fipu.diplomski.dmaglica.repo.NotificationOptionsRepository
 import fipu.diplomski.dmaglica.repo.UserRepository
 import fipu.diplomski.dmaglica.repo.entity.NotificationOptionsEntity
 import fipu.diplomski.dmaglica.repo.entity.UserEntity
+import fipu.diplomski.dmaglica.util.dbActionWithTryCatch
 import org.springframework.stereotype.Service
 import java.sql.SQLException
 
@@ -195,11 +196,4 @@ class UserService(
             lastKnownLongitude = user.lastKnownLongitude,
         )
     }
-
-    private inline fun <reified T> dbActionWithTryCatch(errorMessage: String, block: () -> T): T = try {
-        block()
-    } catch (e: Exception) {
-        throw SQLException(errorMessage, e)
-    }
-
 }

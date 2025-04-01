@@ -9,13 +9,32 @@ import org.springframework.web.bind.annotation.*
 class VenueController(private val venueService: VenueService) {
 
     @PostMapping(Paths.CREATE_VENUE)
-    fun createVenue() = venueService.create()
+    fun createVenue(
+        @RequestParam("name") name: String,
+        @RequestParam("location") location: String,
+        @RequestParam("description") description: String,
+        @RequestParam("typeId") typeId: Int,
+        @RequestParam("workingHours") workingHours: String
+    ) = venueService.create(name, location, description, typeId, workingHours)
 
     @GetMapping(Paths.GET_VENUE)
-    fun getVenue() = venueService.get()
+    fun getVenue(
+        @RequestParam("venueId") venueId: Int,
+    ) = venueService.get(venueId)
+
+    @GetMapping(Paths.GET_VENUE_TYPE)
+    fun getVenueType(
+        @RequestParam("typeId") typeId: Int,
+    ) = venueService.getVenueType(typeId)
 
     @PatchMapping(Paths.UPDATE_VENUE)
     fun updateVenue() = venueService.update()
+
+    @PatchMapping(Paths.RATE_VENUE)
+    fun rateVenue(
+        @RequestParam("venueId") venueId: Int,
+        @RequestParam("rating") rating: Double,
+    ) = venueService.rate(venueId, rating)
 
     @DeleteMapping(Paths.DELETE_VENUE)
     fun deleteVenue() = venueService.delete()

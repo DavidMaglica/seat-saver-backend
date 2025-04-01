@@ -16,7 +16,7 @@ import org.springframework.test.context.ActiveProfiles
 @ActiveProfiles("test")
 abstract class AbstractUserServiceTest {
     companion object {
-        const val USER_ID = 1L
+        const val USER_ID = 1
         const val USER_EMAIL = "user1@mail.com"
         const val USER_USERNAME = "user1"
         const val USER_PASSWORD = "password"
