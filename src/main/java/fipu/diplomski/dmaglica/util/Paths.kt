@@ -17,6 +17,7 @@ class Paths {
 
         const val VENUE = "/venue"
         const val CREATE_VENUE = "/create"
+        const val UPLOAD_VENUE_IMAGE = "/upload-image"
         const val GET_VENUE = "/get"
         const val GET_VENUE_TYPE = "/get-type"
         const val UPDATE_VENUE = "/update"

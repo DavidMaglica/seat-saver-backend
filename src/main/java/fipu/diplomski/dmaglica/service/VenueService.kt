@@ -8,7 +8,9 @@ import fipu.diplomski.dmaglica.repo.VenueTypeRepository
 import fipu.diplomski.dmaglica.repo.entity.VenueEntity
 import fipu.diplomski.dmaglica.repo.entity.VenueRatingEntity
 import fipu.diplomski.dmaglica.util.dbActionWithTryCatch
+import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
+import org.springframework.web.multipart.MultipartFile
 import java.sql.SQLException
 
 @Service
@@ -16,10 +18,12 @@ class VenueService(
     private val venueRepository: VenueRepository,
     private val venueRatingRepository: VenueRatingRepository,
     private val venueTypeRepository: VenueTypeRepository,
+    private val imageDataService: ImageDataService,
 ) {
 
+    @Transactional
     fun create(name: String, location: String, description: String, typeId: Int, workingHours: String): BasicResponse {
-        val venueEntity = VenueEntity().also {
+        val venue = VenueEntity().also {
             it.id
             it.name = name
             it.location = location
@@ -30,10 +34,16 @@ class VenueService(
         }
 
         dbActionWithTryCatch("Error while saving venue with name $name") {
-            venueRepository.saveAndFlush(venueEntity)
+            venueRepository.saveAndFlush(venue)
         }
+
         return BasicResponse(true, "Venue with name $name successfully created")
     }
+
+    fun getVenueImages(venueId: Int, venueName: String) = imageDataService.getImagesForVenue(venueId, venueName)
+
+    fun uploadImage(venueId: Int, image: MultipartFile): BasicResponse =
+        imageDataService.uploadImage(venueId, image)
 
     fun get(venueId: Int): Venue {
         val venue = venueRepository.findById(venueId).orElseThrow { SQLException("Venue wit id: $venueId not found.") }
@@ -54,6 +64,7 @@ class VenueService(
     fun update() {
     }
 
+    @Transactional
     fun rate(venueId: Int, rating: Double) {
         val newRatingEntity = VenueRatingEntity().also {
             it.venueId = venueId
@@ -78,6 +89,10 @@ class VenueService(
         }
     }
 
-    fun delete() {
+    @Transactional
+    fun delete(venueId: Int) {
+        dbActionWithTryCatch("Error while deleting venue with id: $venueId") {
+            venueRepository.deleteById(venueId)
+        }
     }
 }

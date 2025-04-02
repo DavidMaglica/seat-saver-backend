@@ -3,6 +3,7 @@ package fipu.diplomski.dmaglica.controller
 import fipu.diplomski.dmaglica.service.VenueService
 import fipu.diplomski.dmaglica.util.Paths
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.multipart.MultipartFile
 
 @RestController
 @RequestMapping(Paths.VENUE)
@@ -17,10 +18,22 @@ class VenueController(private val venueService: VenueService) {
         @RequestParam("workingHours") workingHours: String
     ) = venueService.create(name, location, description, typeId, workingHours)
 
+    @PostMapping(Paths.UPLOAD_VENUE_IMAGE)
+    fun uploadImage(
+        @RequestParam("venueId") venueId: Int,
+        @RequestParam("image") image: MultipartFile
+    ) = venueService.uploadImage(venueId, image)
+
     @GetMapping(Paths.GET_VENUE)
     fun getVenue(
         @RequestParam("venueId") venueId: Int,
     ) = venueService.get(venueId)
+
+    @GetMapping
+    fun getVenueImages(
+        @RequestParam("venueId") venueId: Int,
+        @RequestParam("venueName") venueName: String,
+    ) = venueService.getVenueImages(venueId, venueName)
 
     @GetMapping(Paths.GET_VENUE_TYPE)
     fun getVenueType(
@@ -37,6 +50,8 @@ class VenueController(private val venueService: VenueService) {
     ) = venueService.rate(venueId, rating)
 
     @DeleteMapping(Paths.DELETE_VENUE)
-    fun deleteVenue() = venueService.delete()
+    fun deleteVenue(
+        @RequestParam("venueId") venueId: Int,
+    ) = venueService.delete(venueId)
 
 }
