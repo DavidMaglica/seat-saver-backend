@@ -20,6 +20,25 @@ class ImageService(
     private val menuImageRepository: MenuImageRepository,
 ) {
 
+    @Transactional(readOnly = true)
+    fun getVenueImages(venueId: Int, venueName: String): List<ByteArray> {
+        val imageDataEntities = venueImageRepository.findByVenueId(venueId)
+
+        if (imageDataEntities.isEmpty()) throw ImageDataException("Images for venue $venueName do not exist", null)
+
+        val images = mutableListOf(ByteArray(0))
+        imageDataEntities.map {
+            images.add(decompressImage(it.imageData))
+        }
+
+        return images
+    }
+
+    @Transactional(readOnly = true)
+    fun getMenuImage(venueId: Int, venueName: String): MenuImageEntity =
+        menuImageRepository.findByVenueId(venueId)
+            ?: throw ImageDataException("Menu image for venue $venueName does not exist", null)
+
     @Transactional
     fun uploadVenueImage(venueId: Int, file: MultipartFile): BasicResponse {
         validateImage(file)
@@ -56,25 +75,6 @@ class ImageService(
         return BasicResponse(true, "Image '${file.originalFilename}' uploaded successfully")
     }
 
-    @Transactional(readOnly = true)
-    fun getVenueImages(venueId: Int, venueName: String): List<ByteArray> {
-        val imageDataEntities = venueImageRepository.findByVenueId(venueId)
-
-        if (imageDataEntities.isEmpty()) throw ImageDataException("Images for venue $venueName do not exist", null)
-
-        val images = mutableListOf(ByteArray(0))
-        imageDataEntities.map {
-            images.add(decompressImage(it.imageData))
-        }
-
-        return images
-    }
-
-    @Transactional(readOnly = true)
-    fun getMenuImage(venueId: Int, venueName: String): MenuImageEntity =
-        menuImageRepository.findByVenueId(venueId)
-            ?: throw ImageDataException("Menu image for venue $venueName does not exist", null)
-
     private fun validateImage(file: MultipartFile) {
         if (file.isEmpty) throw ImageDataException("File is empty", null)
 
@@ -86,8 +86,5 @@ class ImageService(
         )
 
         if (file.originalFilename == null) throw ImageDataException("File name is null", null)
-
     }
-
-
 }

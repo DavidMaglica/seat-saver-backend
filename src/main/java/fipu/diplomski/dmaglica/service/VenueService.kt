@@ -21,8 +21,36 @@ class VenueService(
     private val imageService: ImageService,
 ) {
 
+    @Transactional(readOnly = true)
+    fun get(venueId: Int): Venue {
+        val venue = venueRepository.findById(venueId).orElseThrow { SQLException("Venue wit id: $venueId not found.") }
+        return Venue(
+            id = venue.id,
+            name = venue.name,
+            location = venue.location,
+            workingHours = venue.workingHours,
+            rating = venue.averageRating,
+            venueTypeId = venue.venueTypeId,
+            description = venue.description
+        )
+    }
+
+    @Transactional(readOnly = true)
+    fun getAll(): MutableList<VenueEntity> = venueRepository.findAll()
+
+    @Transactional(readOnly = true)
+    fun getType(typeId: Int): String =
+        venueTypeRepository.findById(typeId).orElseThrow { SQLException("Venue type id: $typeId not found.") }.type
+
+    @Transactional(readOnly = true)
+    fun getAllTypes(): List<String> = venueTypeRepository.findAll().map { it.type }
+
+    fun getVenueImages(venueId: Int, venueName: String) = imageService.getVenueImages(venueId, venueName)
+
+    fun getMenuImage(venueId: Int, venueName: String) = imageService.getMenuImage(venueId, venueName)
+
     @Transactional
-    fun createVenue(
+    fun create(
         name: String,
         location: String,
         description: String,
@@ -46,33 +74,11 @@ class VenueService(
         return BasicResponse(true, "Venue with name $name successfully created")
     }
 
-    fun getVenueImages(venueId: Int, venueName: String) = imageService.getVenueImages(venueId, venueName)
-
     fun uploadVenueImage(venueId: Int, image: MultipartFile): BasicResponse =
         imageService.uploadVenueImage(venueId, image)
 
-    fun getMenuImage(venueId: Int, venueName: String) = imageService.getMenuImage(venueId, venueName)
-
     fun uploadMenuImage(venueId: Int, image: MultipartFile): BasicResponse =
         imageService.uploadMenuImage(venueId, image)
-
-    @Transactional(readOnly = true)
-    fun getVenue(venueId: Int): Venue {
-        val venue = venueRepository.findById(venueId).orElseThrow { SQLException("Venue wit id: $venueId not found.") }
-        return Venue(
-            id = venue.id,
-            name = venue.name,
-            location = venue.location,
-            workingHours = venue.workingHours,
-            rating = venue.averageRating,
-            venueTypeId = venue.venueTypeId,
-            description = venue.description
-        )
-    }
-
-    @Transactional(readOnly = true)
-    fun getVenueType(typeId: Int): String =
-        venueTypeRepository.findById(typeId).orElseThrow { SQLException("Venue type id: $typeId not found.") }.type
 
     @Transactional
     fun update(
@@ -112,6 +118,7 @@ class VenueService(
     @Transactional
     fun rate(venueId: Int, rating: Double): BasicResponse {
         val newRatingEntity = VenueRatingEntity().also {
+            it.id
             it.venueId = venueId
             it.rating = rating
         }
@@ -125,9 +132,12 @@ class VenueService(
         val cumulativeRatingCount = venueRating.size + 1
 
         val newRating = cumulativeRating / cumulativeRatingCount
-        val updatedVenue = venue.also { it.averageRating = newRating }
         dbActionWithTryCatch("Error while updating rating for venue with id $venueId") {
             venueRatingRepository.save(newRatingEntity)
+        }
+
+        val updatedVenue = venue.also { it.averageRating = newRating }
+        dbActionWithTryCatch("Error while updating venue with id $venueId") {
             venueRepository.save(updatedVenue)
         }
 

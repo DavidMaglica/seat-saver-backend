@@ -25,6 +25,13 @@ class UserController(private val userService: UserService) {
         @RequestParam("password") password: String
     ): BasicResponse = userService.login(email, password)
 
+    @GetMapping(Paths.GET_USER_NOTIFICATION_OPTIONS)
+    fun getUserNotificationOptions(@RequestParam("email") email: String): NotificationOptions =
+        userService.getNotificationOptions(email)
+
+    @GetMapping(Paths.GET_USER_LOCATION)
+    fun getUserLocation(@RequestParam("email") email: String): UserLocation = userService.getLocation(email)
+
     @PatchMapping(Paths.UPDATE_USER_EMAIL)
     fun updateUserEmail(
         @RequestParam("email") email: String,
@@ -42,13 +49,6 @@ class UserController(private val userService: UserService) {
         @RequestParam("email") email: String,
         @RequestParam("newPassword") newPassword: String
     ): BasicResponse = userService.updatePassword(email, newPassword)
-
-    @GetMapping(Paths.GET_USER_NOTIFICATION_OPTIONS)
-    fun getUserNotificationOptions(@RequestParam("email") email: String): NotificationOptions =
-        userService.getNotificationOptions(email)
-
-    @GetMapping(Paths.GET_USER_LOCATION)
-    fun getUserLocation(@RequestParam("email") email: String): UserLocation = userService.getLocation(email)
 
     @PatchMapping(Paths.UPDATE_USER_NOTIFICATION_OPTIONS)
     fun updateUserNotificationOptions(

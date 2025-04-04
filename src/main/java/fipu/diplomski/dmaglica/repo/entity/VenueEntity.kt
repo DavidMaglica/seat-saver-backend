@@ -21,4 +21,3 @@ class VenueEntity {
 
     var description: String = ""
 }
-

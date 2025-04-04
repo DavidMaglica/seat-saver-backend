@@ -24,5 +24,4 @@ class ReservationController(private val reservationService: ReservationService) 
 
     @DeleteMapping(Paths.DELETE_RESERVATION)
     fun deleteReservation() = reservationService.delete()
-
 }

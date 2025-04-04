@@ -55,4 +55,3 @@ fun decompressImage(data: ByteArray): ByteArray {
 
     return outputStream.toByteArray()
 }
-
