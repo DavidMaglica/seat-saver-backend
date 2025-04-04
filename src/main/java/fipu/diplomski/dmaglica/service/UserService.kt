@@ -7,7 +7,7 @@ import fipu.diplomski.dmaglica.repo.UserRepository
 import fipu.diplomski.dmaglica.repo.entity.NotificationOptionsEntity
 import fipu.diplomski.dmaglica.repo.entity.UserEntity
 import fipu.diplomski.dmaglica.util.dbActionWithTryCatch
-import jakarta.transaction.Transactional
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.stereotype.Service
 import java.sql.SQLException
 
@@ -24,7 +24,7 @@ class UserService(
         }
 
         dbActionWithTryCatch("Error while saving user with email $email") {
-            userRepository.saveAndFlush(
+            userRepository.save(
                 UserEntity().also {
                     it.id
                     it.email = email
@@ -37,7 +37,7 @@ class UserService(
         val user = userRepository.getByEmail(email) ?: throw UserNotFoundException("User was not created successfully")
 
         dbActionWithTryCatch("Error while saving notification options for user with email $email") {
-            notificationOptionsRepository.saveAndFlush(
+            notificationOptionsRepository.save(
                 NotificationOptionsEntity().also {
                     it.userId = user.id
                     it.locationServicesTurnedOn = false
@@ -50,6 +50,7 @@ class UserService(
         return BasicResponse(success = true, message = "User with email $email successfully created")
     }
 
+    @Transactional(readOnly = true)
     fun login(email: String, password: String): BasicResponse {
         dbActionWithTryCatch("Error while fetching user with email $email") {
             userRepository.getByEmail(email)
@@ -58,6 +59,7 @@ class UserService(
         return BasicResponse(success = true, message = "User with email $email successfully logged in")
     }
 
+    @Transactional(readOnly = true)
     fun getNotificationOptions(email: String): NotificationOptions {
         val user = dbActionWithTryCatch("Error while fetching user with email $email") {
             userRepository.getByEmail(email)
@@ -72,6 +74,7 @@ class UserService(
         )
     }
 
+    @Transactional(readOnly = true)
     fun getLocation(email: String): UserLocation {
         val user = dbActionWithTryCatch("Error while fetching user with email $email") {
             userRepository.getByEmail(email)
@@ -90,9 +93,9 @@ class UserService(
             userRepository.getByEmail(email)
         } ?: throw UserNotFoundException("User with email $email does not exist")
 
+        user.email = newEmail
         dbActionWithTryCatch("Error while updating email for user with email $email") {
-            user.email = newEmail
-            userRepository.saveAndFlush(user)
+            userRepository.save(user)
         }
 
         return BasicResponse(success = true, message = "Email for user with email $email successfully updated")
@@ -104,9 +107,9 @@ class UserService(
             userRepository.getByEmail(email)
         } ?: throw UserNotFoundException("User with email $email does not exist")
 
+        user.username = newUsername
         dbActionWithTryCatch("Error while updating username for user with email $email") {
-            user.username = newUsername
-            userRepository.saveAndFlush(user)
+            userRepository.save(user)
         }
 
         return BasicResponse(success = true, message = "Username for user with email $email successfully updated")
@@ -120,7 +123,7 @@ class UserService(
 
         user.password = newPassword
         dbActionWithTryCatch("Error while updating password for user with email $email") {
-            userRepository.saveAndFlush(user)
+            userRepository.save(user)
         }
 
         return BasicResponse(success = true, message = "Password for user with email $email successfully updated")
@@ -143,7 +146,7 @@ class UserService(
         notificationOptions.emailNotificationsTurnedOn = emailNotificationsTurnedOn
         notificationOptions.locationServicesTurnedOn = locationServicesTurnedOn
         dbActionWithTryCatch("Error while updating notification options for user with email $email") {
-            notificationOptionsRepository.saveAndFlush(notificationOptions)
+            notificationOptionsRepository.save(notificationOptions)
         }
 
         return BasicResponse(
@@ -161,7 +164,7 @@ class UserService(
         user.lastKnownLatitude = latitude
         user.lastKnownLongitude = longitude
         dbActionWithTryCatch("Error while updating location for user with email $email") {
-            userRepository.saveAndFlush(user)
+            userRepository.save(user)
         }
 
         return BasicResponse(success = true, message = "Location for user with email $email successfully updated")
@@ -180,6 +183,7 @@ class UserService(
         return BasicResponse(success = true, message = "User with email $email successfully deleted")
     }
 
+    @Transactional(readOnly = true)
     fun getUser(email: String): User {
         val user = dbActionWithTryCatch("Error while fetching user with email $email") {
             userRepository.findByEmail(email)

@@ -8,7 +8,7 @@ import fipu.diplomski.dmaglica.repo.VenueTypeRepository
 import fipu.diplomski.dmaglica.repo.entity.VenueEntity
 import fipu.diplomski.dmaglica.repo.entity.VenueRatingEntity
 import fipu.diplomski.dmaglica.util.dbActionWithTryCatch
-import jakarta.transaction.Transactional
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
 import java.sql.SQLException
@@ -18,11 +18,17 @@ class VenueService(
     private val venueRepository: VenueRepository,
     private val venueRatingRepository: VenueRatingRepository,
     private val venueTypeRepository: VenueTypeRepository,
-    private val imageDataService: ImageDataService,
+    private val imageService: ImageService,
 ) {
 
     @Transactional
-    fun create(name: String, location: String, description: String, typeId: Int, workingHours: String): BasicResponse {
+    fun createVenue(
+        name: String,
+        location: String,
+        description: String,
+        typeId: Int,
+        workingHours: String
+    ): BasicResponse {
         val venue = VenueEntity().also {
             it.id
             it.name = name
@@ -34,18 +40,24 @@ class VenueService(
         }
 
         dbActionWithTryCatch("Error while saving venue with name $name") {
-            venueRepository.saveAndFlush(venue)
+            venueRepository.save(venue)
         }
 
         return BasicResponse(true, "Venue with name $name successfully created")
     }
 
-    fun getVenueImages(venueId: Int, venueName: String) = imageDataService.getImagesForVenue(venueId, venueName)
+    fun getVenueImages(venueId: Int, venueName: String) = imageService.getVenueImages(venueId, venueName)
 
-    fun uploadImage(venueId: Int, image: MultipartFile): BasicResponse =
-        imageDataService.uploadImage(venueId, image)
+    fun uploadVenueImage(venueId: Int, image: MultipartFile): BasicResponse =
+        imageService.uploadVenueImage(venueId, image)
 
-    fun get(venueId: Int): Venue {
+    fun getMenuImage(venueId: Int, venueName: String) = imageService.getMenuImage(venueId, venueName)
+
+    fun uploadMenuImage(venueId: Int, image: MultipartFile): BasicResponse =
+        imageService.uploadMenuImage(venueId, image)
+
+    @Transactional(readOnly = true)
+    fun getVenue(venueId: Int): Venue {
         val venue = venueRepository.findById(venueId).orElseThrow { SQLException("Venue wit id: $venueId not found.") }
         return Venue(
             id = venue.id,
@@ -58,14 +70,47 @@ class VenueService(
         )
     }
 
+    @Transactional(readOnly = true)
     fun getVenueType(typeId: Int): String =
         venueTypeRepository.findById(typeId).orElseThrow { SQLException("Venue type id: $typeId not found.") }.type
 
-    fun update() {
+    @Transactional
+    fun update(
+        venueId: Int,
+        name: String?,
+        location: String?,
+        workingHours: String?,
+        typeId: Int?,
+        description: String?
+    ): Venue {
+        val venue = venueRepository.findById(venueId)
+            .orElseThrow { SQLException("Venue with id $venueId not found") }
+
+        val updatedVenue = venue.also {
+            it.name = name ?: venue.name
+            it.location = location ?: venue.location
+            it.workingHours = workingHours ?: venue.workingHours
+            it.venueTypeId = typeId ?: venue.venueTypeId
+            it.description = description ?: venue.description
+        }
+
+        dbActionWithTryCatch("Error while updating venue with id $venueId") {
+            venueRepository.save(updatedVenue)
+        }
+
+        return Venue(
+            id = updatedVenue.id,
+            name = updatedVenue.name,
+            location = updatedVenue.location,
+            workingHours = updatedVenue.workingHours,
+            rating = updatedVenue.averageRating,
+            venueTypeId = updatedVenue.venueTypeId,
+            description = updatedVenue.description
+        )
     }
 
     @Transactional
-    fun rate(venueId: Int, rating: Double) {
+    fun rate(venueId: Int, rating: Double): BasicResponse {
         val newRatingEntity = VenueRatingEntity().also {
             it.venueId = venueId
             it.rating = rating
@@ -80,13 +125,13 @@ class VenueService(
         val cumulativeRatingCount = venueRating.size + 1
 
         val newRating = cumulativeRating / cumulativeRatingCount
-        val updatedVenue = venue.also {
-            it.averageRating = newRating
-        }
+        val updatedVenue = venue.also { it.averageRating = newRating }
         dbActionWithTryCatch("Error while updating rating for venue with id $venueId") {
-            venueRatingRepository.saveAndFlush(newRatingEntity)
-            venueRepository.saveAndFlush(updatedVenue)
+            venueRatingRepository.save(newRatingEntity)
+            venueRepository.save(updatedVenue)
         }
+
+        return BasicResponse(true, "Venue with id $venueId successfully rated with rating $rating")
     }
 
     @Transactional

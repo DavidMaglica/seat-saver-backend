@@ -20,6 +20,8 @@ class Paths {
         const val UPLOAD_VENUE_IMAGE = "/upload-image"
         const val GET_VENUE = "/get"
         const val GET_VENUE_TYPE = "/get-type"
+        const val GET_VENUE_MENU = "/get-menu"
+        const val UPLOAD_MENU_IMAGE = "/upload-menu-image"
         const val UPDATE_VENUE = "/update"
         const val RATE_VENUE = "/rate"
         const val DELETE_VENUE = "/delete"

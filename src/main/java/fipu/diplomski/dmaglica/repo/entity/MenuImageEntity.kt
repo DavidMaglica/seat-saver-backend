@@ -3,8 +3,8 @@ package fipu.diplomski.dmaglica.repo.entity
 import jakarta.persistence.*
 
 @Entity
-@Table(name = "image_data")
-class ImageDataEntity {
+@Table(name = "menu_images")
+class MenuImageEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Int = 0

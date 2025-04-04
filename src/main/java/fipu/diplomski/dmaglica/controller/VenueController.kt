@@ -16,18 +16,18 @@ class VenueController(private val venueService: VenueService) {
         @RequestParam("description") description: String,
         @RequestParam("typeId") typeId: Int,
         @RequestParam("workingHours") workingHours: String
-    ) = venueService.create(name, location, description, typeId, workingHours)
+    ) = venueService.createVenue(name, location, description, typeId, workingHours)
 
     @PostMapping(Paths.UPLOAD_VENUE_IMAGE)
     fun uploadImage(
         @RequestParam("venueId") venueId: Int,
         @RequestParam("image") image: MultipartFile
-    ) = venueService.uploadImage(venueId, image)
+    ) = venueService.uploadVenueImage(venueId, image)
 
     @GetMapping(Paths.GET_VENUE)
     fun getVenue(
         @RequestParam("venueId") venueId: Int,
-    ) = venueService.get(venueId)
+    ) = venueService.getVenue(venueId)
 
     @GetMapping
     fun getVenueImages(
@@ -40,8 +40,27 @@ class VenueController(private val venueService: VenueService) {
         @RequestParam("typeId") typeId: Int,
     ) = venueService.getVenueType(typeId)
 
+    @GetMapping(Paths.GET_VENUE_MENU)
+    fun getMenuImage(
+        @RequestParam("venueId") venueId: Int,
+        @RequestParam("venueName") venueName: String,
+    ) = venueService.getMenuImage(venueId, venueName)
+
+    @PostMapping(Paths.UPLOAD_MENU_IMAGE)
+    fun uploadMenuImage(
+        @RequestParam("venueId") venueId: Int,
+        @RequestParam("image") image: MultipartFile
+    ) = venueService.uploadMenuImage(venueId, image)
+
     @PatchMapping(Paths.UPDATE_VENUE)
-    fun updateVenue() = venueService.update()
+    fun updateVenue(
+        @RequestParam("venueId") venueId: Int,
+        @RequestParam("name") name: String?,
+        @RequestParam("location") location: String?,
+        @RequestParam("description") description: String?,
+        @RequestParam("typeId") typeId: Int?,
+        @RequestParam("workingHours") workingHours: String?
+    ) = venueService.update(venueId, name, location, description, typeId, workingHours)
 
     @PatchMapping(Paths.RATE_VENUE)
     fun rateVenue(
