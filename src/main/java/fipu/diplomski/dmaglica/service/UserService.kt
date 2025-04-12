@@ -7,9 +7,8 @@ import fipu.diplomski.dmaglica.repo.UserRepository
 import fipu.diplomski.dmaglica.repo.entity.NotificationOptionsEntity
 import fipu.diplomski.dmaglica.repo.entity.UserEntity
 import fipu.diplomski.dmaglica.util.dbActionWithTryCatch
-import org.springframework.transaction.annotation.Transactional
 import org.springframework.stereotype.Service
-import java.sql.SQLException
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class UserService(
@@ -23,28 +22,24 @@ class UserService(
             return BasicResponse(success = false, message = "User with email $email already exists")
         }
 
-        dbActionWithTryCatch("Error while saving user with email $email") {
-            userRepository.save(
-                UserEntity().also {
-                    it.id
-                    it.email = email
-                    it.username = username
-                    it.password = password
-                    it.roleId = Role.USER.ordinal
-                }
-            )
+        val user = UserEntity().also {
+            it.id
+            it.email = email
+            it.username = username
+            it.password = password
+            it.roleId = Role.USER.ordinal
         }
-        val user = userRepository.getByEmail(email) ?: throw UserNotFoundException("User was not created successfully")
 
-        dbActionWithTryCatch("Error while saving notification options for user with email $email") {
-            notificationOptionsRepository.save(
-                NotificationOptionsEntity().also {
-                    it.userId = user.id
-                    it.locationServicesTurnedOn = false
-                    it.pushNotificationsTurnedOn = false
-                    it.emailNotificationsTurnedOn = false
-                }
-            )
+        val userNotificationOptions = NotificationOptionsEntity().also {
+            it.userId = user.id
+            it.locationServicesTurnedOn = false
+            it.pushNotificationsTurnedOn = false
+            it.emailNotificationsTurnedOn = false
+        }
+
+        dbActionWithTryCatch("Error while saving user with email $email") {
+            userRepository.save(user)
+            notificationOptionsRepository.save(userNotificationOptions)
         }
 
         return BasicResponse(success = true, message = "User with email $email successfully created")
@@ -52,18 +47,15 @@ class UserService(
 
     @Transactional(readOnly = true)
     fun login(email: String, password: String): BasicResponse {
-        dbActionWithTryCatch("Error while fetching user with email $email") {
-            userRepository.getByEmail(email)
-        } ?: return BasicResponse(success = false, message = "User with email $email does not exist")
+        userRepository.getByEmail(email)
+            ?: return BasicResponse(success = false, message = "User with email $email does not exist")
 
         return BasicResponse(success = true, message = "User with email $email successfully logged in")
     }
 
     @Transactional(readOnly = true)
     fun getNotificationOptions(email: String): NotificationOptions {
-        val user = dbActionWithTryCatch("Error while fetching user with email $email") {
-            userRepository.getByEmail(email)
-        } ?: throw UserNotFoundException("User with email $email does not exist")
+        val user = findUserIfExists(email)
 
         val notificationOptions = notificationOptionsRepository.getByUserId(user.id)
 
@@ -75,13 +67,11 @@ class UserService(
     }
 
     @Transactional(readOnly = true)
-    fun getLocation(email: String): UserLocation {
-        val user = dbActionWithTryCatch("Error while fetching user with email $email") {
-            userRepository.getByEmail(email)
-        } ?: throw UserNotFoundException("User with email $email does not exist")
+    fun getLocation(email: String): UserLocation? {
+        val user = findUserIfExists(email)
 
         if (user.lastKnownLatitude == null || user.lastKnownLongitude == null) {
-            throw SQLException("User with email $email does not have a last known location")
+            return null
         }
 
         return UserLocation(latitude = user.lastKnownLatitude!!, longitude = user.lastKnownLongitude!!)
@@ -89,9 +79,7 @@ class UserService(
 
     @Transactional
     fun updateEmail(email: String, newEmail: String): BasicResponse {
-        val user = dbActionWithTryCatch("Error while fetching user with email $email") {
-            userRepository.getByEmail(email)
-        } ?: throw UserNotFoundException("User with email $email does not exist")
+        val user = findUserIfExists(email)
 
         user.email = newEmail
         dbActionWithTryCatch("Error while updating email for user with email $email") {
@@ -103,9 +91,7 @@ class UserService(
 
     @Transactional
     fun updateUsername(email: String, newUsername: String): BasicResponse {
-        val user = dbActionWithTryCatch("Error while fetching user with email $email") {
-            userRepository.getByEmail(email)
-        } ?: throw UserNotFoundException("User with email $email does not exist")
+        val user = findUserIfExists(email)
 
         user.username = newUsername
         dbActionWithTryCatch("Error while updating username for user with email $email") {
@@ -117,9 +103,7 @@ class UserService(
 
     @Transactional
     fun updatePassword(email: String, newPassword: String): BasicResponse {
-        val user = dbActionWithTryCatch("Error while fetching user with email $email") {
-            userRepository.getByEmail(email)
-        } ?: throw UserNotFoundException("User with email $email does not exist")
+        val user = findUserIfExists(email)
 
         user.password = newPassword
         dbActionWithTryCatch("Error while updating password for user with email $email") {
@@ -136,9 +120,7 @@ class UserService(
         emailNotificationsTurnedOn: Boolean,
         locationServicesTurnedOn: Boolean
     ): BasicResponse {
-        val user = dbActionWithTryCatch("Error while fetching user with email $email") {
-            userRepository.getByEmail(email)
-        } ?: throw UserNotFoundException("User with email $email does not exist")
+        val user = findUserIfExists(email)
 
         val notificationOptions = notificationOptionsRepository.getByUserId(user.id)
 
@@ -157,9 +139,7 @@ class UserService(
 
     @Transactional
     fun updateLocation(email: String, latitude: Double, longitude: Double): BasicResponse {
-        val user = dbActionWithTryCatch("Error while fetching user with email $email") {
-            userRepository.getByEmail(email)
-        } ?: throw UserNotFoundException("User with email $email does not exist")
+        val user = findUserIfExists(email)
 
         user.lastKnownLatitude = latitude
         user.lastKnownLongitude = longitude
@@ -172,9 +152,7 @@ class UserService(
 
     @Transactional
     fun delete(email: String): BasicResponse {
-        val user = dbActionWithTryCatch("Error while fetching user with email $email") {
-            userRepository.findByEmail(email)
-        } ?: throw UserNotFoundException("User with email $email does not exist")
+        val user = findUserIfExists(email)
 
         dbActionWithTryCatch("Error while deleting user with email $email") {
             userRepository.deleteById(user.id)
@@ -185,9 +163,7 @@ class UserService(
 
     @Transactional(readOnly = true)
     fun getUser(email: String): User {
-        val user = dbActionWithTryCatch("Error while fetching user with email $email") {
-            userRepository.findByEmail(email)
-        } ?: throw UserNotFoundException("User with email $email does not exist")
+        val user = findUserIfExists(email)
 
         val notificationOptions = notificationOptionsRepository.getByUserId(user.id).let {
             NotificationOptions(
@@ -208,4 +184,7 @@ class UserService(
             lastKnownLongitude = user.lastKnownLongitude,
         )
     }
+
+    private fun findUserIfExists(email: String) =
+        userRepository.findByEmail(email) ?: throw UserNotFoundException("User with email $email does not exist")
 }

@@ -1,10 +1,10 @@
-CREATE TABLE IF NOT EXISTS venue_types
+CREATE TABLE IF NOT EXISTS Venue_types
 (
     id   INT AUTO_INCREMENT PRIMARY KEY,
     type VARCHAR(50) NOT NULL
-    );
+);
 
-INSERT INTO venue_types (id, type)
+INSERT INTO Venue_types (id, type)
 VALUES (1, 'italian'),
        (2, 'asian'),
        (3, 'gluten_free'),

@@ -8,8 +8,8 @@ import fipu.diplomski.dmaglica.repo.VenueTypeRepository
 import fipu.diplomski.dmaglica.repo.entity.VenueEntity
 import fipu.diplomski.dmaglica.repo.entity.VenueRatingEntity
 import fipu.diplomski.dmaglica.util.dbActionWithTryCatch
-import org.springframework.transaction.annotation.Transactional
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
 import java.sql.SQLException
 
@@ -40,7 +40,7 @@ class VenueService(
 
     @Transactional(readOnly = true)
     fun getType(typeId: Int): String =
-        venueTypeRepository.findById(typeId).orElseThrow { SQLException("Venue type id: $typeId not found.") }.type
+        venueTypeRepository.getReferenceById(typeId).type
 
     @Transactional(readOnly = true)
     fun getAllTypes(): List<String> = venueTypeRepository.findAll().map { it.type }

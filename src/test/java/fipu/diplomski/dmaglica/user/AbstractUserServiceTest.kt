@@ -3,6 +3,8 @@ package fipu.diplomski.dmaglica.user
 import fipu.diplomski.dmaglica.model.Role
 import fipu.diplomski.dmaglica.repo.NotificationOptionsRepository
 import fipu.diplomski.dmaglica.repo.UserRepository
+import fipu.diplomski.dmaglica.repo.entity.NotificationOptionsEntity
+import fipu.diplomski.dmaglica.repo.entity.UserEntity
 import fipu.diplomski.dmaglica.service.UserService
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.extension.ExtendWith
@@ -15,8 +17,9 @@ import org.springframework.test.context.ActiveProfiles
 @ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
 abstract class AbstractUserServiceTest {
+
     companion object {
-        const val USER_ID = 1
+        const val  USER_ID = 1
         const val USER_EMAIL = "user1@mail.com"
         const val USER_USERNAME = "user1"
         const val USER_PASSWORD = "password"
@@ -37,5 +40,22 @@ abstract class AbstractUserServiceTest {
     @AfterEach
     protected fun tearDown() {
         reset(userRepository, notificationOptionsRepository)
+    }
+
+    val mockedUser: UserEntity = UserEntity().also {
+        it.id = USER_ID
+        it.email = USER_EMAIL
+        it.username = USER_USERNAME
+        it.password = USER_PASSWORD
+        it.lastKnownLatitude = LAST_KNOWN_LATITUDE
+        it.lastKnownLongitude = LAST_KNOWN_LONGITUDE
+        it.roleId = USER_ROLE.ordinal
+    }
+
+    val mockedNotificationOptions: NotificationOptionsEntity = NotificationOptionsEntity().also {
+        it.userId = USER_ID
+        it.locationServicesTurnedOn = false
+        it.pushNotificationsTurnedOn = false
+        it.emailNotificationsTurnedOn = false
     }
 }

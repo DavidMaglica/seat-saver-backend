@@ -30,7 +30,7 @@ class UserController(private val userService: UserService) {
         userService.getNotificationOptions(email)
 
     @GetMapping(Paths.GET_USER_LOCATION)
-    fun getUserLocation(@RequestParam("email") email: String): UserLocation = userService.getLocation(email)
+    fun getUserLocation(@RequestParam("email") email: String): UserLocation? = userService.getLocation(email)
 
     @PatchMapping(Paths.UPDATE_USER_EMAIL)
     fun updateUserEmail(
