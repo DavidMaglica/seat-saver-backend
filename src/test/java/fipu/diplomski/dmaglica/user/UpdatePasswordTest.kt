@@ -13,7 +13,7 @@ import java.sql.SQLException
 
 @ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
-class UpdatePasswordTest : AbstractUserServiceTest() {
+class UpdatePasswordTest : UserServiceTest() {
 
     companion object {
         const val NEW_PASSWORD = "password2"
@@ -23,7 +23,7 @@ class UpdatePasswordTest : AbstractUserServiceTest() {
     fun `should throw if user not found`() {
         `when`(userRepository.findByEmail(anyString())).thenReturn(null)
 
-        assertThrows<UserNotFoundException> { userService.updatePassword(USER_EMAIL, NEW_PASSWORD) }
+        assertThrows<UserNotFoundException> { userService.updatePassword(mockedUser.email, NEW_PASSWORD) }
     }
 
     @Test
@@ -31,21 +31,21 @@ class UpdatePasswordTest : AbstractUserServiceTest() {
         `when`(userRepository.findByEmail(anyString())).thenReturn(mockedUser)
         `when`(userRepository.save(any())).thenThrow(RuntimeException())
 
-        assertThrows<SQLException> { userService.updatePassword(USER_EMAIL, NEW_PASSWORD) }
+        assertThrows<SQLException> { userService.updatePassword(mockedUser.email, NEW_PASSWORD) }
 
-        verify(userRepository, times(1)).findByEmail(USER_EMAIL)
+        verify(userRepository, times(1)).findByEmail(mockedUser.email)
     }
 
     @Test
     fun `should update password`() {
         `when`(userRepository.findByEmail(anyString())).thenReturn(mockedUser)
 
-        val result = userService.updatePassword(USER_EMAIL, NEW_PASSWORD)
+        val result = userService.updatePassword(mockedUser.email, NEW_PASSWORD)
 
         result.success `should be` true
-        result.message `should be equal to` "Password for user with email $USER_EMAIL successfully updated"
+        result.message `should be equal to` "Password for user with email ${mockedUser.email} successfully updated"
 
-        verify(userRepository, times(1)).findByEmail(USER_EMAIL)
+        verify(userRepository, times(1)).findByEmail(mockedUser.email)
         verify(userRepository, times(1)).save(any())
     }
 }

@@ -9,6 +9,8 @@ class VenueEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Int = 0
 
+    var ownerId: Int = 0
+
     var name: String = ""
 
     var location: String = ""

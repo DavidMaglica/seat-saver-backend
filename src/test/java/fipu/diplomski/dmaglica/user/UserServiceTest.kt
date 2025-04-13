@@ -16,17 +16,7 @@ import org.springframework.test.context.ActiveProfiles
 
 @ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
-abstract class AbstractUserServiceTest {
-
-    companion object {
-        const val  USER_ID = 1
-        const val USER_EMAIL = "user1@mail.com"
-        const val USER_USERNAME = "user1"
-        const val USER_PASSWORD = "password"
-        const val LAST_KNOWN_LATITUDE = 0.0
-        const val LAST_KNOWN_LONGITUDE = 0.0
-        val USER_ROLE = Role.USER
-    }
+abstract class UserServiceTest {
 
     @Mock
     protected lateinit var userRepository: UserRepository
@@ -42,18 +32,18 @@ abstract class AbstractUserServiceTest {
         reset(userRepository, notificationOptionsRepository)
     }
 
-    val mockedUser: UserEntity = UserEntity().also {
-        it.id = USER_ID
-        it.email = USER_EMAIL
-        it.username = USER_USERNAME
-        it.password = USER_PASSWORD
-        it.lastKnownLatitude = LAST_KNOWN_LATITUDE
-        it.lastKnownLongitude = LAST_KNOWN_LONGITUDE
-        it.roleId = USER_ROLE.ordinal
+    protected val mockedUser: UserEntity = UserEntity().also {
+        it.id = 1
+        it.email = "user1@mail.com"
+        it.username = "user1"
+        it.password = "password"
+        it.lastKnownLatitude = 0.0
+        it.lastKnownLongitude = 0.0
+        it.roleId = Role.USER.ordinal
     }
 
-    val mockedNotificationOptions: NotificationOptionsEntity = NotificationOptionsEntity().also {
-        it.userId = USER_ID
+    protected val mockedNotificationOptions: NotificationOptionsEntity = NotificationOptionsEntity().also {
+        it.userId = 1
         it.locationServicesTurnedOn = false
         it.pushNotificationsTurnedOn = false
         it.emailNotificationsTurnedOn = false

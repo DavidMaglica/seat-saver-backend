@@ -13,13 +13,7 @@ import java.sql.SQLException
 
 @ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
-class UpdateNotificationOptionsTest : AbstractUserServiceTest() {
-
-    companion object {
-        private const val LOCATION_SERVICES_TURNED_ON = true
-        private const val PUSH_NOTIFICATIONS_TURNED_ON = true
-        private const val EMAIL_NOTIFICATIONS_TURNED_ON = true
-    }
+class UpdateNotificationOptionsTest : UserServiceTest() {
 
     @Test
     fun `should throw if user not found`() {
@@ -27,10 +21,10 @@ class UpdateNotificationOptionsTest : AbstractUserServiceTest() {
 
         assertThrows<UserNotFoundException> {
             userService.updateNotificationOptions(
-                USER_EMAIL,
-                LOCATION_SERVICES_TURNED_ON,
-                PUSH_NOTIFICATIONS_TURNED_ON,
-                EMAIL_NOTIFICATIONS_TURNED_ON
+                mockedUser.email,
+                !mockedNotificationOptions.locationServicesTurnedOn,
+                !mockedNotificationOptions.pushNotificationsTurnedOn,
+                !mockedNotificationOptions.emailNotificationsTurnedOn
             )
         }
     }
@@ -43,14 +37,14 @@ class UpdateNotificationOptionsTest : AbstractUserServiceTest() {
 
         assertThrows<SQLException> {
             userService.updateNotificationOptions(
-                USER_EMAIL,
-                LOCATION_SERVICES_TURNED_ON,
-                PUSH_NOTIFICATIONS_TURNED_ON,
-                EMAIL_NOTIFICATIONS_TURNED_ON
+                mockedUser.email,
+                !mockedNotificationOptions.locationServicesTurnedOn,
+                !mockedNotificationOptions.pushNotificationsTurnedOn,
+                !mockedNotificationOptions.emailNotificationsTurnedOn
             )
         }
 
-        verify(userRepository, times(1)).findByEmail(USER_EMAIL)
+        verify(userRepository, times(1)).findByEmail(mockedUser.email)
     }
 
     @Test
@@ -59,17 +53,17 @@ class UpdateNotificationOptionsTest : AbstractUserServiceTest() {
         `when`(notificationOptionsRepository.getByUserId(anyInt())).thenReturn(mockedNotificationOptions)
 
         val result = userService.updateNotificationOptions(
-            USER_EMAIL,
-            LOCATION_SERVICES_TURNED_ON,
-            PUSH_NOTIFICATIONS_TURNED_ON,
-            EMAIL_NOTIFICATIONS_TURNED_ON
+            mockedUser.email,
+            !mockedNotificationOptions.locationServicesTurnedOn,
+            !mockedNotificationOptions.pushNotificationsTurnedOn,
+            !mockedNotificationOptions.emailNotificationsTurnedOn
         )
 
         result.success `should be` true
-        result.message `should be equal to` "Notification options for user with email $USER_EMAIL successfully updated"
+        result.message `should be equal to` "Notification options for user with email ${mockedUser.email} successfully updated"
 
-        verify(userRepository, times(1)).findByEmail(USER_EMAIL)
-        verify(notificationOptionsRepository, times(1)).getByUserId(USER_ID)
+        verify(userRepository, times(1)).findByEmail(mockedUser.email)
+        verify(notificationOptionsRepository, times(1)).getByUserId(mockedUser.id)
         verify(notificationOptionsRepository, times(1)).save(any())
     }
 }

@@ -11,18 +11,18 @@ import java.sql.SQLException
 
 @ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
-class SignupTest : AbstractUserServiceTest() {
+class SignupTest : UserServiceTest() {
 
     @Test
     fun `should return early if user already exists`() {
         `when`(userRepository.getByEmail(anyString())).thenReturn(mockedUser)
 
-        val response = userService.signup(USER_EMAIL, USER_USERNAME, USER_PASSWORD)
+        val response = userService.signup(mockedUser.email, mockedUser.username, mockedUser.password)
 
         response.success `should be equal to` false
-        response.message `should be equal to` "User with email $USER_EMAIL already exists"
+        response.message `should be equal to` "User with email ${mockedUser.email} already exists"
 
-        verify(userRepository, times(1)).getByEmail(USER_EMAIL)
+        verify(userRepository, times(1)).getByEmail(mockedUser.email)
         verifyNoInteractions(notificationOptionsRepository)
     }
 
@@ -31,9 +31,9 @@ class SignupTest : AbstractUserServiceTest() {
         `when`(userRepository.getByEmail(anyString())).thenReturn(null)
         `when`(userRepository.save(any())).thenThrow(RuntimeException("Error while saving user"))
 
-        assertThrows<SQLException> { userService.signup(USER_EMAIL, USER_USERNAME, USER_PASSWORD) }
+        assertThrows<SQLException> { userService.signup(mockedUser.email, mockedUser.username, mockedUser.password) }
 
-        verify(userRepository, times(1)).getByEmail(USER_EMAIL)
+        verify(userRepository, times(1)).getByEmail(mockedUser.email)
         verify(userRepository, times(1)).save(any())
         verifyNoInteractions(notificationOptionsRepository)
     }
@@ -44,9 +44,9 @@ class SignupTest : AbstractUserServiceTest() {
         `when`(userRepository.save(any())).thenReturn(mockedUser)
         `when`(notificationOptionsRepository.save(any())).thenThrow(RuntimeException("Error while saving notification options"))
 
-        assertThrows<SQLException> { userService.signup(USER_EMAIL, USER_USERNAME, USER_PASSWORD) }
+        assertThrows<SQLException> { userService.signup(mockedUser.email, mockedUser.username, mockedUser.password) }
 
-        verify(userRepository, times(1)).getByEmail(USER_EMAIL)
+        verify(userRepository, times(1)).getByEmail(mockedUser.email)
         verify(userRepository, times(1)).save(any())
         verify(notificationOptionsRepository, times(1)).save(any())
     }
@@ -57,12 +57,12 @@ class SignupTest : AbstractUserServiceTest() {
         `when`(userRepository.save(any())).thenReturn(mockedUser)
         `when`(notificationOptionsRepository.save(any())).thenReturn(mockedNotificationOptions)
 
-        val response = userService.signup(USER_EMAIL, USER_USERNAME, USER_PASSWORD)
+        val response = userService.signup(mockedUser.email, mockedUser.username, mockedUser.password)
 
         response.success `should be equal to` true
-        response.message `should be equal to` "User with email $USER_EMAIL successfully created"
+        response.message `should be equal to` "User with email ${mockedUser.email} successfully created"
 
-        verify(userRepository, times(1)).getByEmail(USER_EMAIL)
+        verify(userRepository, times(1)).getByEmail(mockedUser.email)
         verify(userRepository, times(1)).save(any())
         verify(notificationOptionsRepository, times(1)).save(any())
     }

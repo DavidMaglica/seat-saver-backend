@@ -1,5 +1,6 @@
 package fipu.diplomski.dmaglica.controller
 
+import fipu.diplomski.dmaglica.model.UpdateVenueRequest
 import fipu.diplomski.dmaglica.service.VenueService
 import fipu.diplomski.dmaglica.util.Paths
 import org.springframework.web.bind.annotation.*
@@ -60,15 +61,11 @@ class VenueController(
         @RequestParam("image") image: MultipartFile
     ) = venueService.uploadMenuImage(venueId, image)
 
-    @PatchMapping(Paths.UPDATE_VENUE)
+    @PatchMapping("${Paths.UPDATE_VENUE}/{venueId}")
     fun updateVenue(
-        @RequestParam("venueId") venueId: Int,
-        @RequestParam("name") name: String?,
-        @RequestParam("location") location: String?,
-        @RequestParam("description") description: String?,
-        @RequestParam("typeId") typeId: Int?,
-        @RequestParam("workingHours") workingHours: String?
-    ) = venueService.update(venueId, name, location, description, typeId, workingHours)
+        @PathVariable("venueId") venueId: Int,
+        @RequestBody(required = false) request: UpdateVenueRequest?
+    ) = venueService.update(venueId, request)
 
     @PostMapping(Paths.RATE_VENUE)
     fun rateVenue(

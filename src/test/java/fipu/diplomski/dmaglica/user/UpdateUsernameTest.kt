@@ -15,7 +15,7 @@ import java.sql.SQLException
 
 @ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
-class UpdateUsernameTest : AbstractUserServiceTest() {
+class UpdateUsernameTest : UserServiceTest() {
     companion object {
         const val NEW_USERNAME = "newTestUsername"
     }
@@ -24,7 +24,7 @@ class UpdateUsernameTest : AbstractUserServiceTest() {
     fun `should throw if user not found`() {
         `when`(userRepository.findByEmail(anyString())).thenReturn(null)
 
-        assertThrows<UserNotFoundException> { userService.updateUsername(USER_EMAIL, NEW_USERNAME) }
+        assertThrows<UserNotFoundException> { userService.updateUsername(mockedUser.email, NEW_USERNAME) }
     }
 
     @Test
@@ -32,21 +32,21 @@ class UpdateUsernameTest : AbstractUserServiceTest() {
         `when`(userRepository.findByEmail(anyString())).thenReturn(mockedUser)
         `when`(userRepository.save(any())).thenThrow(RuntimeException())
 
-        assertThrows<SQLException> { userService.updateUsername(USER_EMAIL, NEW_USERNAME) }
+        assertThrows<SQLException> { userService.updateUsername(mockedUser.email, NEW_USERNAME) }
 
-        verify(userRepository, times(1)).findByEmail(USER_EMAIL)
+        verify(userRepository, times(1)).findByEmail(mockedUser.email)
     }
 
     @Test
     fun `should update username`() {
         `when`(userRepository.findByEmail(anyString())).thenReturn(mockedUser)
 
-        val result = userService.updateUsername(USER_EMAIL, NEW_USERNAME)
+        val result = userService.updateUsername(mockedUser.email, NEW_USERNAME)
 
         result.success `should be` true
-        result.message `should be equal to` "Username for user with email $USER_EMAIL successfully updated"
+        result.message `should be equal to` "Username for user with email ${mockedUser.email} successfully updated"
 
-        verify(userRepository, times(1)).findByEmail(USER_EMAIL)
+        verify(userRepository, times(1)).findByEmail(mockedUser.email)
         verify(userRepository, times(1)).save(any())
     }
 }

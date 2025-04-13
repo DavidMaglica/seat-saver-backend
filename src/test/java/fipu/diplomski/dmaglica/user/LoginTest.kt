@@ -11,7 +11,7 @@ import org.springframework.test.context.ActiveProfiles
 
 @ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
-class LoginTest : AbstractUserServiceTest() {
+class LoginTest : UserServiceTest() {
 
     @Test
     fun `should return BasicResponse with success false when user is not found`() {
@@ -29,19 +29,19 @@ class LoginTest : AbstractUserServiceTest() {
     fun `should throw SQLException when getByEmail throws`() {
         `when`(userRepository.getByEmail(anyString())).thenThrow(RuntimeException())
 
-        assertThrows<RuntimeException> { userService.login(USER_EMAIL, USER_PASSWORD) }
+        assertThrows<RuntimeException> { userService.login(mockedUser.email, mockedUser.password) }
 
         verify(userRepository, times(1)).getByEmail(anyString())
     }
 
     @Test
     fun `when user is found correct user should be returned`() {
-        `when`(userRepository.getByEmail(USER_EMAIL)).thenReturn(mockedUser)
+        `when`(userRepository.getByEmail(mockedUser.email)).thenReturn(mockedUser)
 
-        val result = userService.login(USER_EMAIL, USER_PASSWORD)
+        val result = userService.login(mockedUser.email, mockedUser.password)
 
         result.success `should be equal to` true
-        result.message `should be equal to` "User with email $USER_EMAIL successfully logged in"
+        result.message `should be equal to` "User with email ${mockedUser.email} successfully logged in"
 
         verify(userRepository, times(1)).getByEmail(anyString())
     }

@@ -86,7 +86,7 @@ class UserService(
             userRepository.save(user)
         }
 
-        return BasicResponse(success = true, message = "Email for user with email $email successfully updated")
+        return BasicResponse(success = true, message = "Email for user with email $email updated to $newEmail")
     }
 
     @Transactional

@@ -13,7 +13,7 @@ import java.sql.SQLException
 
 @ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
-class UpdateLocationTest : AbstractUserServiceTest() {
+class UpdateLocationTest : UserServiceTest() {
 
     companion object {
         const val NEW_LATITUDE = 0.0
@@ -24,7 +24,7 @@ class UpdateLocationTest : AbstractUserServiceTest() {
     fun `should throw if user not found`() {
         `when`(userRepository.findByEmail(anyString())).thenReturn(null)
 
-        assertThrows<UserNotFoundException> { userService.updateLocation(USER_EMAIL, NEW_LATITUDE, NEW_LONGITUDE) }
+        assertThrows<UserNotFoundException> { userService.updateLocation(mockedUser.email, NEW_LATITUDE, NEW_LONGITUDE) }
     }
 
     @Test
@@ -32,21 +32,21 @@ class UpdateLocationTest : AbstractUserServiceTest() {
         `when`(userRepository.findByEmail(anyString())).thenReturn(mockedUser)
         `when`(userRepository.save(any())).thenThrow(RuntimeException())
 
-        assertThrows<SQLException> { userService.updateLocation(USER_EMAIL, NEW_LATITUDE, NEW_LONGITUDE) }
+        assertThrows<SQLException> { userService.updateLocation(mockedUser.email, NEW_LATITUDE, NEW_LONGITUDE) }
 
-        verify(userRepository, times(1)).findByEmail(USER_EMAIL)
+        verify(userRepository, times(1)).findByEmail(mockedUser.email)
     }
 
     @Test
     fun `should update location`() {
         `when`(userRepository.findByEmail(anyString())).thenReturn(mockedUser)
 
-        val result = userService.updateLocation(USER_EMAIL, NEW_LATITUDE, NEW_LONGITUDE)
+        val result = userService.updateLocation(mockedUser.email, NEW_LATITUDE, NEW_LONGITUDE)
 
         result.success `should be` true
-        result.message `should be equal to` "Location for user with email $USER_EMAIL successfully updated"
+        result.message `should be equal to` "Location for user with email ${mockedUser.email} successfully updated"
 
-        verify(userRepository, times(1)).findByEmail(USER_EMAIL)
+        verify(userRepository, times(1)).findByEmail(mockedUser.email)
         verify(userRepository, times(1)).save(any())
     }
 }
