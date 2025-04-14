@@ -32,4 +32,10 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
         logger.error("User already exists: ${ex.message}. Cause: ${ex.cause}")
         return ResponseEntity.internalServerError().body("User already exists: ${ex.message}")
     }
+
+    @ExceptionHandler(ImageDataException::class)
+    fun handleImageDataException(ex: ImageDataException): ResponseEntity<String> {
+        logger.error("Image data exception: ${ex.message}. Cause: ${ex.cause}")
+        return ResponseEntity.internalServerError().body("Exception while handling image data: ${ex.message}")
+    }
 }

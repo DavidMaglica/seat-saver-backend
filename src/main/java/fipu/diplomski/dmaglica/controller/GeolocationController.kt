@@ -27,5 +27,4 @@ class GeolocationController(
         @RequestParam("latitude") latitude: Double,
         @RequestParam("longitude") longitude: Double
     ): List<String>? = geolocationService.getNearbyCities(latitude, longitude)
-
 }

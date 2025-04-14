@@ -1,4 +1,4 @@
-package fipu.diplomski.dmaglica.model
+package fipu.diplomski.dmaglica.model.response
 
 data class BasicResponse(
     val success: Boolean,

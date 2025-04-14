@@ -57,5 +57,4 @@ class GeolocationService(
 
         return response
     }
-
 }

@@ -1,9 +1,9 @@
 package fipu.diplomski.dmaglica.controller
 
-import fipu.diplomski.dmaglica.model.BasicResponse
-import fipu.diplomski.dmaglica.model.NotificationOptions
-import fipu.diplomski.dmaglica.model.User
-import fipu.diplomski.dmaglica.model.UserLocation
+import fipu.diplomski.dmaglica.model.data.NotificationOptions
+import fipu.diplomski.dmaglica.model.data.User
+import fipu.diplomski.dmaglica.model.data.UserLocation
+import fipu.diplomski.dmaglica.model.response.BasicResponse
 import fipu.diplomski.dmaglica.service.UserService
 import fipu.diplomski.dmaglica.util.Paths
 import org.springframework.web.bind.annotation.*
@@ -25,6 +25,13 @@ class UserController(private val userService: UserService) {
         @RequestParam("password") password: String
     ): BasicResponse = userService.login(email, password)
 
+    @GetMapping(Paths.GET_USER_NOTIFICATION_OPTIONS)
+    fun getUserNotificationOptions(@RequestParam("email") email: String): NotificationOptions =
+        userService.getNotificationOptions(email)
+
+    @GetMapping(Paths.GET_USER_LOCATION)
+    fun getUserLocation(@RequestParam("email") email: String): UserLocation? = userService.getLocation(email)
+
     @PatchMapping(Paths.UPDATE_USER_EMAIL)
     fun updateUserEmail(
         @RequestParam("email") email: String,
@@ -42,13 +49,6 @@ class UserController(private val userService: UserService) {
         @RequestParam("email") email: String,
         @RequestParam("newPassword") newPassword: String
     ): BasicResponse = userService.updatePassword(email, newPassword)
-
-    @GetMapping(Paths.GET_USER_NOTIFICATION_OPTIONS)
-    fun getUserNotificationOptions(@RequestParam("email") email: String): NotificationOptions =
-        userService.getNotificationOptions(email)
-
-    @GetMapping(Paths.GET_USER_LOCATION)
-    fun getUserLocation(@RequestParam("email") email: String): UserLocation = userService.getLocation(email)
 
     @PatchMapping(Paths.UPDATE_USER_NOTIFICATION_OPTIONS)
     fun updateUserNotificationOptions(
@@ -74,6 +74,6 @@ class UserController(private val userService: UserService) {
     fun deleteUser(@RequestParam("email") email: String): BasicResponse = userService.delete(email)
 
     @GetMapping(Paths.GET_USER)
-    fun getUser(@RequestParam email: String): User = userService.getUser(email)
+    fun getUser(@RequestParam("email") email: String): User = userService.getUser(email)
 
 }

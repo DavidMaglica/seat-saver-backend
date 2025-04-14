@@ -5,16 +5,11 @@ import org.springframework.stereotype.Service
 @Service
 class ReservationService {
 
-    fun create() {
-    }
+    fun create() {}
 
-    fun get() {
-    }
+    fun get() {}
 
-    fun update() {
-    }
+    fun update() {}
 
-    fun delete() {
-    }
-
+    fun delete() {}
 }
