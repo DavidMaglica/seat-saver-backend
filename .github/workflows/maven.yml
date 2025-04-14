@@ -35,5 +35,8 @@ jobs:
     - name: Install dependencies
       run: mvn clean install -DskipTests
 
+    - name: Print test classes
+      run: find . -name '*Test.java'
+
     - name: Run tests
       run: mvn test
