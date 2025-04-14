@@ -31,5 +31,9 @@ jobs:
         java-version: '21'
         distribution: 'graalvm'
         cache: maven
-    - name: Build and Test with Maven
-      run: mvn clean install
+      
+    - name: Install dependencies
+      run: mvn clean install -DskipTests
+
+    - name: Run tests
+      run: mvn test
