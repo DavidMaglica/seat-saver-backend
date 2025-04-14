@@ -1,6 +1,6 @@
 package fipu.diplomski.dmaglica.venue
 
-import fipu.diplomski.dmaglica.model.UpdateVenueRequest
+import fipu.diplomski.dmaglica.model.request.UpdateVenueRequest
 import fipu.diplomski.dmaglica.repo.entity.VenueEntity
 import org.amshove.kluent.`should be`
 import org.amshove.kluent.`should be equal to`

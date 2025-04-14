@@ -1,9 +1,9 @@
 package fipu.diplomski.dmaglica.controller
 
-import fipu.diplomski.dmaglica.model.BasicResponse
-import fipu.diplomski.dmaglica.model.NotificationOptions
-import fipu.diplomski.dmaglica.model.User
-import fipu.diplomski.dmaglica.model.UserLocation
+import fipu.diplomski.dmaglica.model.data.NotificationOptions
+import fipu.diplomski.dmaglica.model.data.User
+import fipu.diplomski.dmaglica.model.data.UserLocation
+import fipu.diplomski.dmaglica.model.response.BasicResponse
 import fipu.diplomski.dmaglica.service.UserService
 import fipu.diplomski.dmaglica.util.Paths
 import org.springframework.web.bind.annotation.*

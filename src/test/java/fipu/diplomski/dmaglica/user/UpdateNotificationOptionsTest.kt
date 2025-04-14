@@ -34,7 +34,7 @@ class UpdateNotificationOptionsTest : UserServiceTest() {
     @Test
     fun `should throw if can't update notification options`() {
         `when`(userRepository.findByEmail(anyString())).thenReturn(mockedUser)
-        `when`(notificationOptionsRepository.getByUserId(anyInt())).thenReturn(mockedNotificationOptions)
+        `when`(notificationOptionsRepository.findByUserId(anyInt())).thenReturn(mockedNotificationOptions)
         `when`(notificationOptionsRepository.save(any())).thenThrow(RuntimeException())
 
         val exception = assertThrows<SQLException> {
@@ -54,7 +54,7 @@ class UpdateNotificationOptionsTest : UserServiceTest() {
     @Test
     fun `should update only push notifications`() {
         `when`(userRepository.findByEmail(anyString())).thenReturn(mockedUser)
-        `when`(notificationOptionsRepository.getByUserId(anyInt())).thenReturn(mockedNotificationOptions)
+        `when`(notificationOptionsRepository.findByUserId(anyInt())).thenReturn(mockedNotificationOptions)
 
         val result = userService.updateNotificationOptions(
             mockedUser.email,
@@ -73,14 +73,14 @@ class UpdateNotificationOptionsTest : UserServiceTest() {
         updatedNotificationOptions.emailNotificationsEnabled `should be equal to` false
 
         verify(userRepository, times(1)).findByEmail(mockedUser.email)
-        verify(notificationOptionsRepository, times(1)).getByUserId(mockedUser.id)
+        verify(notificationOptionsRepository, times(1)).findByUserId(mockedUser.id)
         verify(notificationOptionsRepository, times(1)).save(any())
     }
 
     @Test
     fun `should update notification options`() {
         `when`(userRepository.findByEmail(anyString())).thenReturn(mockedUser)
-        `when`(notificationOptionsRepository.getByUserId(anyInt())).thenReturn(mockedNotificationOptions)
+        `when`(notificationOptionsRepository.findByUserId(anyInt())).thenReturn(mockedNotificationOptions)
 
         val result = userService.updateNotificationOptions(
             mockedUser.email,
@@ -99,7 +99,7 @@ class UpdateNotificationOptionsTest : UserServiceTest() {
         updatedNotificationOptions.emailNotificationsEnabled `should be equal to` true
 
         verify(userRepository, times(1)).findByEmail(mockedUser.email)
-        verify(notificationOptionsRepository, times(1)).getByUserId(mockedUser.id)
+        verify(notificationOptionsRepository, times(1)).findByUserId(mockedUser.id)
         verify(notificationOptionsRepository, times(1)).save(any())
     }
 }

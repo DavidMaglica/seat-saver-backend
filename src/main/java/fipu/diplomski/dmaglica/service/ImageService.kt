@@ -1,7 +1,7 @@
 package fipu.diplomski.dmaglica.service
 
 import fipu.diplomski.dmaglica.exception.ImageDataException
-import fipu.diplomski.dmaglica.model.BasicResponse
+import fipu.diplomski.dmaglica.model.response.BasicResponse
 import fipu.diplomski.dmaglica.repo.MenuImageRepository
 import fipu.diplomski.dmaglica.repo.VenueImageRepository
 import fipu.diplomski.dmaglica.repo.entity.MenuImageEntity
@@ -9,8 +9,8 @@ import fipu.diplomski.dmaglica.repo.entity.VenueImageEntity
 import fipu.diplomski.dmaglica.util.compressImage
 import fipu.diplomski.dmaglica.util.dbActionWithTryCatch
 import fipu.diplomski.dmaglica.util.decompressImage
-import org.springframework.transaction.annotation.Transactional
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
 
 

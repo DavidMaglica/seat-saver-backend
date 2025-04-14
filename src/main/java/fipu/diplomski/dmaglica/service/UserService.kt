@@ -1,7 +1,11 @@
 package fipu.diplomski.dmaglica.service
 
 import fipu.diplomski.dmaglica.exception.UserNotFoundException
-import fipu.diplomski.dmaglica.model.*
+import fipu.diplomski.dmaglica.model.data.NotificationOptions
+import fipu.diplomski.dmaglica.model.data.Role
+import fipu.diplomski.dmaglica.model.data.User
+import fipu.diplomski.dmaglica.model.data.UserLocation
+import fipu.diplomski.dmaglica.model.response.BasicResponse
 import fipu.diplomski.dmaglica.repo.NotificationOptionsRepository
 import fipu.diplomski.dmaglica.repo.UserRepository
 import fipu.diplomski.dmaglica.repo.entity.NotificationOptionsEntity
@@ -18,7 +22,7 @@ class UserService(
 
     @Transactional
     fun signup(email: String, username: String, password: String): BasicResponse {
-        userRepository.getByEmail(email)?.let {
+        userRepository.findByEmail(email)?.let {
             return BasicResponse(false, "User with email $email already exists")
         }
 
@@ -47,7 +51,7 @@ class UserService(
 
     @Transactional(readOnly = true)
     fun login(email: String, password: String): BasicResponse {
-        val user = userRepository.getByEmail(email)
+        val user = userRepository.findByEmail(email)
             ?: return BasicResponse(false, "User with email $email does not exist")
 
         if (user.password.lowercase() != password.lowercase()) {
@@ -61,7 +65,7 @@ class UserService(
     fun getNotificationOptions(email: String): NotificationOptions {
         val user = findUserIfExists(email)
 
-        val notificationOptions = notificationOptionsRepository.getByUserId(user.id)
+        val notificationOptions = notificationOptionsRepository.findByUserId(user.id)
 
         return NotificationOptions(
             pushNotificationsTurnedOn = notificationOptions.pushNotificationsEnabled,
@@ -126,7 +130,7 @@ class UserService(
     ): BasicResponse {
         val user = findUserIfExists(email)
 
-        val notificationOptions = notificationOptionsRepository.getByUserId(user.id)
+        val notificationOptions = notificationOptionsRepository.findByUserId(user.id)
 
         notificationOptions.pushNotificationsEnabled = pushNotificationsTurnedOn
         notificationOptions.emailNotificationsEnabled = emailNotificationsTurnedOn
@@ -169,7 +173,7 @@ class UserService(
     fun getUser(email: String): User {
         val user = findUserIfExists(email)
 
-        val notificationOptions = notificationOptionsRepository.getByUserId(user.id).let {
+        val notificationOptions = notificationOptionsRepository.findByUserId(user.id).let {
             NotificationOptions(
                 pushNotificationsTurnedOn = it.pushNotificationsEnabled,
                 emailNotificationsTurnedOn = it.emailNotificationsEnabled,

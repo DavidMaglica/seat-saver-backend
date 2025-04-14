@@ -1,5 +1,6 @@
 package fipu.diplomski.dmaglica.venue
 
+import fipu.diplomski.dmaglica.model.request.CreateVenueRequest
 import org.amshove.kluent.`should be equal to`
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -17,16 +18,15 @@ class CreateVenueTest : VenueServiceTest() {
     @Test
     fun `should throw if unable to save venue`() {
         `when`(venueRepository.save(any())).thenThrow(RuntimeException("Unable to save venue"))
+        val request = CreateVenueRequest(
+            mockedVenue.name,
+            mockedVenue.location,
+            mockedVenue.description,
+            mockedVenue.venueTypeId,
+            mockedVenue.workingHours,
+        )
 
-        val exception = assertThrows<SQLException> {
-            venueService.create(
-                mockedVenue.name,
-                mockedVenue.location,
-                mockedVenue.description,
-                mockedVenue.venueTypeId,
-                mockedVenue.workingHours,
-            )
-        }
+        val exception = assertThrows<SQLException> { venueService.create(request) }
 
         exception.message `should be equal to` "Error while saving venue: ${mockedVenue.name}"
     }
@@ -34,14 +34,15 @@ class CreateVenueTest : VenueServiceTest() {
     @Test
     fun `should save venue`() {
         `when`(venueRepository.save(any())).thenReturn(mockedVenue)
-
-        val result = venueService.create(
+        val request = CreateVenueRequest(
             mockedVenue.name,
             mockedVenue.location,
             mockedVenue.description,
             mockedVenue.venueTypeId,
-            mockedVenue.workingHours
+            mockedVenue.workingHours,
         )
+
+        val result = venueService.create(request)
 
         result.success `should be equal to` true
         result.message `should be equal to` "Venue ${mockedVenue.name} created successfully"

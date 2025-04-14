@@ -1,8 +1,9 @@
 package fipu.diplomski.dmaglica.service
 
-import fipu.diplomski.dmaglica.model.BasicResponse
-import fipu.diplomski.dmaglica.model.UpdateVenueRequest
-import fipu.diplomski.dmaglica.model.Venue
+import fipu.diplomski.dmaglica.model.data.Venue
+import fipu.diplomski.dmaglica.model.request.CreateVenueRequest
+import fipu.diplomski.dmaglica.model.request.UpdateVenueRequest
+import fipu.diplomski.dmaglica.model.response.BasicResponse
 import fipu.diplomski.dmaglica.repo.VenueRatingRepository
 import fipu.diplomski.dmaglica.repo.VenueRepository
 import fipu.diplomski.dmaglica.repo.VenueTypeRepository
@@ -51,28 +52,22 @@ class VenueService(
     fun getMenuImage(venueId: Int, venueName: String) = imageService.getMenuImage(venueId, venueName)
 
     @Transactional
-    fun create(
-        name: String,
-        location: String,
-        description: String,
-        typeId: Int,
-        workingHours: String
-    ): BasicResponse {
+    fun create(request: CreateVenueRequest): BasicResponse {
         val venue = VenueEntity().also {
             it.id
-            it.name = name
-            it.location = location
-            it.description = description
-            it.workingHours = workingHours
-            it.venueTypeId = typeId
+            it.name = request.name
+            it.location = request.location
+            it.description = request.description
+            it.workingHours = request.workingHours
+            it.venueTypeId = request.typeId
             it.averageRating = 0.0
         }
 
-        dbActionWithTryCatch("Error while saving venue: $name") {
+        dbActionWithTryCatch("Error while saving venue: ${request.name}") {
             venueRepository.save(venue)
         }
 
-        return BasicResponse(true, "Venue $name created successfully")
+        return BasicResponse(true, "Venue ${request.name} created successfully")
     }
 
     fun uploadVenueImage(venueId: Int, image: MultipartFile): BasicResponse =

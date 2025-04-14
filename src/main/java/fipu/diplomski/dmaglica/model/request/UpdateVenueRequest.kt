@@ -1,4 +1,4 @@
-package fipu.diplomski.dmaglica.model
+package fipu.diplomski.dmaglica.model.request
 
 data class UpdateVenueRequest(
     val name: String? = null,

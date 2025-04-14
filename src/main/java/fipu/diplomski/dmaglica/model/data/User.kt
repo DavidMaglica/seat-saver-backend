@@ -1,4 +1,4 @@
-package fipu.diplomski.dmaglica.model
+package fipu.diplomski.dmaglica.model.data
 
 data class User(
     val id: Int,

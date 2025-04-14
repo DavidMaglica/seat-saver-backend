@@ -15,20 +15,20 @@ class SignupTest : UserServiceTest() {
 
     @Test
     fun `should return early if user already exists`() {
-        `when`(userRepository.getByEmail(anyString())).thenReturn(mockedUser)
+        `when`(userRepository.findByEmail(anyString())).thenReturn(mockedUser)
 
         val response = userService.signup(mockedUser.email, mockedUser.username, mockedUser.password)
 
         response.success `should be equal to` false
         response.message `should be equal to` "User with email ${mockedUser.email} already exists"
 
-        verify(userRepository, times(1)).getByEmail(mockedUser.email)
+        verify(userRepository, times(1)).findByEmail(mockedUser.email)
         verifyNoInteractions(notificationOptionsRepository)
     }
 
     @Test
     fun `should throw if user not saved`() {
-        `when`(userRepository.getByEmail(anyString())).thenReturn(null)
+        `when`(userRepository.findByEmail(anyString())).thenReturn(null)
         `when`(userRepository.save(any())).thenThrow(RuntimeException("Error while saving user"))
 
         val exception = assertThrows<SQLException> {
@@ -41,14 +41,14 @@ class SignupTest : UserServiceTest() {
 
         exception.message `should be equal to` "Error while saving user with email ${mockedUser.email}"
 
-        verify(userRepository, times(1)).getByEmail(mockedUser.email)
+        verify(userRepository, times(1)).findByEmail(mockedUser.email)
         verify(userRepository, times(1)).save(any())
         verifyNoInteractions(notificationOptionsRepository)
     }
 
     @Test
     fun `should throw if notification options not saved`() {
-        `when`(userRepository.getByEmail(anyString())).thenReturn(null)
+        `when`(userRepository.findByEmail(anyString())).thenReturn(null)
         `when`(userRepository.save(any())).thenReturn(mockedUser)
         `when`(notificationOptionsRepository.save(any())).thenThrow(RuntimeException("Error while saving notification options"))
 
@@ -62,14 +62,14 @@ class SignupTest : UserServiceTest() {
 
         exception.message `should be equal to` "Error while saving user with email ${mockedUser.email}"
 
-        verify(userRepository, times(1)).getByEmail(mockedUser.email)
+        verify(userRepository, times(1)).findByEmail(mockedUser.email)
         verify(userRepository, times(1)).save(any())
         verify(notificationOptionsRepository, times(1)).save(any())
     }
 
     @Test
     fun `should save user and notification options`() {
-        `when`(userRepository.getByEmail(anyString())).thenReturn(null)
+        `when`(userRepository.findByEmail(anyString())).thenReturn(null)
         `when`(userRepository.save(any())).thenReturn(mockedUser)
         `when`(notificationOptionsRepository.save(any())).thenReturn(mockedNotificationOptions)
 
@@ -92,7 +92,7 @@ class SignupTest : UserServiceTest() {
         newNotificationOptions.pushNotificationsEnabled `should be equal to` mockedNotificationOptions.pushNotificationsEnabled
         newNotificationOptions.locationServicesEnabled `should be equal to` mockedNotificationOptions.locationServicesEnabled
 
-        verify(userRepository, times(1)).getByEmail(mockedUser.email)
+        verify(userRepository, times(1)).findByEmail(mockedUser.email)
         verify(userRepository, times(1)).save(any())
         verify(notificationOptionsRepository, times(1)).save(any())
     }

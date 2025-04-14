@@ -1,6 +1,6 @@
 package fipu.diplomski.dmaglica.user
 
-import fipu.diplomski.dmaglica.model.Role
+import fipu.diplomski.dmaglica.model.data.Role
 import fipu.diplomski.dmaglica.repo.NotificationOptionsRepository
 import fipu.diplomski.dmaglica.repo.UserRepository
 import fipu.diplomski.dmaglica.repo.entity.NotificationOptionsEntity

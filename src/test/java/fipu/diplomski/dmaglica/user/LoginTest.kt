@@ -27,30 +27,30 @@ class LoginTest : UserServiceTest() {
         result.success `should be` false
         result.message `should be equal to` "User with email $WRONG_EMAIL does not exist"
 
-        verify(userRepository, times(1)).getByEmail(anyString())
+        verify(userRepository, times(1)).findByEmail(anyString())
     }
 
     @Test
     fun `should return early if wrong password`() {
-        `when`(userRepository.getByEmail(anyString())).thenReturn(mockedUser)
+        `when`(userRepository.findByEmail(anyString())).thenReturn(mockedUser)
 
         val result = userService.login(mockedUser.email, WRONG_PASSWORD)
 
         result.success `should be` false
         result.message `should be equal to` "Incorrect password"
 
-        verify(userRepository, times(1)).getByEmail(anyString())
+        verify(userRepository, times(1)).findByEmail(anyString())
     }
 
     @Test
     fun `when user is found and password is correct user should be returned`() {
-        `when`(userRepository.getByEmail(anyString())).thenReturn(mockedUser)
+        `when`(userRepository.findByEmail(anyString())).thenReturn(mockedUser)
 
         val result = userService.login(mockedUser.email, mockedUser.password)
 
         result.success `should be` true
         result.message `should be equal to` "User with email ${mockedUser.email} successfully logged in"
 
-        verify(userRepository, times(1)).getByEmail(anyString())
+        verify(userRepository, times(1)).findByEmail(anyString())
     }
 }

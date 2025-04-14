@@ -1,6 +1,7 @@
 package fipu.diplomski.dmaglica.controller
 
-import fipu.diplomski.dmaglica.model.UpdateVenueRequest
+import fipu.diplomski.dmaglica.model.request.CreateVenueRequest
+import fipu.diplomski.dmaglica.model.request.UpdateVenueRequest
 import fipu.diplomski.dmaglica.service.VenueService
 import fipu.diplomski.dmaglica.util.Paths
 import org.springframework.web.bind.annotation.*
@@ -42,12 +43,8 @@ class VenueController(
 
     @PostMapping(Paths.CREATE_VENUE)
     fun createVenue(
-        @RequestParam("name") name: String,
-        @RequestParam("location") location: String,
-        @RequestParam("description") description: String,
-        @RequestParam("typeId") typeId: Int,
-        @RequestParam("workingHours") workingHours: String
-    ) = venueService.create(name, location, description, typeId, workingHours)
+        @RequestBody request: CreateVenueRequest,
+    ) = venueService.create(request)
 
     @PostMapping(Paths.UPLOAD_VENUE_IMAGE)
     fun uploadVenueImage(
