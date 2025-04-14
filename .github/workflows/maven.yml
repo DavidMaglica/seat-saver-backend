@@ -33,6 +33,8 @@ jobs:
         cache: maven
     - name: Build and Test with Maven
       run: mvn clean install
+    - name: Submit dependency graph
+      uses: advanced-security/maven-dependency-submission-action@v4
 
     # Optional: Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive
     - name: Update dependency graph
