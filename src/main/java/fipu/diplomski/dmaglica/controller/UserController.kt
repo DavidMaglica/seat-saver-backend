@@ -74,6 +74,6 @@ class UserController(private val userService: UserService) {
     fun deleteUser(@RequestParam("email") email: String): BasicResponse = userService.delete(email)
 
     @GetMapping(Paths.GET_USER)
-    fun getUser(@RequestParam email: String): User = userService.getUser(email)
+    fun getUser(@RequestParam("email") email: String): User = userService.getUser(email)
 
 }
