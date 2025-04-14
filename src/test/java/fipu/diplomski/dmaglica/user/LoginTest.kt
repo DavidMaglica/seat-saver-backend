@@ -1,8 +1,8 @@
 package fipu.diplomski.dmaglica.user
 
+import org.amshove.kluent.`should be`
 import org.amshove.kluent.`should be equal to`
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.*
@@ -13,34 +13,42 @@ import org.springframework.test.context.ActiveProfiles
 @ActiveProfiles("test")
 class LoginTest : UserServiceTest() {
 
+    companion object {
+        const val WRONG_PASSWORD = "wrongPassword"
+        const val WRONG_EMAIL = "wrongEmail@email.com"
+    }
+
     @Test
-    fun `should return BasicResponse with success false when user is not found`() {
-        `when`(userRepository.getByEmail(anyString())).thenReturn(null)
+    fun `should return early when user not found`() {
+        `when`(userRepository.findByEmail(anyString())).thenReturn(null)
 
-        val response = userService.login("wrongEmail@email.com", "wrongPassword")
+        val result = userService.login(WRONG_EMAIL, mockedUser.password)
 
-        response.success `should be equal to` false
-        response.message `should be equal to` "User with email wrongEmail@email.com does not exist"
+        result.success `should be` false
+        result.message `should be equal to` "User with email $WRONG_EMAIL does not exist"
 
         verify(userRepository, times(1)).getByEmail(anyString())
     }
 
     @Test
-    fun `should throw SQLException when getByEmail throws`() {
-        `when`(userRepository.getByEmail(anyString())).thenThrow(RuntimeException())
+    fun `should return early if wrong password`() {
+        `when`(userRepository.getByEmail(anyString())).thenReturn(mockedUser)
 
-        assertThrows<RuntimeException> { userService.login(mockedUser.email, mockedUser.password) }
+        val result = userService.login(mockedUser.email, WRONG_PASSWORD)
+
+        result.success `should be` false
+        result.message `should be equal to` "Incorrect password"
 
         verify(userRepository, times(1)).getByEmail(anyString())
     }
 
     @Test
-    fun `when user is found correct user should be returned`() {
-        `when`(userRepository.getByEmail(mockedUser.email)).thenReturn(mockedUser)
+    fun `when user is found and password is correct user should be returned`() {
+        `when`(userRepository.getByEmail(anyString())).thenReturn(mockedUser)
 
         val result = userService.login(mockedUser.email, mockedUser.password)
 
-        result.success `should be equal to` true
+        result.success `should be` true
         result.message `should be equal to` "User with email ${mockedUser.email} successfully logged in"
 
         verify(userRepository, times(1)).getByEmail(anyString())

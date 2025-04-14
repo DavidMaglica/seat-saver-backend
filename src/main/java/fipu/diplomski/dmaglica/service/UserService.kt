@@ -19,7 +19,7 @@ class UserService(
     @Transactional
     fun signup(email: String, username: String, password: String): BasicResponse {
         userRepository.getByEmail(email)?.let {
-            return BasicResponse(success = false, message = "User with email $email already exists")
+            return BasicResponse(false, "User with email $email already exists")
         }
 
         val user = UserEntity().also {
@@ -32,9 +32,9 @@ class UserService(
 
         val userNotificationOptions = NotificationOptionsEntity().also {
             it.userId = user.id
-            it.locationServicesTurnedOn = false
-            it.pushNotificationsTurnedOn = false
-            it.emailNotificationsTurnedOn = false
+            it.locationServicesEnabled = false
+            it.pushNotificationsEnabled = false
+            it.emailNotificationsEnabled = false
         }
 
         dbActionWithTryCatch("Error while saving user with email $email") {
@@ -42,15 +42,19 @@ class UserService(
             notificationOptionsRepository.save(userNotificationOptions)
         }
 
-        return BasicResponse(success = true, message = "User with email $email successfully created")
+        return BasicResponse(true, "User with email $email successfully created")
     }
 
     @Transactional(readOnly = true)
     fun login(email: String, password: String): BasicResponse {
-        userRepository.getByEmail(email)
-            ?: return BasicResponse(success = false, message = "User with email $email does not exist")
+        val user = userRepository.getByEmail(email)
+            ?: return BasicResponse(false, "User with email $email does not exist")
 
-        return BasicResponse(success = true, message = "User with email $email successfully logged in")
+        if (user.password.lowercase() != password.lowercase()) {
+            return BasicResponse(false, "Incorrect password")
+        }
+
+        return BasicResponse(true, "User with email $email successfully logged in")
     }
 
     @Transactional(readOnly = true)
@@ -60,9 +64,9 @@ class UserService(
         val notificationOptions = notificationOptionsRepository.getByUserId(user.id)
 
         return NotificationOptions(
-            pushNotificationsTurnedOn = notificationOptions.pushNotificationsTurnedOn,
-            emailNotificationsTurnedOn = notificationOptions.emailNotificationsTurnedOn,
-            locationServicesTurnedOn = notificationOptions.locationServicesTurnedOn,
+            pushNotificationsTurnedOn = notificationOptions.pushNotificationsEnabled,
+            emailNotificationsTurnedOn = notificationOptions.emailNotificationsEnabled,
+            locationServicesTurnedOn = notificationOptions.locationServicesEnabled,
         )
     }
 
@@ -86,7 +90,7 @@ class UserService(
             userRepository.save(user)
         }
 
-        return BasicResponse(success = true, message = "Email for user with email $email updated to $newEmail")
+        return BasicResponse(true, "Email for user with email $email updated to $newEmail")
     }
 
     @Transactional
@@ -98,7 +102,7 @@ class UserService(
             userRepository.save(user)
         }
 
-        return BasicResponse(success = true, message = "Username for user with email $email successfully updated")
+        return BasicResponse(true, "Username for user with email $email successfully updated")
     }
 
     @Transactional
@@ -110,7 +114,7 @@ class UserService(
             userRepository.save(user)
         }
 
-        return BasicResponse(success = true, message = "Password for user with email $email successfully updated")
+        return BasicResponse(true, "Password for user with email $email successfully updated")
     }
 
     @Transactional
@@ -124,16 +128,16 @@ class UserService(
 
         val notificationOptions = notificationOptionsRepository.getByUserId(user.id)
 
-        notificationOptions.pushNotificationsTurnedOn = pushNotificationsTurnedOn
-        notificationOptions.emailNotificationsTurnedOn = emailNotificationsTurnedOn
-        notificationOptions.locationServicesTurnedOn = locationServicesTurnedOn
+        notificationOptions.pushNotificationsEnabled = pushNotificationsTurnedOn
+        notificationOptions.emailNotificationsEnabled = emailNotificationsTurnedOn
+        notificationOptions.locationServicesEnabled = locationServicesTurnedOn
         dbActionWithTryCatch("Error while updating notification options for user with email $email") {
             notificationOptionsRepository.save(notificationOptions)
         }
 
         return BasicResponse(
-            success = true,
-            message = "Notification options for user with email $email successfully updated"
+            true,
+            "Notification options for user with email $email successfully updated"
         )
     }
 
@@ -147,7 +151,7 @@ class UserService(
             userRepository.save(user)
         }
 
-        return BasicResponse(success = true, message = "Location for user with email $email successfully updated")
+        return BasicResponse(true, "Location for user with email $email successfully updated")
     }
 
     @Transactional
@@ -158,7 +162,7 @@ class UserService(
             userRepository.deleteById(user.id)
         }
 
-        return BasicResponse(success = true, message = "User with email $email successfully deleted")
+        return BasicResponse(true, "User with email $email successfully deleted")
     }
 
     @Transactional(readOnly = true)
@@ -167,9 +171,9 @@ class UserService(
 
         val notificationOptions = notificationOptionsRepository.getByUserId(user.id).let {
             NotificationOptions(
-                pushNotificationsTurnedOn = it.pushNotificationsTurnedOn,
-                emailNotificationsTurnedOn = it.emailNotificationsTurnedOn,
-                locationServicesTurnedOn = it.locationServicesTurnedOn,
+                pushNotificationsTurnedOn = it.pushNotificationsEnabled,
+                emailNotificationsTurnedOn = it.emailNotificationsEnabled,
+                locationServicesTurnedOn = it.locationServicesEnabled,
             )
         }
 

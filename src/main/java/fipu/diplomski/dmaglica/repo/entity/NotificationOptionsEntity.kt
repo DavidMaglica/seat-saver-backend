@@ -11,10 +11,10 @@ class NotificationOptionsEntity {
 
     var userId: Int = 0
 
-    var pushNotificationsTurnedOn = false
+    var pushNotificationsEnabled = false
 
-    var emailNotificationsTurnedOn = false
+    var emailNotificationsEnabled = false
 
-    var locationServicesTurnedOn = false
+    var locationServicesEnabled = false
 
 }

@@ -8,6 +8,7 @@ import fipu.diplomski.dmaglica.repo.entity.UserEntity
 import fipu.diplomski.dmaglica.service.UserService
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.ArgumentCaptor
 import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.Mockito.reset
@@ -32,8 +33,12 @@ abstract class UserServiceTest {
         reset(userRepository, notificationOptionsRepository)
     }
 
+    protected val userEntityArgumentCaptor: ArgumentCaptor<UserEntity> = ArgumentCaptor.forClass(UserEntity::class.java)
+    protected val notificationOptionsArgumentCaptor: ArgumentCaptor<NotificationOptionsEntity> =
+        ArgumentCaptor.forClass(NotificationOptionsEntity::class.java)
+
     protected val mockedUser: UserEntity = UserEntity().also {
-        it.id = 1
+        it.id = 0
         it.email = "user1@mail.com"
         it.username = "user1"
         it.password = "password"
@@ -43,9 +48,9 @@ abstract class UserServiceTest {
     }
 
     protected val mockedNotificationOptions: NotificationOptionsEntity = NotificationOptionsEntity().also {
-        it.userId = 1
-        it.locationServicesTurnedOn = false
-        it.pushNotificationsTurnedOn = false
-        it.emailNotificationsTurnedOn = false
+        it.userId = 0
+        it.locationServicesEnabled = false
+        it.pushNotificationsEnabled = false
+        it.emailNotificationsEnabled = false
     }
 }

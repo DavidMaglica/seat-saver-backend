@@ -1,13 +1,10 @@
 package fipu.diplomski.dmaglica.venue
 
-import fipu.diplomski.dmaglica.repo.entity.VenueEntity
-import fipu.diplomski.dmaglica.repo.entity.VenueRatingEntity
 import org.amshove.kluent.`should be`
 import org.amshove.kluent.`should be equal to`
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
@@ -18,11 +15,6 @@ import java.util.*
 @ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
 class RateVenueTest : VenueServiceTest() {
-
-    companion object {
-        private val updatedRatingCaptor = ArgumentCaptor.forClass(VenueRatingEntity::class.java)
-        private val updatedVenueCaptor = ArgumentCaptor.forClass(VenueEntity::class.java)
-    }
 
     @Test
     fun `should return early if rating is not valid`() {
@@ -67,7 +59,7 @@ class RateVenueTest : VenueServiceTest() {
     fun `should throw if saving updated rating fails`() {
         `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
         `when`(venueRatingRepository.findByVenueId(anyInt())).thenReturn(listOf(mockedRating))
-        `when`(venueRatingRepository.save(updatedRatingCaptor.capture())).thenThrow(RuntimeException())
+        `when`(venueRatingRepository.save(any())).thenThrow(RuntimeException())
 
         val exception = assertThrows<SQLException> {
             venueService.rate(mockedVenue.id, 3.0)
@@ -77,7 +69,7 @@ class RateVenueTest : VenueServiceTest() {
 
         verify(venueRepository, times(1)).findById(mockedVenue.id)
         verify(venueRatingRepository, times(1)).findByVenueId(mockedVenue.id)
-        verify(venueRatingRepository, times(1)).save(updatedRatingCaptor.capture())
+        verify(venueRatingRepository, times(1)).save(venueRatingArgumentCaptor.capture())
     }
 
     @Test
@@ -90,20 +82,20 @@ class RateVenueTest : VenueServiceTest() {
         response.success `should be` true
         response.message `should be equal to` "Venue with id ${mockedVenue.id} successfully rated with rating 3.0"
 
-        verify(venueRatingRepository).save(updatedRatingCaptor.capture())
-        val updatedRating = updatedRatingCaptor.value
+        verify(venueRatingRepository).save(venueRatingArgumentCaptor.capture())
+        val updatedRating = venueRatingArgumentCaptor.value
         updatedRating.venueId `should be equal to` mockedVenue.id
         updatedRating.rating `should be equal to` 3.0
 
-        verify(venueRepository).save(updatedVenueCaptor.capture())
-        val updatedVenue = updatedVenueCaptor.value
+        verify(venueRepository).save(venueArgumentCaptor.capture())
+        val updatedVenue = venueArgumentCaptor.value
         updatedVenue.id `should be equal to` mockedVenue.id
         updatedVenue.averageRating `should be equal to` 3.0
 
         verify(venueRepository, times(1)).findById(mockedVenue.id)
         verify(venueRatingRepository, times(1)).findByVenueId(mockedVenue.id)
-        verify(venueRatingRepository, times(1)).save(updatedRatingCaptor.capture())
-        verify(venueRepository, times(1)).save(updatedVenueCaptor.capture())
+        verify(venueRatingRepository, times(1)).save(venueRatingArgumentCaptor.capture())
+        verify(venueRepository, times(1)).save(venueArgumentCaptor.capture())
     }
 
     @Test
@@ -116,20 +108,20 @@ class RateVenueTest : VenueServiceTest() {
         response.success `should be` true
         response.message `should be equal to` "Venue with id ${mockedVenue.id} successfully rated with rating 5.0"
 
-        verify(venueRatingRepository).save(updatedRatingCaptor.capture())
-        val updatedRating = updatedRatingCaptor.value
+        verify(venueRatingRepository).save(venueRatingArgumentCaptor.capture())
+        val updatedRating = venueRatingArgumentCaptor.value
         updatedRating.venueId `should be equal to` mockedVenue.id
         updatedRating.rating `should be equal to` 5.0
 
-        verify(venueRepository).save(updatedVenueCaptor.capture())
-        val updatedVenue = updatedVenueCaptor.value
+        verify(venueRepository).save(venueArgumentCaptor.capture())
+        val updatedVenue = venueArgumentCaptor.value
         updatedVenue.id `should be equal to` mockedVenue.id
         updatedVenue.averageRating `should be equal to` 4.5
 
         verify(venueRepository, times(1)).findById(mockedVenue.id)
         verify(venueRatingRepository, times(1)).findByVenueId(mockedVenue.id)
-        verify(venueRatingRepository, times(1)).save(updatedRatingCaptor.capture())
-        verify(venueRepository, times(1)).save(updatedVenueCaptor.capture())
+        verify(venueRatingRepository, times(1)).save(venueRatingArgumentCaptor.capture())
+        verify(venueRepository, times(1)).save(venueArgumentCaptor.capture())
     }
 
 }

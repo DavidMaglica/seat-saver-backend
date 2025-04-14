@@ -31,7 +31,15 @@ class SignupTest : UserServiceTest() {
         `when`(userRepository.getByEmail(anyString())).thenReturn(null)
         `when`(userRepository.save(any())).thenThrow(RuntimeException("Error while saving user"))
 
-        assertThrows<SQLException> { userService.signup(mockedUser.email, mockedUser.username, mockedUser.password) }
+        val exception = assertThrows<SQLException> {
+            userService.signup(
+                mockedUser.email,
+                mockedUser.username,
+                mockedUser.password
+            )
+        }
+
+        exception.message `should be equal to` "Error while saving user with email ${mockedUser.email}"
 
         verify(userRepository, times(1)).getByEmail(mockedUser.email)
         verify(userRepository, times(1)).save(any())
@@ -44,7 +52,15 @@ class SignupTest : UserServiceTest() {
         `when`(userRepository.save(any())).thenReturn(mockedUser)
         `when`(notificationOptionsRepository.save(any())).thenThrow(RuntimeException("Error while saving notification options"))
 
-        assertThrows<SQLException> { userService.signup(mockedUser.email, mockedUser.username, mockedUser.password) }
+        val exception = assertThrows<SQLException> {
+            userService.signup(
+                mockedUser.email,
+                mockedUser.username,
+                mockedUser.password
+            )
+        }
+
+        exception.message `should be equal to` "Error while saving user with email ${mockedUser.email}"
 
         verify(userRepository, times(1)).getByEmail(mockedUser.email)
         verify(userRepository, times(1)).save(any())
@@ -61,6 +77,20 @@ class SignupTest : UserServiceTest() {
 
         response.success `should be equal to` true
         response.message `should be equal to` "User with email ${mockedUser.email} successfully created"
+
+        verify(userRepository).save(userEntityArgumentCaptor.capture())
+        verify(notificationOptionsRepository).save(notificationOptionsArgumentCaptor.capture())
+        val newUser = userEntityArgumentCaptor.value
+        val newNotificationOptions = notificationOptionsArgumentCaptor.value
+
+        newUser.email `should be equal to` mockedUser.email
+        newUser.username `should be equal to` mockedUser.username
+        newUser.password `should be equal to` mockedUser.password
+        newUser.roleId `should be equal to` mockedUser.roleId
+        newNotificationOptions.userId `should be equal to` mockedUser.id
+        newNotificationOptions.emailNotificationsEnabled `should be equal to` mockedNotificationOptions.emailNotificationsEnabled
+        newNotificationOptions.pushNotificationsEnabled `should be equal to` mockedNotificationOptions.pushNotificationsEnabled
+        newNotificationOptions.locationServicesEnabled `should be equal to` mockedNotificationOptions.locationServicesEnabled
 
         verify(userRepository, times(1)).getByEmail(mockedUser.email)
         verify(userRepository, times(1)).save(any())

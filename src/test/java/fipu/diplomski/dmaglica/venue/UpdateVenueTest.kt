@@ -7,7 +7,6 @@ import org.amshove.kluent.`should be equal to`
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.ArgumentCaptor
 import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.test.context.ActiveProfiles
@@ -17,10 +16,6 @@ import java.util.*
 @ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
 class UpdateVenueTest : VenueServiceTest() {
-
-    companion object {
-        private val updatedVenueCaptor = ArgumentCaptor.forClass(VenueEntity::class.java)
-    }
 
     @Test
     fun `should throw if venue not found`() {
@@ -102,8 +97,8 @@ class UpdateVenueTest : VenueServiceTest() {
             UpdateVenueRequest(name = newVenue.name, description = newVenue.description)
         )
 
-        verify(venueRepository).save(updatedVenueCaptor.capture())
-        val savedVenue = updatedVenueCaptor.value
+        verify(venueRepository).save(venueArgumentCaptor.capture())
+        val savedVenue = venueArgumentCaptor.value
 
         result.success `should be equal to` true
         result.message `should be equal to` "Venue updated successfully"
@@ -140,8 +135,8 @@ class UpdateVenueTest : VenueServiceTest() {
             )
         )
 
-        verify(venueRepository).save(updatedVenueCaptor.capture())
-        val savedVenue = updatedVenueCaptor.value
+        verify(venueRepository).save(venueArgumentCaptor.capture())
+        val savedVenue = venueArgumentCaptor.value
 
         result.success `should be equal to` true
         result.message `should be equal to` "Venue updated successfully"

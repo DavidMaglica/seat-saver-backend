@@ -24,7 +24,15 @@ class UpdateLocationTest : UserServiceTest() {
     fun `should throw if user not found`() {
         `when`(userRepository.findByEmail(anyString())).thenReturn(null)
 
-        assertThrows<UserNotFoundException> { userService.updateLocation(mockedUser.email, NEW_LATITUDE, NEW_LONGITUDE) }
+        val exception = assertThrows<UserNotFoundException> {
+            userService.updateLocation(
+                mockedUser.email,
+                NEW_LATITUDE,
+                NEW_LONGITUDE
+            )
+        }
+
+        exception.message `should be equal to` "User with email ${mockedUser.email} does not exist"
     }
 
     @Test
@@ -32,7 +40,10 @@ class UpdateLocationTest : UserServiceTest() {
         `when`(userRepository.findByEmail(anyString())).thenReturn(mockedUser)
         `when`(userRepository.save(any())).thenThrow(RuntimeException())
 
-        assertThrows<SQLException> { userService.updateLocation(mockedUser.email, NEW_LATITUDE, NEW_LONGITUDE) }
+        val exception =
+            assertThrows<SQLException> { userService.updateLocation(mockedUser.email, NEW_LATITUDE, NEW_LONGITUDE) }
+
+        exception.message `should be equal to` "Error while updating location for user with email ${mockedUser.email}"
 
         verify(userRepository, times(1)).findByEmail(mockedUser.email)
     }
@@ -45,6 +56,11 @@ class UpdateLocationTest : UserServiceTest() {
 
         result.success `should be` true
         result.message `should be equal to` "Location for user with email ${mockedUser.email} successfully updated"
+
+        verify(userRepository).save(userEntityArgumentCaptor.capture())
+        val updatedUser = userEntityArgumentCaptor.value
+        updatedUser.lastKnownLatitude `should be equal to` NEW_LATITUDE
+        updatedUser.lastKnownLongitude `should be equal to` NEW_LONGITUDE
 
         verify(userRepository, times(1)).findByEmail(mockedUser.email)
         verify(userRepository, times(1)).save(any())

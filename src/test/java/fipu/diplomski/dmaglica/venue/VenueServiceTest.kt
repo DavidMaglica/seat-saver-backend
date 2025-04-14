@@ -9,6 +9,7 @@ import fipu.diplomski.dmaglica.service.ImageService
 import fipu.diplomski.dmaglica.service.VenueService
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.ArgumentCaptor
 import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.Mockito.reset
@@ -38,6 +39,9 @@ abstract class VenueServiceTest {
     fun tearDown() {
         reset(venueRepository, venueRatingRepository, venueTypeRepository)
     }
+
+    protected val venueArgumentCaptor = ArgumentCaptor.forClass(VenueEntity::class.java)
+    protected val venueRatingArgumentCaptor = ArgumentCaptor.forClass(VenueRatingEntity::class.java)
 
     protected val mockedVenue = VenueEntity().also {
         it.id = 1

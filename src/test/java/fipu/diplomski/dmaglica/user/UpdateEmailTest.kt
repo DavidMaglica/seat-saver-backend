@@ -24,7 +24,9 @@ class UpdateEmailTest : UserServiceTest() {
     fun `should throw if user not found`() {
         `when`(userRepository.findByEmail(anyString())).thenReturn(null)
 
-        assertThrows<UserNotFoundException> { userService.updateEmail(OLD_EMAIL, NEW_EMAIL) }
+        val exception = assertThrows<UserNotFoundException> { userService.updateEmail(OLD_EMAIL, NEW_EMAIL) }
+
+        exception.message `should be equal to` "User with email $OLD_EMAIL does not exist"
     }
 
     @Test
@@ -32,7 +34,9 @@ class UpdateEmailTest : UserServiceTest() {
         `when`(userRepository.findByEmail(anyString())).thenReturn(mockedUser)
         `when`(userRepository.save(any())).thenThrow(RuntimeException())
 
-        assertThrows<SQLException> { userService.updateEmail(OLD_EMAIL, NEW_EMAIL) }
+        val exception = assertThrows<SQLException> { userService.updateEmail(OLD_EMAIL, NEW_EMAIL) }
+
+        exception.message `should be equal to` "Error while updating email for user with email $OLD_EMAIL"
 
         verify(userRepository, times(1)).findByEmail(anyString())
     }
@@ -45,6 +49,10 @@ class UpdateEmailTest : UserServiceTest() {
 
         result.success `should be` true
         result.message `should be equal to` "Email for user with email $OLD_EMAIL updated to $NEW_EMAIL"
+
+        verify(userRepository).save(userEntityArgumentCaptor.capture())
+        val updatedUser = userEntityArgumentCaptor.value
+        updatedUser.email `should be equal to` NEW_EMAIL
 
         verify(userRepository, times(1)).findByEmail(OLD_EMAIL)
         verify(userRepository, times(1)).save(any())

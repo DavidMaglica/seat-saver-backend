@@ -18,7 +18,9 @@ class DeleteUserTest : UserServiceTest() {
     fun `should throw if user not found`() {
         `when`(userRepository.findByEmail(mockedUser.email)).thenReturn(null)
 
-        assertThrows<UserNotFoundException> { userService.delete(mockedUser.email) }
+        val exception = assertThrows<UserNotFoundException> { userService.delete(mockedUser.email) }
+
+        exception.message `should be equal to` "User with email ${mockedUser.email} does not exist"
     }
 
     @Test
