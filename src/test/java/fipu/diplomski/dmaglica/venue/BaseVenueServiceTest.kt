@@ -18,7 +18,7 @@ import org.springframework.test.context.ActiveProfiles
 
 @ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
-abstract class VenueServiceTest {
+abstract class BaseVenueServiceTest {
 
     @Mock
     protected lateinit var venueRepository: VenueRepository
@@ -40,8 +40,9 @@ abstract class VenueServiceTest {
         reset(venueRepository, venueRatingRepository, venueTypeRepository)
     }
 
-    protected val venueArgumentCaptor = ArgumentCaptor.forClass(VenueEntity::class.java)
-    protected val venueRatingArgumentCaptor = ArgumentCaptor.forClass(VenueRatingEntity::class.java)
+    protected val venueArgumentCaptor: ArgumentCaptor<VenueEntity> = ArgumentCaptor.forClass(VenueEntity::class.java)
+    protected val venueRatingArgumentCaptor: ArgumentCaptor<VenueRatingEntity> =
+        ArgumentCaptor.forClass(VenueRatingEntity::class.java)
 
     protected val mockedVenue = VenueEntity().also {
         it.id = 1

@@ -15,7 +15,7 @@ import java.util.*
 
 @ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
-class UpdateVenueTest : VenueServiceTest() {
+class UpdateVenueTest : BaseVenueServiceTest() {
 
     @Test
     fun `should throw if venue not found`() {

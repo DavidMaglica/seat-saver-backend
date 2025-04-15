@@ -13,7 +13,7 @@ import java.sql.SQLException
 
 @ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
-class UpdateNotificationOptionsTest : UserServiceTest() {
+class UpdateNotificationOptionsTest : BaseUserServiceTest() {
 
     @Test
     fun `should throw if user not found`() {
