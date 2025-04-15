@@ -27,22 +27,21 @@ class UserService(
         }
 
         val user = UserEntity().also {
-            it.id
             it.email = email
             it.username = username
             it.password = password
             it.roleId = Role.USER.ordinal
         }
 
-        val userNotificationOptions = NotificationOptionsEntity().also {
-            it.userId = user.id
-            it.locationServicesEnabled = false
-            it.pushNotificationsEnabled = false
-            it.emailNotificationsEnabled = false
-        }
-
         dbActionWithTryCatch("Error while saving user with email $email") {
             userRepository.save(user)
+
+            val userNotificationOptions = NotificationOptionsEntity().also {
+                it.userId = user.id
+                it.locationServicesEnabled = false
+                it.pushNotificationsEnabled = false
+                it.emailNotificationsEnabled = false
+            }
             notificationOptionsRepository.save(userNotificationOptions)
         }
 
