@@ -77,9 +77,6 @@ class ReservationService(
     @Transactional
     fun delete(email: String, reservationId: Int): BasicResponse {
         userRepository.findByEmail(email) ?: throw UserNotFoundException("User with email $email not found")
-        venueRepository.findById(reservationId).orElseThrow {
-            VenueNotFoundException("Venue with id ${reservationId} not found")
-        }
 
         dbActionWithTryCatch("Error while deleting reservation for user with email $email") {
             reservationRepository.deleteById(reservationId)
