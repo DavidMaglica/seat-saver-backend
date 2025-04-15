@@ -30,7 +30,7 @@ class Paths {
 
         const val RESERVATION = "/reservation"
         const val CREATE_RESERVATION = "/create"
-        const val GET_RESERVATION = "/get"
+        const val GET_RESERVATIONS = "/get-all"
         const val UPDATE_RESERVATION = "/update"
         const val DELETE_RESERVATION = "/delete"
 

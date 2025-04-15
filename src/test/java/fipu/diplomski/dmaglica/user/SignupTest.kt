@@ -11,7 +11,7 @@ import java.sql.SQLException
 
 @ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
-class SignupTest : UserServiceTest() {
+class SignupTest : BaseUserServiceTest() {
 
     @Test
     fun `should return early if user already exists`() {

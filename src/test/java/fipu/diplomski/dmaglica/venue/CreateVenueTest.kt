@@ -13,7 +13,7 @@ import java.sql.SQLException
 
 @ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
-class CreateVenueTest : VenueServiceTest() {
+class CreateVenueTest : BaseVenueServiceTest() {
 
     @Test
     fun `should throw if unable to save venue`() {

@@ -15,7 +15,7 @@ import java.sql.SQLException
 
 @ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
-class UpdateUsernameTest : UserServiceTest() {
+class UpdateUsernameTest : BaseUserServiceTest() {
     companion object {
         const val NEW_USERNAME = "newTestUsername"
     }

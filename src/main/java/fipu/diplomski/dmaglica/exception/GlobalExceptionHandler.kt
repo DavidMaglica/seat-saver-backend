@@ -38,4 +38,16 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
         logger.error("Image data exception: ${ex.message}. Cause: ${ex.cause}")
         return ResponseEntity.internalServerError().body("Exception while handling image data: ${ex.message}")
     }
+
+    @ExceptionHandler(VenueNotFoundException::class)
+    fun handleVenueNotFoundException(ex: VenueNotFoundException): ResponseEntity<String> {
+        logger.error("Venue not found: ${ex.message}. Cause: ${ex.cause}")
+        return ResponseEntity.internalServerError().body("Venue not found: ${ex.message}")
+    }
+
+    @ExceptionHandler(ReservationNotFoundException::class)
+    fun handleReservationNotFoundException(ex: ReservationNotFoundException): ResponseEntity<String> {
+        logger.error("Reservation not found: ${ex.message}. Cause: ${ex.cause}")
+        return ResponseEntity.internalServerError().body("Reservation not found: ${ex.message}")
+    }
 }

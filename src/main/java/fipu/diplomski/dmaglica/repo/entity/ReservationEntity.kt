@@ -13,7 +13,7 @@ data class ReservationEntity(
 
     var venueId: Int = 0,
 
-    var datetime: Long = 0L,
+    var datetime: String = "",
 
     var numberOfGuests: Int = 0,
 )

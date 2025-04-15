@@ -3,4 +3,6 @@ package fipu.diplomski.dmaglica.repo
 import fipu.diplomski.dmaglica.repo.entity.ReservationEntity
 import org.springframework.data.jpa.repository.JpaRepository
 
-interface ReservationRepository : JpaRepository<ReservationEntity, Int>
+interface ReservationRepository : JpaRepository<ReservationEntity, Int> {
+    fun findByUserId(userId: Int): List<ReservationEntity>
+}

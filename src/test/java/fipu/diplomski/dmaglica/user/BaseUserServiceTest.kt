@@ -17,7 +17,7 @@ import org.springframework.test.context.ActiveProfiles
 
 @ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
-abstract class UserServiceTest {
+abstract class BaseUserServiceTest {
 
     @Mock
     protected lateinit var userRepository: UserRepository
