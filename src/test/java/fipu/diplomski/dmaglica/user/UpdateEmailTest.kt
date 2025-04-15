@@ -13,7 +13,7 @@ import java.sql.SQLException
 
 @ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
-class UpdateEmailTest : UserServiceTest() {
+class UpdateEmailTest : BaseUserServiceTest() {
 
     companion object {
         const val NEW_EMAIL = "test@test.com"

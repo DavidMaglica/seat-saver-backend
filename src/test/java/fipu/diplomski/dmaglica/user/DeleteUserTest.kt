@@ -12,7 +12,7 @@ import java.sql.SQLException
 
 @ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
-class DeleteUserTest : UserServiceTest() {
+class DeleteUserTest : BaseUserServiceTest() {
 
     @Test
     fun `should throw if user not found`() {

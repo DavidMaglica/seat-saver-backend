@@ -11,7 +11,7 @@ import org.springframework.test.context.ActiveProfiles
 
 @ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
-class LoginTest : UserServiceTest() {
+class LoginTest : BaseUserServiceTest() {
 
     companion object {
         const val WRONG_PASSWORD = "wrongPassword"

@@ -12,7 +12,7 @@ import java.sql.SQLException
 
 @ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
-class DeleteVenueTest : VenueServiceTest() {
+class DeleteVenueTest : BaseVenueServiceTest() {
 
     @Test
     fun `should throw when venue does not exist`() {

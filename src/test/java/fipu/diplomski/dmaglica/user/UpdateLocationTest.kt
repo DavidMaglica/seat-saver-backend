@@ -13,7 +13,7 @@ import java.sql.SQLException
 
 @ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
-class UpdateLocationTest : UserServiceTest() {
+class UpdateLocationTest : BaseUserServiceTest() {
 
     companion object {
         const val NEW_LATITUDE = 0.0

@@ -13,7 +13,7 @@ import java.sql.SQLException
 
 @ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
-class UpdatePasswordTest : UserServiceTest() {
+class UpdatePasswordTest : BaseUserServiceTest() {
 
     companion object {
         const val NEW_PASSWORD = "password2"

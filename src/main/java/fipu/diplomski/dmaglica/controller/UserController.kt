@@ -25,32 +25,32 @@ class UserController(private val userService: UserService) {
         @RequestParam("password") password: String
     ): BasicResponse = userService.login(email, password)
 
-    @GetMapping(Paths.GET_USER_NOTIFICATION_OPTIONS)
+    @GetMapping(Paths.GET_NOTIFICATION_OPTIONS)
     fun getUserNotificationOptions(@RequestParam("email") email: String): NotificationOptions =
         userService.getNotificationOptions(email)
 
-    @GetMapping(Paths.GET_USER_LOCATION)
+    @GetMapping(Paths.GET_LOCATION)
     fun getUserLocation(@RequestParam("email") email: String): UserLocation? = userService.getLocation(email)
 
-    @PatchMapping(Paths.UPDATE_USER_EMAIL)
+    @PatchMapping(Paths.UPDATE_EMAIL)
     fun updateUserEmail(
         @RequestParam("email") email: String,
         @RequestParam("newEmail") newEmail: String
     ): BasicResponse = userService.updateEmail(email, newEmail)
 
-    @PatchMapping(Paths.UPDATE_USER_USERNAME)
+    @PatchMapping(Paths.UPDATE_USERNAME)
     fun updateUserUsername(
         @RequestParam("email") email: String,
         @RequestParam("newUsername") newUsername: String
     ): BasicResponse = userService.updateUsername(email, newUsername)
 
-    @PatchMapping(Paths.UPDATE_USER_PASSWORD)
+    @PatchMapping(Paths.UPDATE_PASSWORD)
     fun updateUserPassword(
         @RequestParam("email") email: String,
         @RequestParam("newPassword") newPassword: String
     ): BasicResponse = userService.updatePassword(email, newPassword)
 
-    @PatchMapping(Paths.UPDATE_USER_NOTIFICATION_OPTIONS)
+    @PatchMapping(Paths.UPDATE_NOTIFICATION_OPTIONS)
     fun updateUserNotificationOptions(
         @RequestParam("email") email: String,
         @RequestParam("pushNotificationsTurnedOn") pushNotificationsTurnedOn: Boolean,
@@ -63,7 +63,7 @@ class UserController(private val userService: UserService) {
         locationServicesTurnedOn
     )
 
-    @PatchMapping(Paths.UPDATE_USER_LOCATION)
+    @PatchMapping(Paths.UPDATE_LOCATION)
     fun updateUserLocation(
         @RequestParam("email") email: String,
         @RequestParam("latitude") latitude: Double,

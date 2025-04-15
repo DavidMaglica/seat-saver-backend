@@ -14,7 +14,7 @@ import java.util.*
 
 @ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
-class RateVenueTest : VenueServiceTest() {
+class RateVenueTest : BaseVenueServiceTest() {
 
     @Test
     fun `should return early if rating is not valid`() {
