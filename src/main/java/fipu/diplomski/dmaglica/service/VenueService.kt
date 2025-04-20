@@ -1,6 +1,5 @@
 package fipu.diplomski.dmaglica.service
 
-import fipu.diplomski.dmaglica.model.data.Venue
 import fipu.diplomski.dmaglica.model.request.CreateVenueRequest
 import fipu.diplomski.dmaglica.model.request.UpdateVenueRequest
 import fipu.diplomski.dmaglica.model.response.BasicResponse
@@ -9,6 +8,7 @@ import fipu.diplomski.dmaglica.repo.VenueRepository
 import fipu.diplomski.dmaglica.repo.VenueTypeRepository
 import fipu.diplomski.dmaglica.repo.entity.VenueEntity
 import fipu.diplomski.dmaglica.repo.entity.VenueRatingEntity
+import fipu.diplomski.dmaglica.repo.entity.VenueTypeEntity
 import fipu.diplomski.dmaglica.util.dbActionWithTryCatch
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -24,18 +24,8 @@ class VenueService(
 ) {
 
     @Transactional(readOnly = true)
-    fun get(venueId: Int): Venue {
-        val venue = venueRepository.findById(venueId).orElseThrow { SQLException("Venue wit id: $venueId not found.") }
-        return Venue(
-            id = venue.id,
-            name = venue.name,
-            location = venue.location,
-            workingHours = venue.workingHours,
-            rating = venue.averageRating,
-            venueTypeId = venue.venueTypeId,
-            description = venue.description
-        )
-    }
+    fun get(venueId: Int): VenueEntity =
+        venueRepository.findById(venueId).orElseThrow { SQLException("Venue wit id: $venueId not found.") }
 
     @Transactional(readOnly = true)
     fun getAll(): MutableList<VenueEntity> = venueRepository.findAll()
@@ -45,7 +35,7 @@ class VenueService(
         venueTypeRepository.getReferenceById(typeId).type
 
     @Transactional(readOnly = true)
-    fun getAllTypes(): List<String> = venueTypeRepository.findAll().map { it.type }
+    fun getAllTypes(): List<VenueTypeEntity> = venueTypeRepository.findAll()
 
     fun getVenueImages(venueId: Int, venueName: String) = imageService.getVenueImages(venueId, venueName)
 
@@ -102,7 +92,7 @@ class VenueService(
 
     @Transactional
     fun rate(venueId: Int, userRating: Double): BasicResponse {
-        if (userRating < 1.0 || userRating > 5.0) return BasicResponse(false, "Rating must be between 1 and 5")
+        if (userRating < 0.5 || userRating > 5.0) return BasicResponse(false, "Rating must be between 1 and 5")
 
         val venue = venueRepository.findById(venueId)
             .orElseThrow { SQLException("Venue with id $venueId not found") }

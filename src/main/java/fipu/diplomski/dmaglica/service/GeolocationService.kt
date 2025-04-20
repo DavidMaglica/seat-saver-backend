@@ -27,11 +27,10 @@ class GeolocationService(
             .build()
             .toUriString()
 
-        val response = restTemplate.getForObject(uri, Map::class.java)?.let {
+        restTemplate.getForObject(uri, Map::class.java)?.let {
             return it["city"] as String
         }
 
-        println("Response: $response")
         return "Latitude: $latitude, Longitude: $longitude"
     }
 
