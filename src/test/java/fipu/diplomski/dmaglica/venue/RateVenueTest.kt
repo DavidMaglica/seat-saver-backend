@@ -21,7 +21,7 @@ class RateVenueTest : BaseVenueServiceTest() {
         val response = venueService.rate(mockedVenue.id, 6.0)
 
         response.success `should be` false
-        response.message `should be equal to` "Rating must be between 1 and 5"
+        response.message `should be equal to` "Rating must be between 0.5 and 5"
 
         verifyNoInteractions(venueRatingRepository, venueRepository)
     }
