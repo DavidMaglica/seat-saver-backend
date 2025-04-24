@@ -92,7 +92,7 @@ class VenueService(
 
     @Transactional
     fun rate(venueId: Int, userRating: Double): BasicResponse {
-        if (userRating < 0.5 || userRating > 5.0) return BasicResponse(false, "Rating must be between 1 and 5")
+        if (userRating < 0.5 || userRating > 5.0) return BasicResponse(false, "Rating must be between 0.5 and 5")
 
         val venue = venueRepository.findById(venueId)
             .orElseThrow { SQLException("Venue with id $venueId not found") }
