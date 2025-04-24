@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS venue_types
     type VARCHAR(50) NOT NULL
 );
 
-INSERT INTO Venue_types (id, type)
+INSERT INTO venue_types (id, type)
 VALUES (1, 'italian'),
        (2, 'asian'),
        (3, 'gluten_free'),

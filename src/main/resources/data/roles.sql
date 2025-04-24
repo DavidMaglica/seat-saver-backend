@@ -4,6 +4,6 @@ Create Table IF NOT EXISTS roles
     role VARCHAR(50) NOT NULL
 );
 
-INSERT INTO Roles (id, role)
+INSERT INTO roles (id, role)
 VALUES (0, 'USER'),
        (1, 'OWNER');

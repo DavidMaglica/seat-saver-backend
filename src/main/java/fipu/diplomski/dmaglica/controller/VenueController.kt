@@ -2,6 +2,8 @@ package fipu.diplomski.dmaglica.controller
 
 import fipu.diplomski.dmaglica.model.request.CreateVenueRequest
 import fipu.diplomski.dmaglica.model.request.UpdateVenueRequest
+import fipu.diplomski.dmaglica.repo.entity.VenueEntity
+import fipu.diplomski.dmaglica.repo.entity.VenueTypeEntity
 import fipu.diplomski.dmaglica.service.VenueService
 import fipu.diplomski.dmaglica.util.Paths
 import org.springframework.web.bind.annotation.*
@@ -16,18 +18,18 @@ class VenueController(
     @GetMapping(Paths.GET_VENUE)
     fun getVenue(
         @RequestParam("venueId") venueId: Int,
-    ) = venueService.get(venueId)
+    ): VenueEntity = venueService.get(venueId)
 
     @GetMapping(Paths.GET_ALL_VENUES)
-    fun getAllVenues() = venueService.getAll()
+    fun getAllVenues(): MutableList<VenueEntity> = venueService.getAll()
 
     @GetMapping(Paths.GET_VENUE_TYPE)
     fun getVenueType(
         @RequestParam("typeId") typeId: Int,
-    ) = venueService.getType(typeId)
+    ): String = venueService.getType(typeId)
 
     @GetMapping(Paths.GET_ALL_VENUE_TYPES)
-    fun getAllVenueTypes() = venueService.getAllTypes()
+    fun getAllVenueTypes(): List<VenueTypeEntity> = venueService.getAllTypes()
 
     @GetMapping
     fun getVenueImages(
