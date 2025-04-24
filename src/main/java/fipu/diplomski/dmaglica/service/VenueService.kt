@@ -25,7 +25,7 @@ class VenueService(
 
     @Transactional(readOnly = true)
     fun get(venueId: Int): VenueEntity =
-        venueRepository.findById(venueId).orElseThrow { SQLException("Venue wit id: $venueId not found.") }
+        venueRepository.findById(venueId).orElseThrow { SQLException("Venue with id: $venueId not found.") }
 
     @Transactional(readOnly = true)
     fun getAll(): MutableList<VenueEntity> = venueRepository.findAll()
