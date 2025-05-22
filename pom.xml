@@ -46,7 +46,7 @@
         <kluent.version>1.73</kluent.version>
         <logback.version>1.5.18</logback.version>
         <xmlunit.version>2.10.1</xmlunit.version>
-        <tomcat.version>11.0.7</tomcat.version>
+        <klogging.version>0.9.4</klogging.version>
     </properties>
 
     <dependencies>
@@ -115,6 +115,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-core</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
         <!-- Spring end -->
 
         <!-- Misc start -->
@@ -128,6 +133,12 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-core</artifactId>
             <version>${logback.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.klogging</groupId>
+            <artifactId>klogging-jvm</artifactId>
+            <version>${klogging.version}</version>
         </dependency>
 
         <dependency>
@@ -146,11 +157,6 @@
             <artifactId>kluent</artifactId>
             <version>${kluent.version}</version>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.tomcat.embed</groupId>
-            <artifactId>tomcat-embed-core</artifactId>
-            <version>${tomcat.version}</version>
         </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>

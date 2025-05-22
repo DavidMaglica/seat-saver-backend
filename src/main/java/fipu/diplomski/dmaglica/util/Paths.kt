@@ -39,5 +39,8 @@ class Paths {
         const val FETCH_GEOLOCATION = "/fetch-geolocation"
         const val GET_GEOLOCATION = "/get-geolocation"
         const val GET_NEARBY_CITIES = "/get-nearby-cities"
+
+        const val SUPPORT = "/support"
+        const val SEND_EMAIL = "/send-email"
     }
 }
