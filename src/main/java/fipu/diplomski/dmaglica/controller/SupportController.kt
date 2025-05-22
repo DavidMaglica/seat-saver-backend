@@ -15,8 +15,8 @@ class SupportController(
 
     @PostMapping(Paths.SEND_EMAIL)
     fun sendEmail(
-        @RequestParam("receiver") receiver: String,
+        @RequestParam("userEmail") userEmail: String,
         @RequestParam("subject") subject: String,
         @RequestParam("body") body: String
-    ) = supportService.sendEmail(receiver, subject, body)
+    ) = supportService.sendEmail(userEmail, subject, body)
 }
