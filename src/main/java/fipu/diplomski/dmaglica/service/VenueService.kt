@@ -10,6 +10,7 @@ import fipu.diplomski.dmaglica.repo.entity.VenueEntity
 import fipu.diplomski.dmaglica.repo.entity.VenueRatingEntity
 import fipu.diplomski.dmaglica.repo.entity.VenueTypeEntity
 import fipu.diplomski.dmaglica.util.dbActionWithTryCatch
+import jakarta.persistence.EntityNotFoundException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
@@ -35,15 +36,13 @@ class VenueService(
     @Transactional(readOnly = true)
     fun getAll(): List<VenueEntity> {
         val venues: List<VenueEntity> = venueRepository.findAll()
+        val ratings: List<VenueRatingEntity> = venueRatingRepository.findAll()
+
+        val averageRatingById = ratings.groupBy { it.venueId }
+            .mapValues { (_, venueRatings) -> venueRatings.map { it.rating }.average() }
 
         for (venue in venues) {
-            val ratings = venueRatingRepository.findByVenueId(venue.id).filter { it.venueId == venue.id }
-            if (ratings.isNotEmpty()) {
-                val averageRating = ratings.map { it.rating }.average()
-                venue.averageRating = averageRating
-            } else {
-                venue.averageRating = 0.0
-            }
+            venue.averageRating = averageRatingById[venue.id] ?: 0.0
         }
 
         return venues
@@ -55,7 +54,7 @@ class VenueService(
 
     @Transactional(readOnly = true)
     fun getVenueRating(venueId: Int): Double = venueRepository.findById(venueId)
-        .orElseThrow { SQLException("Venue with id: $venueId not found.") }.averageRating
+        .orElseThrow { EntityNotFoundException("Venue with id: $venueId not found.") }.averageRating
 
     @Transactional(readOnly = true)
     fun getAllTypes(): List<VenueTypeEntity> = venueTypeRepository.findAll()

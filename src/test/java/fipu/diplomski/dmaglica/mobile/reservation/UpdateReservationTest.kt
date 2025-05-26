@@ -1,4 +1,4 @@
-package fipu.diplomski.dmaglica.reservation
+package fipu.diplomski.dmaglica.mobile.reservation
 
 import fipu.diplomski.dmaglica.exception.ReservationNotFoundException
 import fipu.diplomski.dmaglica.exception.UserNotFoundException
@@ -75,7 +75,8 @@ class UpdateReservationTest : BaseReservationServiceTest() {
         `when`(userRepository.findByEmail(anyString())).thenReturn(mockedUser)
         `when`(reservationRepository.findById(anyInt())).thenReturn(Optional.of(mockedReservation))
 
-        val result = reservationService.update(invalidRequest)
+        val result =
+            reservationService.update(invalidRequest)
 
         result.success `should be` false
         result.message `should be equal to` "Request is not valid"
@@ -89,7 +90,8 @@ class UpdateReservationTest : BaseReservationServiceTest() {
         `when`(userRepository.findByEmail(anyString())).thenReturn(mockedUser)
         `when`(reservationRepository.findById(anyInt())).thenReturn(Optional.of(mockedReservation))
 
-        val result = reservationService.update(noChangeRequest)
+        val result =
+            reservationService.update(noChangeRequest)
 
         result.success `should be` false
         result.message `should be equal to` "No changes to update"
@@ -120,7 +122,8 @@ class UpdateReservationTest : BaseReservationServiceTest() {
         `when`(userRepository.findByEmail(anyString())).thenReturn(mockedUser)
         `when`(reservationRepository.findById(anyInt())).thenReturn(Optional.of(mockedReservation))
 
-        val result = reservationService.update(mockedRequest)
+        val result =
+            reservationService.update(mockedRequest)
 
         result.success `should be` true
         result.message `should be equal to` "Reservation updated successfully"

@@ -1,4 +1,4 @@
-package fipu.diplomski.dmaglica.user
+package fipu.diplomski.dmaglica.mobile.user
 
 import fipu.diplomski.dmaglica.exception.UserNotFoundException
 import org.amshove.kluent.`should be`
@@ -13,46 +13,54 @@ import java.sql.SQLException
 
 @ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
-class UpdatePasswordTest : BaseUserServiceTest() {
+class UpdateLocationTest : BaseUserServiceTest() {
 
     companion object {
-        const val NEW_PASSWORD = "password2"
+        const val NEW_LATITUDE = 0.0
+        const val NEW_LONGITUDE = 0.0
     }
 
     @Test
     fun `should throw if user not found`() {
         `when`(userRepository.findByEmail(anyString())).thenReturn(null)
 
-        val exception =
-            assertThrows<UserNotFoundException> { userService.updatePassword(mockedUser.email, NEW_PASSWORD) }
+        val exception = assertThrows<UserNotFoundException> {
+            userService.updateLocation(
+                mockedUser.email,
+                NEW_LATITUDE,
+                NEW_LONGITUDE
+            )
+        }
 
         exception.message `should be equal to` "User with email ${mockedUser.email} does not exist"
     }
 
     @Test
-    fun `should throw if can't update password`() {
+    fun `should throw if can't update location`() {
         `when`(userRepository.findByEmail(anyString())).thenReturn(mockedUser)
         `when`(userRepository.save(any())).thenThrow(RuntimeException())
 
-        val exception = assertThrows<SQLException> { userService.updatePassword(mockedUser.email, NEW_PASSWORD) }
+        val exception =
+            assertThrows<SQLException> { userService.updateLocation(mockedUser.email, NEW_LATITUDE, NEW_LONGITUDE) }
 
-        exception.message `should be equal to` "Error while updating password for user with email ${mockedUser.email}"
+        exception.message `should be equal to` "Error while updating location for user with email ${mockedUser.email}"
 
         verify(userRepository, times(1)).findByEmail(mockedUser.email)
     }
 
     @Test
-    fun `should update password`() {
+    fun `should update location`() {
         `when`(userRepository.findByEmail(anyString())).thenReturn(mockedUser)
 
-        val result = userService.updatePassword(mockedUser.email, NEW_PASSWORD)
+        val result = userService.updateLocation(mockedUser.email, NEW_LATITUDE, NEW_LONGITUDE)
 
         result.success `should be` true
-        result.message `should be equal to` "Password for user with email ${mockedUser.email} successfully updated"
+        result.message `should be equal to` "Location for user with email ${mockedUser.email} successfully updated"
 
         verify(userRepository).save(userEntityArgumentCaptor.capture())
         val updatedUser = userEntityArgumentCaptor.value
-        updatedUser.password `should be equal to` NEW_PASSWORD
+        updatedUser.lastKnownLatitude `should be equal to` NEW_LATITUDE
+        updatedUser.lastKnownLongitude `should be equal to` NEW_LONGITUDE
 
         verify(userRepository, times(1)).findByEmail(mockedUser.email)
         verify(userRepository, times(1)).save(any())

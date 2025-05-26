@@ -1,4 +1,4 @@
-package fipu.diplomski.dmaglica.user
+package fipu.diplomski.dmaglica.mobile.user
 
 import fipu.diplomski.dmaglica.model.data.Role
 import fipu.diplomski.dmaglica.repo.NotificationOptionsRepository

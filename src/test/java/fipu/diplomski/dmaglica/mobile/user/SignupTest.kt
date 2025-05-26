@@ -1,4 +1,4 @@
-package fipu.diplomski.dmaglica.user
+package fipu.diplomski.dmaglica.mobile.user
 
 import org.amshove.kluent.`should be equal to`
 import org.junit.jupiter.api.Test

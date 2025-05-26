@@ -46,7 +46,7 @@
         <kluent.version>1.73</kluent.version>
         <logback.version>1.5.18</logback.version>
         <xmlunit.version>2.10.1</xmlunit.version>
-        <klogging.version>0.9.4</klogging.version>
+        <klogging.version>7.0.7</klogging.version>
     </properties>
 
     <dependencies>
@@ -136,8 +136,8 @@
         </dependency>
 
         <dependency>
-            <groupId>io.klogging</groupId>
-            <artifactId>klogging-jvm</artifactId>
+            <groupId>io.github.oshai</groupId>
+            <artifactId>kotlin-logging-jvm</artifactId>
             <version>${klogging.version}</version>
         </dependency>
 

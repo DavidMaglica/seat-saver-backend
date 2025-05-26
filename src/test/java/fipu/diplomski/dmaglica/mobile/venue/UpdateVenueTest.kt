@@ -1,4 +1,4 @@
-package fipu.diplomski.dmaglica.venue
+package fipu.diplomski.dmaglica.mobile.venue
 
 import fipu.diplomski.dmaglica.model.request.UpdateVenueRequest
 import fipu.diplomski.dmaglica.repo.entity.VenueEntity

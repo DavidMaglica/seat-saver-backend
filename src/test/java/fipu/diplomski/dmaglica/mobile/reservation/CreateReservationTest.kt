@@ -1,4 +1,4 @@
-package fipu.diplomski.dmaglica.reservation
+package fipu.diplomski.dmaglica.mobile.reservation
 
 import fipu.diplomski.dmaglica.exception.UserNotFoundException
 import fipu.diplomski.dmaglica.exception.VenueNotFoundException
@@ -80,7 +80,8 @@ class CreateReservationTest : BaseReservationServiceTest() {
         `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
         `when`(reservationRepository.save(any())).thenReturn(mockedReservation)
 
-        val response = reservationService.create(mockedRequest)
+        val response =
+            reservationService.create(mockedRequest)
 
         response.success `should be equal to` true
         response.message `should be equal to` "Reservation created successfully"
