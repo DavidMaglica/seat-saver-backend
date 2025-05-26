@@ -1,4 +1,4 @@
-package fipu.diplomski.dmaglica.reservation
+package fipu.diplomski.dmaglica.mobile.reservation
 
 import fipu.diplomski.dmaglica.exception.UserNotFoundException
 import org.amshove.kluent.`should be equal to`

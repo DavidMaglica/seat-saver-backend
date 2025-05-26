@@ -10,10 +10,10 @@ import fipu.diplomski.dmaglica.repo.entity.VenueEntity
 import fipu.diplomski.dmaglica.repo.entity.VenueRatingEntity
 import fipu.diplomski.dmaglica.repo.entity.VenueTypeEntity
 import fipu.diplomski.dmaglica.util.dbActionWithTryCatch
+import jakarta.persistence.EntityNotFoundException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
-import java.sql.SQLException
 
 @Service
 class VenueService(
@@ -24,15 +24,37 @@ class VenueService(
 ) {
 
     @Transactional(readOnly = true)
-    fun get(venueId: Int): VenueEntity =
-        venueRepository.findById(venueId).orElseThrow { SQLException("Venue with id: $venueId not found.") }
+    fun get(venueId: Int): VenueEntity {
+        val venue: VenueEntity =
+            venueRepository.findById(venueId)
+                .orElseThrow { EntityNotFoundException("Venue with id: $venueId not found.") }
+        val venueRating: List<VenueRatingEntity> = venueRatingRepository.findByVenueId(venueId)
+        venue.averageRating = venueRating.map { it.rating }.average()
+        return venue
+    }
 
     @Transactional(readOnly = true)
-    fun getAll(): MutableList<VenueEntity> = venueRepository.findAll()
+    fun getAll(): List<VenueEntity> {
+        val venues: List<VenueEntity> = venueRepository.findAll()
+        val ratings: List<VenueRatingEntity> = venueRatingRepository.findAll()
+
+        val averageRatingById = ratings.groupBy { it.venueId }
+            .mapValues { (_, venueRatings) -> venueRatings.map { it.rating }.average() }
+
+        for (venue in venues) {
+            venue.averageRating = averageRatingById[venue.id] ?: 0.0
+        }
+
+        return venues
+    }
 
     @Transactional(readOnly = true)
     fun getType(typeId: Int): String =
         venueTypeRepository.getReferenceById(typeId).type
+
+    @Transactional(readOnly = true)
+    fun getVenueRating(venueId: Int): Double = venueRepository.findById(venueId)
+        .orElseThrow { EntityNotFoundException("Venue with id: $venueId not found.") }.averageRating
 
     @Transactional(readOnly = true)
     fun getAllTypes(): List<VenueTypeEntity> = venueTypeRepository.findAll()
@@ -69,7 +91,7 @@ class VenueService(
     @Transactional
     fun update(venueId: Int, request: UpdateVenueRequest?): BasicResponse {
         val venue = venueRepository.findById(venueId)
-            .orElseThrow { SQLException("Venue with id $venueId not found") }
+            .orElseThrow { EntityNotFoundException("Venue with id $venueId not found") }
 
         if (!isRequestValid(request)) return BasicResponse(false, "Request is not valid")
 
@@ -95,7 +117,7 @@ class VenueService(
         if (userRating < 0.5 || userRating > 5.0) return BasicResponse(false, "Rating must be between 0.5 and 5")
 
         val venue = venueRepository.findById(venueId)
-            .orElseThrow { SQLException("Venue with id $venueId not found") }
+            .orElseThrow { EntityNotFoundException("Venue with id $venueId not found") }
         val venueRating =
             venueRatingRepository.findByVenueId(venueId)
 

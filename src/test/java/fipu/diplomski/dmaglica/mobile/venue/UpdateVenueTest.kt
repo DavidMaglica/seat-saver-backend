@@ -1,7 +1,8 @@
-package fipu.diplomski.dmaglica.venue
+package fipu.diplomski.dmaglica.mobile.venue
 
 import fipu.diplomski.dmaglica.model.request.UpdateVenueRequest
 import fipu.diplomski.dmaglica.repo.entity.VenueEntity
+import jakarta.persistence.EntityNotFoundException
 import org.amshove.kluent.`should be`
 import org.amshove.kluent.`should be equal to`
 import org.junit.jupiter.api.Test
@@ -21,7 +22,7 @@ class UpdateVenueTest : BaseVenueServiceTest() {
     fun `should throw if venue not found`() {
         `when`(venueRepository.findById(anyInt())).thenReturn(Optional.empty())
 
-        val exception = assertThrows<SQLException> {
+        val exception = assertThrows<EntityNotFoundException> {
             venueService.update(mockedVenue.id, null)
         }
 

@@ -1,4 +1,4 @@
-package fipu.diplomski.dmaglica.user
+package fipu.diplomski.dmaglica.mobile.user
 
 import fipu.diplomski.dmaglica.model.data.Role
 import fipu.diplomski.dmaglica.repo.NotificationOptionsRepository
@@ -17,7 +17,7 @@ import org.springframework.test.context.ActiveProfiles
 
 @ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
-abstract class UserServiceTest {
+abstract class BaseUserServiceTest {
 
     @Mock
     protected lateinit var userRepository: UserRepository

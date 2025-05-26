@@ -27,7 +27,6 @@ fun compressImage(data: ByteArray): ByteArray {
     val tmp = ByteArray(4 * 1024)
 
     imageActionWithTryCatch("Error while deflating output stream during image compression") {
-
         while (!deflater.finished()) {
             val size = deflater.deflate(tmp)
             outputStream.write(tmp, 0, size)

@@ -1,4 +1,4 @@
-package fipu.diplomski.dmaglica.venue
+package fipu.diplomski.dmaglica.mobile.venue
 
 import fipu.diplomski.dmaglica.model.request.CreateVenueRequest
 import org.amshove.kluent.`should be equal to`

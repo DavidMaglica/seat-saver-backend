@@ -1,4 +1,4 @@
-package fipu.diplomski.dmaglica.venue
+package fipu.diplomski.dmaglica.mobile.venue
 
 import org.amshove.kluent.`should be equal to`
 import org.junit.jupiter.api.Test
