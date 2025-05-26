@@ -1,7 +1,6 @@
 package fipu.diplomski.dmaglica.mobile.user
 
 import fipu.diplomski.dmaglica.exception.UserNotFoundException
-import jakarta.persistence.EntityNotFoundException
 import org.amshove.kluent.`should be`
 import org.amshove.kluent.`should be equal to`
 import org.junit.jupiter.api.Test
@@ -10,6 +9,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.test.context.ActiveProfiles
+import java.sql.SQLException
 
 @ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
@@ -41,7 +41,7 @@ class UpdateLocationTest : BaseUserServiceTest() {
         `when`(userRepository.save(any())).thenThrow(RuntimeException())
 
         val exception =
-            assertThrows<EntityNotFoundException> {
+            assertThrows<SQLException> {
                 userService.updateLocation(
                     mockedUser.email,
                     NEW_LATITUDE,

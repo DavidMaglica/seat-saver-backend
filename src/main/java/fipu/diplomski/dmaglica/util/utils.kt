@@ -1,15 +1,15 @@
 package fipu.diplomski.dmaglica.util
 
 import fipu.diplomski.dmaglica.exception.ImageDataException
-import jakarta.persistence.EntityNotFoundException
 import java.io.ByteArrayOutputStream
+import java.sql.SQLException
 import java.util.zip.Deflater
 import java.util.zip.Inflater
 
 inline fun <reified T> dbActionWithTryCatch(errorMessage: String, block: () -> T): T = try {
     block()
 } catch (e: Exception) {
-    throw EntityNotFoundException(errorMessage, e)
+    throw SQLException(errorMessage, e)
 }
 
 inline fun <reified T> imageActionWithTryCatch(errorMessage: String, block: () -> T): T = try {

@@ -1,7 +1,6 @@
 package fipu.diplomski.dmaglica.mobile.venue
 
 import fipu.diplomski.dmaglica.model.request.CreateVenueRequest
-import jakarta.persistence.EntityNotFoundException
 import org.amshove.kluent.`should be equal to`
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -10,6 +9,7 @@ import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.test.context.ActiveProfiles
+import java.sql.SQLException
 
 @ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
@@ -26,7 +26,7 @@ class CreateVenueTest : BaseVenueServiceTest() {
             mockedVenue.workingHours,
         )
 
-        val exception = assertThrows<EntityNotFoundException> { venueService.create(request) }
+        val exception = assertThrows<SQLException> { venueService.create(request) }
 
         exception.message `should be equal to` "Error while saving venue: ${mockedVenue.name}"
     }

@@ -11,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.test.context.ActiveProfiles
+import java.sql.SQLException
 import java.util.*
 
 @ExtendWith(MockitoExtension::class)
@@ -68,7 +69,7 @@ class UpdateVenueTest : BaseVenueServiceTest() {
         `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
         `when`(venueRepository.save(any())).thenThrow(RuntimeException("Save failed"))
 
-        val exception = assertThrows<EntityNotFoundException> {
+        val exception = assertThrows<SQLException> {
             venueService.update(mockedVenue.id, UpdateVenueRequest(name = "New name"))
         }
 

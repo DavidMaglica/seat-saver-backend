@@ -10,6 +10,7 @@ import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.test.context.ActiveProfiles
+import java.sql.SQLException
 import java.util.*
 
 @ExtendWith(MockitoExtension::class)
@@ -45,7 +46,7 @@ class RateVenueTest : BaseVenueServiceTest() {
         `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
         `when`(venueRatingRepository.save(any())).thenThrow(RuntimeException())
 
-        val exception = assertThrows<EntityNotFoundException> {
+        val exception = assertThrows<SQLException> {
             venueService.rate(mockedVenue.id, 3.0)
         }
 
@@ -61,7 +62,7 @@ class RateVenueTest : BaseVenueServiceTest() {
         `when`(venueRatingRepository.findByVenueId(anyInt())).thenReturn(listOf(mockedRating))
         `when`(venueRatingRepository.save(any())).thenThrow(RuntimeException())
 
-        val exception = assertThrows<EntityNotFoundException> {
+        val exception = assertThrows<SQLException> {
             venueService.rate(mockedVenue.id, 3.0)
         }
 
