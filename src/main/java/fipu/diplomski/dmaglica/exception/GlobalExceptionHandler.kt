@@ -2,6 +2,7 @@ package fipu.diplomski.dmaglica.exception
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.persistence.EntityNotFoundException
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -30,7 +31,7 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
     @ExceptionHandler(EntityNotFoundException::class)
     fun handleEntityNotFoundException(ex: EntityNotFoundException): ResponseEntity<String> {
         kLogger.error { "Entity not found occurred: ${ex.message}. Cause: ${ex.cause}" }
-        return ResponseEntity.internalServerError().body("Entity not found exception occurred: ${ex.message}")
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Entity not found exception occurred: ${ex.message}")
     }
 
     @ExceptionHandler(UserNotFoundException::class)
