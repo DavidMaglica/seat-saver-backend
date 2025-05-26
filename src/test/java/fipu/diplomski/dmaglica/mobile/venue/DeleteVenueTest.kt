@@ -1,5 +1,6 @@
 package fipu.diplomski.dmaglica.mobile.venue
 
+import jakarta.persistence.EntityNotFoundException
 import org.amshove.kluent.`should be equal to`
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -8,7 +9,6 @@ import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.test.context.ActiveProfiles
-import java.sql.SQLException
 
 @ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
@@ -18,7 +18,7 @@ class DeleteVenueTest : BaseVenueServiceTest() {
     fun `should throw when venue does not exist`() {
         `when`(venueRepository.deleteById(anyInt())).thenThrow(IllegalArgumentException("Venue not found"))
 
-        val exception = assertThrows<SQLException> { venueService.delete(mockedVenue.id) }
+        val exception = assertThrows<EntityNotFoundException> { venueService.delete(mockedVenue.id) }
 
         exception.message `should be equal to` "Error while deleting venue with id: ${mockedVenue.id}"
     }

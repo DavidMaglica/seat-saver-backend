@@ -1,10 +1,10 @@
 package fipu.diplomski.dmaglica.exception
 
+import jakarta.persistence.EntityNotFoundException
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler
-import java.sql.SQLException
 
 @ControllerAdvice
 class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
@@ -15,10 +15,10 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
         return ResponseEntity.internalServerError().body("Something went wrong: ${ex.message}")
     }
 
-    @ExceptionHandler(SQLException::class)
-    fun handleSqlException(ex: SQLException): ResponseEntity<String> {
-        logger.error("SQL exception occurred: ${ex.message}. Cause: ${ex.cause}")
-        return ResponseEntity.internalServerError().body("SQL exception occurred: ${ex.message}")
+    @ExceptionHandler(EntityNotFoundException::class)
+    fun handleEntityNotFoundException(ex: EntityNotFoundException): ResponseEntity<String> {
+        logger.error("Entity not found occurred: ${ex.message}. Cause: ${ex.cause}")
+        return ResponseEntity.internalServerError().body("Entity not found exception occurred: ${ex.message}")
     }
 
     @ExceptionHandler(UserNotFoundException::class)

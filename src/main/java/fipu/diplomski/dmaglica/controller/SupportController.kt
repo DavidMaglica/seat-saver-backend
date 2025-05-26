@@ -1,5 +1,6 @@
 package fipu.diplomski.dmaglica.controller
 
+import fipu.diplomski.dmaglica.model.response.BasicResponse
 import fipu.diplomski.dmaglica.service.SupportService
 import fipu.diplomski.dmaglica.util.Paths
 import org.springframework.web.bind.annotation.PostMapping
@@ -18,5 +19,5 @@ class SupportController(
         @RequestParam("userEmail") userEmail: String,
         @RequestParam("subject") subject: String,
         @RequestParam("body") body: String
-    ) = supportService.sendEmail(userEmail, subject, body)
+    ): BasicResponse = supportService.sendEmail(userEmail, subject, body)
 }

@@ -1,6 +1,7 @@
 package fipu.diplomski.dmaglica.mobile.reservation
 
 import fipu.diplomski.dmaglica.exception.UserNotFoundException
+import jakarta.persistence.EntityNotFoundException
 import org.amshove.kluent.`should be equal to`
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -9,7 +10,6 @@ import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.test.context.ActiveProfiles
-import java.sql.SQLException
 
 @ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
@@ -34,7 +34,7 @@ class DeleteReservationTest : BaseReservationServiceTest() {
         `when`(userRepository.findByEmail(anyString())).thenReturn(mockedUser)
         `when`(reservationRepository.deleteById(anyInt())).thenThrow(RuntimeException())
 
-        val exception = assertThrows<SQLException> {
+        val exception = assertThrows<EntityNotFoundException> {
             reservationService.delete(mockedUser.email, mockedReservation.id)
         }
 

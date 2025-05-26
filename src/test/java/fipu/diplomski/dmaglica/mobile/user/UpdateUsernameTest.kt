@@ -1,6 +1,7 @@
 package fipu.diplomski.dmaglica.mobile.user
 
 import fipu.diplomski.dmaglica.exception.UserNotFoundException
+import jakarta.persistence.EntityNotFoundException
 import org.amshove.kluent.`should be`
 import org.amshove.kluent.`should be equal to`
 import org.junit.jupiter.api.Test
@@ -11,7 +12,6 @@ import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.test.context.ActiveProfiles
-import java.sql.SQLException
 
 @ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
@@ -35,7 +35,8 @@ class UpdateUsernameTest : BaseUserServiceTest() {
         `when`(userRepository.findByEmail(anyString())).thenReturn(mockedUser)
         `when`(userRepository.save(any())).thenThrow(RuntimeException())
 
-        val exception = assertThrows<SQLException> { userService.updateUsername(mockedUser.email, NEW_USERNAME) }
+        val exception =
+            assertThrows<EntityNotFoundException> { userService.updateUsername(mockedUser.email, NEW_USERNAME) }
 
         exception.message `should be equal to` "Error while updating username for user with email ${mockedUser.email}"
 

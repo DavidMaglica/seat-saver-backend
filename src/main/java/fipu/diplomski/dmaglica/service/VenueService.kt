@@ -14,7 +14,6 @@ import jakarta.persistence.EntityNotFoundException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
-import java.sql.SQLException
 
 @Service
 class VenueService(
@@ -27,7 +26,8 @@ class VenueService(
     @Transactional(readOnly = true)
     fun get(venueId: Int): VenueEntity {
         val venue: VenueEntity =
-            venueRepository.findById(venueId).orElseThrow { SQLException("Venue with id: $venueId not found.") }
+            venueRepository.findById(venueId)
+                .orElseThrow { EntityNotFoundException("Venue with id: $venueId not found.") }
         val venueRating: List<VenueRatingEntity> = venueRatingRepository.findByVenueId(venueId)
         venue.averageRating = venueRating.map { it.rating }.average()
         return venue
@@ -91,7 +91,7 @@ class VenueService(
     @Transactional
     fun update(venueId: Int, request: UpdateVenueRequest?): BasicResponse {
         val venue = venueRepository.findById(venueId)
-            .orElseThrow { SQLException("Venue with id $venueId not found") }
+            .orElseThrow { EntityNotFoundException("Venue with id $venueId not found") }
 
         if (!isRequestValid(request)) return BasicResponse(false, "Request is not valid")
 
@@ -117,7 +117,7 @@ class VenueService(
         if (userRating < 0.5 || userRating > 5.0) return BasicResponse(false, "Rating must be between 0.5 and 5")
 
         val venue = venueRepository.findById(venueId)
-            .orElseThrow { SQLException("Venue with id $venueId not found") }
+            .orElseThrow { EntityNotFoundException("Venue with id $venueId not found") }
         val venueRating =
             venueRatingRepository.findByVenueId(venueId)
 

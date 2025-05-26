@@ -31,7 +31,7 @@ class VenueController(
     @GetMapping(Paths.GET_VENUE_RATING)
     fun getVenueRating(
         @RequestParam("venueId") venueId: Int,
-    ) = venueService.getVenueRating(venueId)
+    ): Double = venueService.getVenueRating(venueId)
 
     @GetMapping(Paths.GET_ALL_VENUE_TYPES)
     fun getAllVenueTypes(): List<VenueTypeEntity> = venueService.getAllTypes()

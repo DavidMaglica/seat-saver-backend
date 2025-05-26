@@ -2,6 +2,7 @@ package fipu.diplomski.dmaglica.mobile.venue
 
 import fipu.diplomski.dmaglica.model.request.UpdateVenueRequest
 import fipu.diplomski.dmaglica.repo.entity.VenueEntity
+import jakarta.persistence.EntityNotFoundException
 import org.amshove.kluent.`should be`
 import org.amshove.kluent.`should be equal to`
 import org.junit.jupiter.api.Test
@@ -10,7 +11,6 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.test.context.ActiveProfiles
-import java.sql.SQLException
 import java.util.*
 
 @ExtendWith(MockitoExtension::class)
@@ -21,7 +21,7 @@ class UpdateVenueTest : BaseVenueServiceTest() {
     fun `should throw if venue not found`() {
         `when`(venueRepository.findById(anyInt())).thenReturn(Optional.empty())
 
-        val exception = assertThrows<SQLException> {
+        val exception = assertThrows<EntityNotFoundException> {
             venueService.update(mockedVenue.id, null)
         }
 
@@ -68,7 +68,7 @@ class UpdateVenueTest : BaseVenueServiceTest() {
         `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
         `when`(venueRepository.save(any())).thenThrow(RuntimeException("Save failed"))
 
-        val exception = assertThrows<SQLException> {
+        val exception = assertThrows<EntityNotFoundException> {
             venueService.update(mockedVenue.id, UpdateVenueRequest(name = "New name"))
         }
 

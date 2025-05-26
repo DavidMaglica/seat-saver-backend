@@ -3,6 +3,7 @@ package fipu.diplomski.dmaglica.mobile.reservation
 import fipu.diplomski.dmaglica.exception.UserNotFoundException
 import fipu.diplomski.dmaglica.exception.VenueNotFoundException
 import fipu.diplomski.dmaglica.model.request.CreateReservationRequest
+import jakarta.persistence.EntityNotFoundException
 import org.amshove.kluent.`should be equal to`
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -10,7 +11,6 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.test.context.ActiveProfiles
-import java.sql.SQLException
 import java.util.*
 
 @ExtendWith(MockitoExtension::class)
@@ -63,7 +63,7 @@ class CreateReservationTest : BaseReservationServiceTest() {
         `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
         `when`(reservationRepository.save(any())).thenThrow(RuntimeException())
 
-        val exception = assertThrows<SQLException> {
+        val exception = assertThrows<EntityNotFoundException> {
             reservationService.create(mockedRequest)
         }
 

@@ -28,7 +28,7 @@ class SupportService(
             BasicResponse(true, "Email sent successfully.")
         } catch (e: Exception) {
             logger.error { "There was an error while sending the email: ${e.message}" }
-            return BasicResponse(false, "There was an error while sending the email. Please try again later.")
+            BasicResponse(false, "There was an error while sending the email. Please try again later.")
         }
     }
 }
