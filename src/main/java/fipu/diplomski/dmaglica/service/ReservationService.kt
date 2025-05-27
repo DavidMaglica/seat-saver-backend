@@ -27,19 +27,27 @@ class ReservationService(
         val user = userRepository.findByEmail(request.userEmail)
             ?: throw UserNotFoundException("User with email ${request.userEmail} not found")
 
-        venueRepository.findById(request.venueId).orElseThrow {
+        val venue = venueRepository.findById(request.venueId).orElseThrow {
             VenueNotFoundException("Venue with id ${request.venueId} not found")
         }
 
-        val reservation = ReservationEntity().also {
-            it.userId = user.id
-            it.venueId = request.venueId
-            it.datetime = request.reservationDate
-            it.numberOfGuests = request.numberOfPeople
+        val reservation = ReservationEntity().apply {
+            userId = user.id
+            venueId = request.venueId
+            datetime = request.reservationDate
+            numberOfGuests = request.numberOfPeople
         }
 
         dbActionWithTryCatch("Error while creating reservation for user with email ${request.userEmail}") {
             reservationRepository.save(reservation)
+        }
+
+        venue.apply {
+            availableCapacity -= request.numberOfPeople
+        }
+
+        dbActionWithTryCatch("Error while updating venue capacity for venue with id ${request.venueId}") {
+            venueRepository.save(venue)
         }
 
         return BasicResponse(true, "Reservation created successfully")
@@ -63,23 +71,51 @@ class ReservationService(
         if (!isRequestValid(request)) return BasicResponse(false, "Request is not valid")
         if (!containsReservationChanges(request, reservation)) return BasicResponse(false, "No changes to update")
 
-        val updatedReservation = reservation.apply {
+        val venue = venueRepository.findById(request.venueId)
+            .orElseThrow { VenueNotFoundException("Venue with id ${request.venueId} not found") }
+        venue.apply {
+            if (request.numberOfPeople!! > reservation.numberOfGuests) {
+                availableCapacity -= request.numberOfPeople
+            } else {
+                availableCapacity += reservation.numberOfGuests
+            }
+        }
+
+        reservation.apply {
             numberOfGuests = request.numberOfPeople ?: reservation.numberOfGuests
             datetime = request.reservationDate ?: reservation.datetime
         }
+
         dbActionWithTryCatch("Error while updating reservation with id ${request.reservationId}") {
-            reservationRepository.save(updatedReservation)
+            reservationRepository.save(reservation)
+        }
+
+        dbActionWithTryCatch("Error while updating venue capacity for venue with id ${request.venueId}") {
+            venueRepository.save(venue)
         }
 
         return BasicResponse(true, "Reservation updated successfully")
     }
 
     @Transactional
-    fun delete(email: String, reservationId: Int): BasicResponse {
+    fun delete(email: String, reservationId: Int, venueId: Int): BasicResponse {
         userRepository.findByEmail(email) ?: throw UserNotFoundException("User with email $email not found")
+        val reservation = reservationRepository.findById(reservationId).orElseThrow {
+            ReservationNotFoundException("Reservation with id $reservationId not found")
+        }
+        val venue = venueRepository.findById(venueId).orElseThrow {
+            VenueNotFoundException("Venue with id $venueId not found")
+        }
+
+        venue.apply {
+            availableCapacity += reservation.numberOfGuests
+        }
 
         dbActionWithTryCatch("Error while deleting reservation for user with email $email") {
             reservationRepository.deleteById(reservationId)
+        }
+        dbActionWithTryCatch("Error while updating venue capacity for venue with id $venueId") {
+            venueRepository.save(venue)
         }
 
         return BasicResponse(true, "Reservation deleted successfully")
@@ -96,7 +132,11 @@ class ReservationService(
     private fun isRequestValid(request: UpdateReservationRequest): Boolean =
         (request.numberOfPeople?.let { it > 0 } == true) || request.reservationDate != null
 
-    private fun containsReservationChanges(request: UpdateReservationRequest, reservation: ReservationEntity): Boolean =
+    private fun containsReservationChanges(
+        request: UpdateReservationRequest,
+        reservation: ReservationEntity,
+    ): Boolean =
         (request.numberOfPeople != null && request.numberOfPeople != reservation.numberOfGuests) ||
-                (request.reservationDate != null && request.reservationDate != reservation.datetime)
+                (request.reservationDate != null && request.reservationDate != reservation.datetime) ||
+                (request.numberOfPeople != null && request.numberOfPeople != reservation.numberOfGuests)
 }

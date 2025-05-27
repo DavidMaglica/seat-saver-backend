@@ -6,6 +6,7 @@ import fipu.diplomski.dmaglica.model.response.BasicResponse
 import fipu.diplomski.dmaglica.repo.VenueRatingRepository
 import fipu.diplomski.dmaglica.repo.VenueRepository
 import fipu.diplomski.dmaglica.repo.VenueTypeRepository
+import fipu.diplomski.dmaglica.repo.entity.MenuImageEntity
 import fipu.diplomski.dmaglica.repo.entity.VenueEntity
 import fipu.diplomski.dmaglica.repo.entity.VenueRatingEntity
 import fipu.diplomski.dmaglica.repo.entity.VenueTypeEntity
@@ -59,20 +60,23 @@ class VenueService(
     @Transactional(readOnly = true)
     fun getAllTypes(): List<VenueTypeEntity> = venueTypeRepository.findAll()
 
-    fun getVenueImages(venueId: Int, venueName: String) = imageService.getVenueImages(venueId, venueName)
+    fun getVenueImages(venueId: Int, venueName: String): List<ByteArray> =
+        imageService.getVenueImages(venueId, venueName)
 
-    fun getMenuImage(venueId: Int, venueName: String) = imageService.getMenuImage(venueId, venueName)
+    fun getMenuImage(venueId: Int, venueName: String): MenuImageEntity = imageService.getMenuImage(venueId, venueName)
 
     @Transactional
     fun create(request: CreateVenueRequest): BasicResponse {
-        val venue = VenueEntity().also {
-            it.id
-            it.name = request.name
-            it.location = request.location
-            it.description = request.description
-            it.workingHours = request.workingHours
-            it.venueTypeId = request.typeId
-            it.averageRating = 0.0
+        val venue = VenueEntity().apply {
+            id
+            name = request.name
+            location = request.location
+            description = request.description
+            workingHours = request.workingHours
+            maximumCapacity = request.maximumCapacity
+            availableCapacity = request.availableCapacity
+            venueTypeId = request.typeId
+            averageRating = 0.0
         }
 
         dbActionWithTryCatch("Error while saving venue: ${request.name}") {
@@ -97,16 +101,18 @@ class VenueService(
 
         if (!containsVenueChanges(request, venue)) return BasicResponse(false, "Request does not update anything")
 
-        val updatedVenue = venue.also {
-            it.name = request?.name ?: venue.name
-            it.location = request?.location ?: venue.location
-            it.workingHours = request?.workingHours ?: venue.workingHours
-            it.venueTypeId = request?.typeId ?: venue.venueTypeId
-            it.description = request?.description ?: venue.description
+        venue.apply {
+            name = request?.name ?: venue.name
+            location = request?.location ?: venue.location
+            workingHours = request?.workingHours ?: venue.workingHours
+            maximumCapacity = request?.maximumCapacity ?: venue.maximumCapacity
+            availableCapacity = request?.availableCapacity ?: venue.availableCapacity
+            venueTypeId = request?.typeId ?: venue.venueTypeId
+            description = request?.description ?: venue.description
         }
 
         dbActionWithTryCatch("Error while updating venue with id $venueId") {
-            venueRepository.save(updatedVenue)
+            venueRepository.save(venue)
         }
 
         return BasicResponse(true, "Venue updated successfully")
@@ -170,6 +176,8 @@ class VenueService(
             request.name?.takeIf { it != venue.name },
             request.location?.takeIf { it != venue.location },
             request.workingHours?.takeIf { it != venue.workingHours },
+            request.maximumCapacity?.takeIf { it != venue.maximumCapacity },
+            request.availableCapacity?.takeIf { it != venue.availableCapacity },
             request.typeId?.takeIf { it != venue.venueTypeId },
             request.description?.takeIf { it != venue.description }
         ).any { it != null }

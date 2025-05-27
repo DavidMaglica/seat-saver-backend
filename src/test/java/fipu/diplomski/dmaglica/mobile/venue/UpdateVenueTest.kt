@@ -81,14 +81,14 @@ class UpdateVenueTest : BaseVenueServiceTest() {
 
     @Test
     fun `should update only select fields`() {
-        val newVenue = VenueEntity().also {
-            it.id = mockedVenue.id
-            it.name = "New name"
-            it.location = mockedVenue.location
-            it.description = "New description"
-            it.workingHours = mockedVenue.workingHours
-            it.averageRating = mockedVenue.averageRating
-            it.venueTypeId = mockedVenue.venueTypeId
+        val newVenue = VenueEntity().apply {
+            id = mockedVenue.id
+            name = "New name"
+            location = mockedVenue.location
+            description = "New description"
+            workingHours = mockedVenue.workingHours
+            averageRating = mockedVenue.averageRating
+            venueTypeId = mockedVenue.venueTypeId
         }
         `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
         `when`(venueRepository.save(any())).thenReturn(newVenue)
@@ -113,14 +113,16 @@ class UpdateVenueTest : BaseVenueServiceTest() {
 
     @Test
     fun `should update venue`() {
-        val newVenue = VenueEntity().also {
-            it.id = mockedVenue.id
-            it.name = "New name"
-            it.location = "New location"
-            it.description = "New description"
-            it.workingHours = "New working hours"
-            it.averageRating = mockedVenue.averageRating
-            it.venueTypeId = 2
+        val newVenue = VenueEntity().apply {
+            id = mockedVenue.id
+            name = "New name"
+            location = "New location"
+            description = "New description"
+            workingHours = "New working hours"
+            maximumCapacity = 50
+            availableCapacity = 25
+            averageRating = mockedVenue.averageRating
+            venueTypeId = 2
         }
         `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
         `when`(venueRepository.save(any())).thenReturn(newVenue)
@@ -132,7 +134,9 @@ class UpdateVenueTest : BaseVenueServiceTest() {
                 location = newVenue.location,
                 description = newVenue.description,
                 typeId = newVenue.venueTypeId,
-                workingHours = newVenue.workingHours
+                workingHours = newVenue.workingHours,
+                maximumCapacity = newVenue.maximumCapacity,
+                availableCapacity = newVenue.availableCapacity
             )
         )
 
@@ -147,5 +151,7 @@ class UpdateVenueTest : BaseVenueServiceTest() {
         savedVenue.description `should be equal to` newVenue.description
         savedVenue.workingHours `should be equal to` newVenue.workingHours
         savedVenue.venueTypeId `should be equal to` newVenue.venueTypeId
+        savedVenue.maximumCapacity `should be equal to` newVenue.maximumCapacity
+        savedVenue.availableCapacity `should be equal to` newVenue.availableCapacity
     }
 }

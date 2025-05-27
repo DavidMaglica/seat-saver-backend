@@ -2,6 +2,7 @@ package fipu.diplomski.dmaglica.mobile.reservation
 
 import fipu.diplomski.dmaglica.exception.ReservationNotFoundException
 import fipu.diplomski.dmaglica.exception.UserNotFoundException
+import fipu.diplomski.dmaglica.exception.VenueNotFoundException
 import fipu.diplomski.dmaglica.model.request.UpdateReservationRequest
 import org.amshove.kluent.`should be`
 import org.amshove.kluent.`should be equal to`
@@ -26,18 +27,21 @@ class UpdateReservationTest : BaseReservationServiceTest() {
             reservationId = 1,
             reservationDate = "02-08-2025 10:00",
             numberOfPeople = 3,
+            venueId = 1
         )
         private val invalidRequest = UpdateReservationRequest(
             userEmail = "user1@mail.com",
             reservationId = 1,
             reservationDate = null,
             numberOfPeople = 0,
+            venueId = 1
         )
         private val noChangeRequest = UpdateReservationRequest(
             userEmail = "user1@mail.com",
             reservationId = 1,
             reservationDate = "02-08-2025 10:00",
             numberOfPeople = 2,
+            venueId = 1
         )
     }
 
@@ -101,9 +105,28 @@ class UpdateReservationTest : BaseReservationServiceTest() {
     }
 
     @Test
+    fun `should throw if venue does not exist`() {
+        `when`(userRepository.findByEmail(anyString())).thenReturn(mockedUser)
+        `when`(reservationRepository.findById(anyInt())).thenReturn(Optional.of(mockedReservation))
+        `when`(venueRepository.findById(anyInt())).thenReturn(Optional.empty())
+
+        val exception = assertThrows<VenueNotFoundException> {
+            reservationService.update(mockedRequest)
+        }
+
+        exception.message `should be equal to` "Venue with id ${mockedRequest.venueId} not found"
+
+        verify(userRepository, times(1)).findByEmail(anyString())
+        verify(reservationRepository, times(1)).findById(anyInt())
+        verify(venueRepository, times(1)).findById(anyInt())
+        verifyNoMoreInteractions(reservationRepository)
+    }
+
+    @Test
     fun `should throw if unable to update reservation`() {
         `when`(userRepository.findByEmail(anyString())).thenReturn(mockedUser)
         `when`(reservationRepository.findById(anyInt())).thenReturn(Optional.of(mockedReservation))
+        `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
         `when`(reservationRepository.save(any())).thenThrow(RuntimeException())
 
         val exception = assertThrows<SQLException> {
@@ -114,6 +137,7 @@ class UpdateReservationTest : BaseReservationServiceTest() {
 
         verify(userRepository, times(1)).findByEmail(anyString())
         verify(reservationRepository, times(1)).findById(anyInt())
+        verify(venueRepository, times(1)).findById(anyInt())
         verify(reservationRepository, times(1)).save(any())
     }
 
@@ -121,9 +145,9 @@ class UpdateReservationTest : BaseReservationServiceTest() {
     fun `should update reservation`() {
         `when`(userRepository.findByEmail(anyString())).thenReturn(mockedUser)
         `when`(reservationRepository.findById(anyInt())).thenReturn(Optional.of(mockedReservation))
+        `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
 
-        val result =
-            reservationService.update(mockedRequest)
+        val result = reservationService.update(mockedRequest)
 
         result.success `should be` true
         result.message `should be equal to` "Reservation updated successfully"
@@ -135,8 +159,15 @@ class UpdateReservationTest : BaseReservationServiceTest() {
         updatedReservation.numberOfGuests `should be equal to` mockedRequest.numberOfPeople
         updatedReservation.datetime `should be equal to` mockedRequest.reservationDate
 
+        verify(venueRepository).save(venueArgumentCaptor.capture())
+        val venue = venueArgumentCaptor.value
+        venue.id `should be equal to` mockedVenue.id
+        venue.availableCapacity `should be equal to` (mockedVenue.maximumCapacity - mockedRequest.numberOfPeople!!)
+
         verify(userRepository, times(1)).findByEmail(anyString())
         verify(reservationRepository, times(1)).findById(anyInt())
+        verify(venueRepository, times(1)).findById(anyInt())
+        verify(venueRepository, times(1)).save(venueArgumentCaptor.capture())
         verify(reservationRepository, times(1)).save(reservationArgumentCaptor.capture())
     }
 }

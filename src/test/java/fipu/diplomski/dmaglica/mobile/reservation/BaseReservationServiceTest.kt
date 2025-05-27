@@ -41,31 +41,36 @@ abstract class BaseReservationServiceTest {
     protected val reservationArgumentCaptor: ArgumentCaptor<ReservationEntity> =
         ArgumentCaptor.forClass(ReservationEntity::class.java)
 
-    protected val mockedUser: UserEntity = UserEntity().also {
-        it.id = 1
-        it.email = "user1@mail.com"
-        it.username = "user1"
-        it.password = "password"
-        it.lastKnownLatitude = 0.0
-        it.lastKnownLongitude = 0.0
-        it.roleId = Role.USER.ordinal
+    protected val venueArgumentCaptor: ArgumentCaptor<VenueEntity> =
+        ArgumentCaptor.forClass(VenueEntity::class.java)
+
+    protected val mockedUser: UserEntity = UserEntity().apply {
+        id = 1
+        email = "user1@mail.com"
+        username = "user1"
+        password = "password"
+        lastKnownLatitude = 0.0
+        lastKnownLongitude = 0.0
+        roleId = Role.USER.ordinal
     }
 
-    protected val mockedVenue = VenueEntity().also {
-        it.id = 1
-        it.name = "Test Venue"
-        it.location = "Test Location"
-        it.description = "Test Description"
-        it.workingHours = "9 AM - 5 PM"
-        it.averageRating = 0.0
-        it.venueTypeId = 1
+    protected val mockedVenue = VenueEntity().apply {
+        id = 1
+        name = "Test Venue"
+        location = "Test Location"
+        description = "Test Description"
+        workingHours = "9 AM - 5 PM"
+        maximumCapacity = 100
+        availableCapacity = 100
+        averageRating = 0.0
+        venueTypeId = 1
     }
 
-    protected val mockedReservation = ReservationEntity().also {
-        it.id = 1
-        it.userId = 1
-        it.venueId = 1
-        it.datetime = "02-08-2025 10:00"
-        it.numberOfGuests = 2
+    protected val mockedReservation = ReservationEntity().apply {
+        id = 1
+        userId = 1
+        venueId = 1
+        datetime = "02-08-2025 10:00"
+        numberOfGuests = 2
     }
 }

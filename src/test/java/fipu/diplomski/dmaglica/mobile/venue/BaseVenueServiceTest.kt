@@ -44,20 +44,22 @@ abstract class BaseVenueServiceTest {
     protected val venueRatingArgumentCaptor: ArgumentCaptor<VenueRatingEntity> =
         ArgumentCaptor.forClass(VenueRatingEntity::class.java)
 
-    protected val mockedVenue = VenueEntity().also {
-        it.id = 1
-        it.name = "Test Venue"
-        it.location = "Test Location"
-        it.description = "Test Description"
-        it.workingHours = "9 AM - 5 PM"
-        it.averageRating = 0.0
-        it.venueTypeId = 1
+    protected val mockedVenue = VenueEntity().apply {
+        id = 1
+        name = "Test Venue"
+        location = "Test Location"
+        description = "Test Description"
+        workingHours = "9 AM - 5 PM"
+        maximumCapacity = 100
+        availableCapacity = 50
+        averageRating = 0.0
+        venueTypeId = 1
     }
 
-    protected val mockedRating = VenueRatingEntity().also {
-        it.id = 1
-        it.venueId = mockedVenue.id
-        it.rating = 4.0
+    protected val mockedRating = VenueRatingEntity().apply {
+        id = 1
+        venueId = mockedVenue.id
+        rating = 4.0
     }
 
 }

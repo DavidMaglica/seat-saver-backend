@@ -37,20 +37,20 @@ abstract class BaseUserServiceTest {
     protected val notificationOptionsArgumentCaptor: ArgumentCaptor<NotificationOptionsEntity> =
         ArgumentCaptor.forClass(NotificationOptionsEntity::class.java)
 
-    protected val mockedUser: UserEntity = UserEntity().also {
-        it.id = 0
-        it.email = "user1@mail.com"
-        it.username = "user1"
-        it.password = "password"
-        it.lastKnownLatitude = 0.0
-        it.lastKnownLongitude = 0.0
-        it.roleId = Role.USER.ordinal
+    protected val mockedUser: UserEntity = UserEntity().apply {
+        id = 0
+        email = "user1@mail.com"
+        username = "user1"
+        password = "password"
+        lastKnownLatitude = 0.0
+        lastKnownLongitude = 0.0
+        roleId = Role.USER.ordinal
     }
 
-    protected val mockedNotificationOptions: NotificationOptionsEntity = NotificationOptionsEntity().also {
-        it.userId = 0
-        it.locationServicesEnabled = false
-        it.pushNotificationsEnabled = false
-        it.emailNotificationsEnabled = false
+    protected val mockedNotificationOptions: NotificationOptionsEntity = NotificationOptionsEntity().apply {
+        userId = 0
+        locationServicesEnabled = false
+        pushNotificationsEnabled = false
+        emailNotificationsEnabled = false
     }
 }

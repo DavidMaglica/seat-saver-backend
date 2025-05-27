@@ -80,8 +80,7 @@ class CreateReservationTest : BaseReservationServiceTest() {
         `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
         `when`(reservationRepository.save(any())).thenReturn(mockedReservation)
 
-        val response =
-            reservationService.create(mockedRequest)
+        val response = reservationService.create(mockedRequest)
 
         response.success `should be equal to` true
         response.message `should be equal to` "Reservation created successfully"
@@ -92,6 +91,11 @@ class CreateReservationTest : BaseReservationServiceTest() {
         reservation.venueId `should be equal to` mockedRequest.venueId
         reservation.datetime `should be equal to` mockedRequest.reservationDate
         reservation.numberOfGuests `should be equal to` mockedRequest.numberOfPeople
+
+        verify(venueRepository).save(venueArgumentCaptor.capture())
+        val venue = venueArgumentCaptor.value
+        venue.id `should be equal to` mockedVenue.id
+        venue.availableCapacity `should be equal to` (mockedVenue.maximumCapacity - mockedRequest.numberOfPeople)
 
         verify(userRepository, times(1)).findByEmail(anyString())
         verify(venueRepository, times(1)).findById(anyInt())

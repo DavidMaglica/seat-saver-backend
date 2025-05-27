@@ -6,4 +6,6 @@ data class UpdateVenueRequest(
     val description: String? = null,
     val typeId: Int? = null,
     val workingHours: String? = null,
+    val maximumCapacity: Int? = null,
+    val availableCapacity: Int? = null,
 )
