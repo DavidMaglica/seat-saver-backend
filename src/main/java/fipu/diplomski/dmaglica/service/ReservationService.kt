@@ -71,13 +71,18 @@ class ReservationService(
         if (!isRequestValid(request)) return BasicResponse(false, "Request is not valid")
         if (!containsReservationChanges(request, reservation)) return BasicResponse(false, "No changes to update")
 
-        val venue = venueRepository.findById(request.venueId)
-            .orElseThrow { VenueNotFoundException("Venue with id ${request.venueId} not found") }
-        venue.apply {
-            if (request.numberOfPeople!! > reservation.numberOfGuests) {
-                availableCapacity -= request.numberOfPeople
-            } else {
-                availableCapacity += reservation.numberOfGuests
+        val guestDelta = request.numberOfPeople?.minus(reservation.numberOfGuests)
+
+        if (guestDelta != null && guestDelta != 0) {
+            val venue = venueRepository.findById(request.venueId)
+                .orElseThrow { VenueNotFoundException("Venue with id ${request.venueId} not found") }
+
+            venue.apply {
+                availableCapacity -= guestDelta
+            }
+
+            dbActionWithTryCatch("Error while updating venue capacity for venue with id ${request.venueId}") {
+                venueRepository.save(venue)
             }
         }
 
@@ -88,10 +93,6 @@ class ReservationService(
 
         dbActionWithTryCatch("Error while updating reservation with id ${request.reservationId}") {
             reservationRepository.save(reservation)
-        }
-
-        dbActionWithTryCatch("Error while updating venue capacity for venue with id ${request.venueId}") {
-            venueRepository.save(venue)
         }
 
         return BasicResponse(true, "Reservation updated successfully")

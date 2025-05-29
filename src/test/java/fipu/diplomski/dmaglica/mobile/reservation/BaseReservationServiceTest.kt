@@ -61,7 +61,7 @@ abstract class BaseReservationServiceTest {
         description = "Test Description"
         workingHours = "9 AM - 5 PM"
         maximumCapacity = 100
-        availableCapacity = 100
+        availableCapacity = 98
         averageRating = 0.0
         venueTypeId = 1
     }
