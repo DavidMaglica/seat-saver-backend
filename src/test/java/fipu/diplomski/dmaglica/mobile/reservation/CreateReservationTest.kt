@@ -92,13 +92,6 @@ class CreateReservationTest : BaseReservationServiceTest() {
         reservation.datetime `should be equal to` mockedRequest.reservationDate
         reservation.numberOfGuests `should be equal to` mockedRequest.numberOfPeople
 
-        val guestDelta = mockedRequest.numberOfPeople - mockedReservation.numberOfGuests
-
-        verify(venueRepository).save(venueArgumentCaptor.capture())
-        val venue = venueArgumentCaptor.value
-        venue.id `should be equal to` mockedVenue.id
-        venue.availableCapacity `should be equal to` mockedVenue.availableCapacity - guestDelta
-
         verify(userRepository, times(1)).findByEmail(anyString())
         verify(venueRepository, times(1)).findById(anyInt())
         verify(reservationRepository, times(1)).save(reservationArgumentCaptor.capture())

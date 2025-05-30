@@ -27,7 +27,7 @@ class ReservationService(
         val user = userRepository.findByEmail(request.userEmail)
             ?: throw UserNotFoundException("User with email ${request.userEmail} not found")
 
-        val venue = venueRepository.findById(request.venueId).orElseThrow {
+        venueRepository.findById(request.venueId).orElseThrow {
             VenueNotFoundException("Venue with id ${request.venueId} not found")
         }
 
@@ -40,14 +40,6 @@ class ReservationService(
 
         dbActionWithTryCatch("Error while creating reservation for user with email ${request.userEmail}") {
             reservationRepository.save(reservation)
-        }
-
-        venue.apply {
-            availableCapacity -= request.numberOfPeople
-        }
-
-        dbActionWithTryCatch("Error while updating venue capacity for venue with id ${request.venueId}") {
-            venueRepository.save(venue)
         }
 
         return BasicResponse(true, "Reservation created successfully")
@@ -71,20 +63,8 @@ class ReservationService(
         if (!isRequestValid(request)) return BasicResponse(false, "Request is not valid")
         if (!containsReservationChanges(request, reservation)) return BasicResponse(false, "No changes to update")
 
-        val guestDelta = request.numberOfPeople?.minus(reservation.numberOfGuests)
-
-        if (guestDelta != null && guestDelta != 0) {
-            val venue = venueRepository.findById(request.venueId)
-                .orElseThrow { VenueNotFoundException("Venue with id ${request.venueId} not found") }
-
-            venue.apply {
-                availableCapacity -= guestDelta
-            }
-
-            dbActionWithTryCatch("Error while updating venue capacity for venue with id ${request.venueId}") {
-                venueRepository.save(venue)
-            }
-        }
+        venueRepository.findById(request.venueId)
+            .orElseThrow { VenueNotFoundException("Venue with id ${request.venueId} not found") }
 
         reservation.apply {
             numberOfGuests = request.numberOfPeople ?: reservation.numberOfGuests
@@ -101,22 +81,15 @@ class ReservationService(
     @Transactional
     fun delete(email: String, reservationId: Int, venueId: Int): BasicResponse {
         userRepository.findByEmail(email) ?: throw UserNotFoundException("User with email $email not found")
-        val reservation = reservationRepository.findById(reservationId).orElseThrow {
+        reservationRepository.findById(reservationId).orElseThrow {
             ReservationNotFoundException("Reservation with id $reservationId not found")
         }
-        val venue = venueRepository.findById(venueId).orElseThrow {
+        venueRepository.findById(venueId).orElseThrow {
             VenueNotFoundException("Venue with id $venueId not found")
-        }
-
-        venue.apply {
-            availableCapacity += reservation.numberOfGuests
         }
 
         dbActionWithTryCatch("Error while deleting reservation for user with email $email") {
             reservationRepository.deleteById(reservationId)
-        }
-        dbActionWithTryCatch("Error while updating venue capacity for venue with id $venueId") {
-            venueRepository.save(venue)
         }
 
         return BasicResponse(true, "Reservation deleted successfully")
