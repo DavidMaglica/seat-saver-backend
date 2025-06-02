@@ -2,6 +2,7 @@ package fipu.diplomski.dmaglica.mobile.reservation
 
 import fipu.diplomski.dmaglica.exception.ReservationNotFoundException
 import fipu.diplomski.dmaglica.exception.UserNotFoundException
+import fipu.diplomski.dmaglica.exception.VenueNotFoundException
 import fipu.diplomski.dmaglica.model.request.UpdateReservationRequest
 import org.amshove.kluent.`should be`
 import org.amshove.kluent.`should be equal to`
@@ -14,7 +15,8 @@ import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.test.context.ActiveProfiles
 import java.sql.SQLException
-import java.util.*
+import java.time.LocalDateTime
+import java.util.Optional
 
 @ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
@@ -24,20 +26,23 @@ class UpdateReservationTest : BaseReservationServiceTest() {
         private val mockedRequest = UpdateReservationRequest(
             userEmail = "user1@mail.com",
             reservationId = 1,
-            reservationDate = "02-08-2025 10:00",
+            reservationDate = LocalDateTime.now(),
             numberOfPeople = 3,
+            venueId = 1
         )
         private val invalidRequest = UpdateReservationRequest(
             userEmail = "user1@mail.com",
             reservationId = 1,
             reservationDate = null,
             numberOfPeople = 0,
+            venueId = 1
         )
         private val noChangeRequest = UpdateReservationRequest(
             userEmail = "user1@mail.com",
             reservationId = 1,
-            reservationDate = "02-08-2025 10:00",
+            reservationDate = null,
             numberOfPeople = 2,
+            venueId = 1
         )
     }
 
@@ -90,8 +95,7 @@ class UpdateReservationTest : BaseReservationServiceTest() {
         `when`(userRepository.findByEmail(anyString())).thenReturn(mockedUser)
         `when`(reservationRepository.findById(anyInt())).thenReturn(Optional.of(mockedReservation))
 
-        val result =
-            reservationService.update(noChangeRequest)
+        val result = reservationService.update(noChangeRequest)
 
         result.success `should be` false
         result.message `should be equal to` "No changes to update"
@@ -101,9 +105,28 @@ class UpdateReservationTest : BaseReservationServiceTest() {
     }
 
     @Test
+    fun `should throw if venue does not exist`() {
+        `when`(userRepository.findByEmail(anyString())).thenReturn(mockedUser)
+        `when`(reservationRepository.findById(anyInt())).thenReturn(Optional.of(mockedReservation))
+        `when`(venueRepository.findById(anyInt())).thenReturn(Optional.empty())
+
+        val exception = assertThrows<VenueNotFoundException> {
+            reservationService.update(mockedRequest)
+        }
+
+        exception.message `should be equal to` "Venue with id ${mockedRequest.venueId} not found"
+
+        verify(userRepository, times(1)).findByEmail(anyString())
+        verify(reservationRepository, times(1)).findById(anyInt())
+        verify(venueRepository, times(1)).findById(anyInt())
+        verifyNoMoreInteractions(reservationRepository)
+    }
+
+    @Test
     fun `should throw if unable to update reservation`() {
         `when`(userRepository.findByEmail(anyString())).thenReturn(mockedUser)
         `when`(reservationRepository.findById(anyInt())).thenReturn(Optional.of(mockedReservation))
+        `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
         `when`(reservationRepository.save(any())).thenThrow(RuntimeException())
 
         val exception = assertThrows<SQLException> {
@@ -114,6 +137,7 @@ class UpdateReservationTest : BaseReservationServiceTest() {
 
         verify(userRepository, times(1)).findByEmail(anyString())
         verify(reservationRepository, times(1)).findById(anyInt())
+        verify(venueRepository, times(1)).findById(anyInt())
         verify(reservationRepository, times(1)).save(any())
     }
 
@@ -121,9 +145,9 @@ class UpdateReservationTest : BaseReservationServiceTest() {
     fun `should update reservation`() {
         `when`(userRepository.findByEmail(anyString())).thenReturn(mockedUser)
         `when`(reservationRepository.findById(anyInt())).thenReturn(Optional.of(mockedReservation))
+        `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
 
-        val result =
-            reservationService.update(mockedRequest)
+        val result = reservationService.update(mockedRequest)
 
         result.success `should be` true
         result.message `should be equal to` "Reservation updated successfully"
@@ -137,6 +161,7 @@ class UpdateReservationTest : BaseReservationServiceTest() {
 
         verify(userRepository, times(1)).findByEmail(anyString())
         verify(reservationRepository, times(1)).findById(anyInt())
+        verify(venueRepository, times(1)).findById(anyInt())
         verify(reservationRepository, times(1)).save(reservationArgumentCaptor.capture())
     }
 }

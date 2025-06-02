@@ -3,9 +3,12 @@ package fipu.diplomski.dmaglica.service
 import fipu.diplomski.dmaglica.model.request.CreateVenueRequest
 import fipu.diplomski.dmaglica.model.request.UpdateVenueRequest
 import fipu.diplomski.dmaglica.model.response.BasicResponse
+import fipu.diplomski.dmaglica.repo.ReservationRepository
 import fipu.diplomski.dmaglica.repo.VenueRatingRepository
 import fipu.diplomski.dmaglica.repo.VenueRepository
 import fipu.diplomski.dmaglica.repo.VenueTypeRepository
+import fipu.diplomski.dmaglica.repo.entity.MenuImageEntity
+import fipu.diplomski.dmaglica.repo.entity.ReservationEntity
 import fipu.diplomski.dmaglica.repo.entity.VenueEntity
 import fipu.diplomski.dmaglica.repo.entity.VenueRatingEntity
 import fipu.diplomski.dmaglica.repo.entity.VenueTypeEntity
@@ -14,6 +17,7 @@ import jakarta.persistence.EntityNotFoundException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
+import java.time.LocalDateTime
 
 @Service
 class VenueService(
@@ -21,6 +25,7 @@ class VenueService(
     private val venueRatingRepository: VenueRatingRepository,
     private val venueTypeRepository: VenueTypeRepository,
     private val imageService: ImageService,
+    private val reservationRepository: ReservationRepository,
 ) {
 
     @Transactional(readOnly = true)
@@ -30,19 +35,42 @@ class VenueService(
                 .orElseThrow { EntityNotFoundException("Venue with id: $venueId not found.") }
         val venueRating: List<VenueRatingEntity> = venueRatingRepository.findByVenueId(venueId)
         venue.averageRating = venueRating.map { it.rating }.average()
+
+        val (lowerBound, upperBound) = getSurroundingHalfHours(LocalDateTime.now())
+
+        val reservations = reservationRepository.findByVenueIdAndDatetimeIn(
+            venueId, listOf(lowerBound, upperBound)
+        )
+
+        if (reservations.isNotEmpty()) {
+            calculateCurrentAvailableCapacity(venue, reservations)
+        } else {
+            venue.availableCapacity = venue.maximumCapacity
+        }
+
         return venue
     }
 
     @Transactional(readOnly = true)
     fun getAll(): List<VenueEntity> {
-        val venues: List<VenueEntity> = venueRepository.findAll()
-        val ratings: List<VenueRatingEntity> = venueRatingRepository.findAll()
+        val venues = venueRepository.findAll()
+        val ratings = venueRatingRepository.findAll()
+        val (lowerBound, upperBound) = getSurroundingHalfHours(LocalDateTime.now())
+        val reservationsByVenueId =
+            reservationRepository.findByDatetimeIn(listOf(lowerBound, upperBound)).groupBy { it.venueId }
 
-        val averageRatingById = ratings.groupBy { it.venueId }
+        val averageRatingByVenueId = ratings.groupBy { it.venueId }
             .mapValues { (_, venueRatings) -> venueRatings.map { it.rating }.average() }
 
         for (venue in venues) {
-            venue.averageRating = averageRatingById[venue.id] ?: 0.0
+            venue.averageRating = averageRatingByVenueId[venue.id] ?: 0.0
+
+            val venueReservations = reservationsByVenueId[venue.id].orEmpty()
+            if (venueReservations.isNotEmpty()) {
+                calculateCurrentAvailableCapacity(venue, venueReservations)
+            } else {
+                venue.availableCapacity = venue.maximumCapacity
+            }
         }
 
         return venues
@@ -59,20 +87,22 @@ class VenueService(
     @Transactional(readOnly = true)
     fun getAllTypes(): List<VenueTypeEntity> = venueTypeRepository.findAll()
 
-    fun getVenueImages(venueId: Int, venueName: String) = imageService.getVenueImages(venueId, venueName)
+    fun getVenueImages(venueId: Int, venueName: String): List<ByteArray> =
+        imageService.getVenueImages(venueId, venueName)
 
-    fun getMenuImage(venueId: Int, venueName: String) = imageService.getMenuImage(venueId, venueName)
+    fun getMenuImage(venueId: Int, venueName: String): MenuImageEntity = imageService.getMenuImage(venueId, venueName)
 
     @Transactional
     fun create(request: CreateVenueRequest): BasicResponse {
-        val venue = VenueEntity().also {
-            it.id
-            it.name = request.name
-            it.location = request.location
-            it.description = request.description
-            it.workingHours = request.workingHours
-            it.venueTypeId = request.typeId
-            it.averageRating = 0.0
+        val venue = VenueEntity().apply {
+            name = request.name
+            location = request.location
+            description = request.description
+            workingHours = request.workingHours
+            maximumCapacity = request.maximumCapacity
+            availableCapacity = request.availableCapacity
+            venueTypeId = request.typeId
+            averageRating = 0.0
         }
 
         dbActionWithTryCatch("Error while saving venue: ${request.name}") {
@@ -97,16 +127,18 @@ class VenueService(
 
         if (!containsVenueChanges(request, venue)) return BasicResponse(false, "Request does not update anything")
 
-        val updatedVenue = venue.also {
-            it.name = request?.name ?: venue.name
-            it.location = request?.location ?: venue.location
-            it.workingHours = request?.workingHours ?: venue.workingHours
-            it.venueTypeId = request?.typeId ?: venue.venueTypeId
-            it.description = request?.description ?: venue.description
+        venue.apply {
+            name = request?.name ?: venue.name
+            location = request?.location ?: venue.location
+            workingHours = request?.workingHours ?: venue.workingHours
+            maximumCapacity = request?.maximumCapacity ?: venue.maximumCapacity
+            availableCapacity = request?.availableCapacity ?: venue.availableCapacity
+            venueTypeId = request?.typeId ?: venue.venueTypeId
+            description = request?.description ?: venue.description
         }
 
         dbActionWithTryCatch("Error while updating venue with id $venueId") {
-            venueRepository.save(updatedVenue)
+            venueRepository.save(venue)
         }
 
         return BasicResponse(true, "Venue updated successfully")
@@ -170,8 +202,35 @@ class VenueService(
             request.name?.takeIf { it != venue.name },
             request.location?.takeIf { it != venue.location },
             request.workingHours?.takeIf { it != venue.workingHours },
+            request.maximumCapacity?.takeIf { it != venue.maximumCapacity },
+            request.availableCapacity?.takeIf { it != venue.availableCapacity },
             request.typeId?.takeIf { it != venue.venueTypeId },
             request.description?.takeIf { it != venue.description }
         ).any { it != null }
+    }
+
+    private fun calculateCurrentAvailableCapacity(venue: VenueEntity, reservations: List<ReservationEntity>) {
+        val totalGuests = reservations.sumOf { it.numberOfGuests }
+
+        venue.availableCapacity = venue.maximumCapacity - totalGuests
+    }
+
+    private fun getSurroundingHalfHours(time: LocalDateTime): Pair<LocalDateTime, LocalDateTime> {
+        val minute = time.minute
+        val second = time.second
+        val nano = time.nano
+        val truncated = time.minusSeconds(second.toLong()).minusNanos(nano.toLong())
+
+        val previous = when {
+            minute < 30 -> truncated.withMinute(0)
+            else -> truncated.withMinute(30)
+        }
+
+        val next = when {
+            minute < 30 -> truncated.withMinute(30)
+            else -> truncated.plusHours(1).withMinute(0)
+        }
+
+        return previous to next
     }
 }

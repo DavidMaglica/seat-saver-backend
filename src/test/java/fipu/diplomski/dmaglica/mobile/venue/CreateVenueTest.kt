@@ -24,6 +24,8 @@ class CreateVenueTest : BaseVenueServiceTest() {
             mockedVenue.description,
             mockedVenue.venueTypeId,
             mockedVenue.workingHours,
+            mockedVenue.maximumCapacity,
+            mockedVenue.availableCapacity,
         )
 
         val exception = assertThrows<SQLException> { venueService.create(request) }
@@ -40,6 +42,8 @@ class CreateVenueTest : BaseVenueServiceTest() {
             mockedVenue.description,
             mockedVenue.venueTypeId,
             mockedVenue.workingHours,
+            mockedVenue.maximumCapacity,
+            mockedVenue.availableCapacity,
         )
 
         val result = venueService.create(request)
@@ -54,6 +58,8 @@ class CreateVenueTest : BaseVenueServiceTest() {
         savedVenue.description `should be equal to` mockedVenue.description
         savedVenue.venueTypeId `should be equal to` mockedVenue.venueTypeId
         savedVenue.workingHours `should be equal to` mockedVenue.workingHours
+        savedVenue.maximumCapacity `should be equal to` mockedVenue.maximumCapacity
+        savedVenue.availableCapacity `should be equal to` mockedVenue.availableCapacity
 
         verify(venueRepository, times(1)).save(any())
     }

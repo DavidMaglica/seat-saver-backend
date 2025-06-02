@@ -129,11 +129,12 @@ class UserService(
     ): BasicResponse {
         val user = findUserIfExists(email)
 
-        val notificationOptions = notificationOptionsRepository.findByUserId(user.id)
+        val notificationOptions = notificationOptionsRepository.findByUserId(user.id).apply {
+            pushNotificationsEnabled = pushNotificationsTurnedOn
+            emailNotificationsEnabled = emailNotificationsTurnedOn
+            locationServicesEnabled = locationServicesTurnedOn
+        }
 
-        notificationOptions.pushNotificationsEnabled = pushNotificationsTurnedOn
-        notificationOptions.emailNotificationsEnabled = emailNotificationsTurnedOn
-        notificationOptions.locationServicesEnabled = locationServicesTurnedOn
         dbActionWithTryCatch("Error while updating notification options for user with email $email") {
             notificationOptionsRepository.save(notificationOptions)
         }
@@ -146,10 +147,11 @@ class UserService(
 
     @Transactional
     fun updateLocation(email: String, latitude: Double, longitude: Double): BasicResponse {
-        val user = findUserIfExists(email)
+        val user = findUserIfExists(email).apply {
+            lastKnownLatitude = latitude
+            lastKnownLongitude = longitude
+        }
 
-        user.lastKnownLatitude = latitude
-        user.lastKnownLongitude = longitude
         dbActionWithTryCatch("Error while updating location for user with email $email") {
             userRepository.save(user)
         }

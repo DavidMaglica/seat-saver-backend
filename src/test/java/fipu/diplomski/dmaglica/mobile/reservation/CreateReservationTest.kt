@@ -11,7 +11,8 @@ import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.test.context.ActiveProfiles
 import java.sql.SQLException
-import java.util.*
+import java.time.LocalDateTime
+import java.util.Optional
 
 @ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
@@ -21,7 +22,7 @@ class CreateReservationTest : BaseReservationServiceTest() {
         private val mockedRequest = CreateReservationRequest(
             userEmail = "user1@mail.com",
             venueId = 1,
-            reservationDate = "02-08-2025 10:00",
+            reservationDate = LocalDateTime.now(),
             numberOfPeople = 2,
         )
     }
@@ -80,8 +81,7 @@ class CreateReservationTest : BaseReservationServiceTest() {
         `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
         `when`(reservationRepository.save(any())).thenReturn(mockedReservation)
 
-        val response =
-            reservationService.create(mockedRequest)
+        val response = reservationService.create(mockedRequest)
 
         response.success `should be equal to` true
         response.message `should be equal to` "Reservation created successfully"

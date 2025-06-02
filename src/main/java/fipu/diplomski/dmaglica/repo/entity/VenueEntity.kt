@@ -17,6 +17,10 @@ class VenueEntity {
 
     var workingHours: String = ""
 
+    var maximumCapacity: Int = 0
+
+    var availableCapacity: Int = 0
+
     var averageRating: Double = 0.0
 
     var venueTypeId: Int = 0

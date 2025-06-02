@@ -1,6 +1,7 @@
 package fipu.diplomski.dmaglica.repo.entity
 
 import jakarta.persistence.*
+import java.time.LocalDateTime
 
 @Entity
 @Table(name = "reservations")
@@ -13,7 +14,7 @@ data class ReservationEntity(
 
     var venueId: Int = 0,
 
-    var datetime: String = "",
+    var datetime: LocalDateTime = LocalDateTime.now(),
 
     var numberOfGuests: Int = 0,
 )
