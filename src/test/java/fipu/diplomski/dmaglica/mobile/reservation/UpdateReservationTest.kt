@@ -15,7 +15,8 @@ import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.test.context.ActiveProfiles
 import java.sql.SQLException
-import java.util.*
+import java.time.LocalDateTime
+import java.util.Optional
 
 @ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
@@ -25,7 +26,7 @@ class UpdateReservationTest : BaseReservationServiceTest() {
         private val mockedRequest = UpdateReservationRequest(
             userEmail = "user1@mail.com",
             reservationId = 1,
-            reservationDate = "02-08-2025 10:00",
+            reservationDate = LocalDateTime.now(),
             numberOfPeople = 3,
             venueId = 1
         )
@@ -39,7 +40,7 @@ class UpdateReservationTest : BaseReservationServiceTest() {
         private val noChangeRequest = UpdateReservationRequest(
             userEmail = "user1@mail.com",
             reservationId = 1,
-            reservationDate = "02-08-2025 10:00",
+            reservationDate = null,
             numberOfPeople = 2,
             venueId = 1
         )
@@ -94,8 +95,7 @@ class UpdateReservationTest : BaseReservationServiceTest() {
         `when`(userRepository.findByEmail(anyString())).thenReturn(mockedUser)
         `when`(reservationRepository.findById(anyInt())).thenReturn(Optional.of(mockedReservation))
 
-        val result =
-            reservationService.update(noChangeRequest)
+        val result = reservationService.update(noChangeRequest)
 
         result.success `should be` false
         result.message `should be equal to` "No changes to update"

@@ -1,5 +1,6 @@
 package fipu.diplomski.dmaglica.mobile.venue
 
+import fipu.diplomski.dmaglica.repo.ReservationRepository
 import fipu.diplomski.dmaglica.repo.VenueRatingRepository
 import fipu.diplomski.dmaglica.repo.VenueRepository
 import fipu.diplomski.dmaglica.repo.VenueTypeRepository
@@ -30,6 +31,9 @@ abstract class BaseVenueServiceTest {
     protected lateinit var venueTypeRepository: VenueTypeRepository
 
     @Mock
+    protected lateinit var reservationRepository: ReservationRepository
+
+    @Mock
     protected lateinit var imageService: ImageService
 
     @InjectMocks
@@ -37,7 +41,7 @@ abstract class BaseVenueServiceTest {
 
     @AfterEach
     fun tearDown() {
-        reset(venueRepository, venueRatingRepository, venueTypeRepository)
+        reset(venueRepository, venueRatingRepository, venueTypeRepository, reservationRepository)
     }
 
     protected val venueArgumentCaptor: ArgumentCaptor<VenueEntity> = ArgumentCaptor.forClass(VenueEntity::class.java)

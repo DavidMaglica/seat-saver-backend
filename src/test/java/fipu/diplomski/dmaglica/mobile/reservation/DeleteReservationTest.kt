@@ -12,7 +12,7 @@ import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.test.context.ActiveProfiles
 import java.sql.SQLException
-import java.util.*
+import java.util.Optional
 
 @ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
@@ -47,7 +47,7 @@ class DeleteReservationTest : BaseReservationServiceTest() {
 
         verify(userRepository, times(1)).findByEmail(anyString())
         verify(venueRepository, times(1)).findById(mockedReservation.venueId)
-        verify(reservationRepository, times(1)).findById(mockedReservation.venueId)
+        verify(reservationRepository, times(1)).findById(mockedReservation.id)
         verifyNoMoreInteractions(reservationRepository)
     }
 

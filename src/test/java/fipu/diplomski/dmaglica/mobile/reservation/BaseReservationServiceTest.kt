@@ -16,6 +16,7 @@ import org.mockito.Mock
 import org.mockito.Mockito.reset
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.test.context.ActiveProfiles
+import java.time.LocalDateTime
 
 @ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
@@ -40,9 +41,6 @@ abstract class BaseReservationServiceTest {
 
     protected val reservationArgumentCaptor: ArgumentCaptor<ReservationEntity> =
         ArgumentCaptor.forClass(ReservationEntity::class.java)
-
-    protected val venueArgumentCaptor: ArgumentCaptor<VenueEntity> =
-        ArgumentCaptor.forClass(VenueEntity::class.java)
 
     protected val mockedUser: UserEntity = UserEntity().apply {
         id = 1
@@ -70,7 +68,7 @@ abstract class BaseReservationServiceTest {
         id = 1
         userId = 1
         venueId = 1
-        datetime = "02-08-2025 10:00"
+        datetime = LocalDateTime.now()
         numberOfGuests = 2
     }
 }
