@@ -110,7 +110,7 @@ class VenueService(
         try {
             venueRepository.save(venue)
         } catch (e: Exception) {
-            logger.error { "Error while creating venue: ${e.message}" }
+            logger.error(e) { "Error while creating venue: ${e.message}" }
             return BasicResponse(false, "Error while creating venue. Please try again later.")
         }
 
