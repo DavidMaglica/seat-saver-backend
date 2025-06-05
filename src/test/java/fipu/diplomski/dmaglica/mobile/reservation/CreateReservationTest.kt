@@ -59,10 +59,15 @@ class CreateReservationTest : BaseReservationServiceTest() {
 
     @Test
     fun `should return failure response if venue is fully booked`() {
+        val (lowerBound, upperBound) = getSurroundingHalfHours(mockedRequest.reservationDate)
+
         `when`(userRepository.findById(anyInt())).thenReturn(Optional.of(mockedUser))
         `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
-        `when`(reservationRepository.findByVenueIdAndDatetimeIn(anyInt(), anyList()))
-            .thenReturn(listOf(mockedReservation.copy(numberOfGuests = mockedVenue.maximumCapacity)))
+        `when`(
+            reservationRepository.findByVenueIdAndDatetimeBetween(
+                mockedRequest.venueId, lowerBound, upperBound
+            )
+        ).thenReturn(listOf(mockedReservation.copy(numberOfGuests = mockedVenue.maximumCapacity)))
 
         val response = reservationService.create(mockedRequest)
 
@@ -71,15 +76,23 @@ class CreateReservationTest : BaseReservationServiceTest() {
 
         verify(userRepository, times(1)).findById(mockedUser.id)
         verify(venueRepository, times(1)).findById(mockedVenue.id)
-        verify(reservationRepository, times(1)).findByVenueIdAndDatetimeIn(anyInt(), anyList() ?: emptyList())
+        verify(reservationRepository, times(1)).findByVenueIdAndDatetimeBetween(
+            mockedVenue.id, lowerBound, upperBound
+        )
         verifyNoMoreInteractions(userRepository, venueRepository, reservationRepository)
     }
 
     @Test
     fun `should return failure response if unable to save reservation`() {
+        val (lowerBound, upperBound) = getSurroundingHalfHours(mockedRequest.reservationDate)
+
         `when`(userRepository.findById(anyInt())).thenReturn(Optional.of(mockedUser))
         `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
-        `when`(reservationRepository.findByVenueIdAndDatetimeIn(anyInt(), anyList())).thenReturn(emptyList())
+        `when`(
+            reservationRepository.findByVenueIdAndDatetimeBetween(
+                mockedRequest.venueId, lowerBound, upperBound
+            )
+        ).thenReturn(emptyList())
         `when`(reservationRepository.save(any())).thenThrow(RuntimeException())
 
         val response = reservationService.create(mockedRequest)
@@ -89,15 +102,24 @@ class CreateReservationTest : BaseReservationServiceTest() {
 
         verify(userRepository, times(1)).findById(mockedUser.id)
         verify(venueRepository, times(1)).findById(mockedVenue.id)
-        verify(reservationRepository, times(1)).findByVenueIdAndDatetimeIn(anyInt(), anyList() ?: emptyList())
+        verify(reservationRepository, times(1)).findByVenueIdAndDatetimeBetween(
+            mockedVenue.id, lowerBound, upperBound
+        )
         verify(reservationRepository, times(1)).save(any())
         verifyNoMoreInteractions(userRepository, venueRepository, reservationRepository)
     }
 
     @Test
     fun `should create reservation`() {
+        val (lowerBound, upperBound) = getSurroundingHalfHours(mockedRequest.reservationDate)
+
         `when`(userRepository.findById(anyInt())).thenReturn(Optional.of(mockedUser))
         `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
+        `when`(
+            reservationRepository.findByVenueIdAndDatetimeBetween(
+                mockedRequest.venueId, lowerBound, upperBound
+            )
+        ).thenReturn(emptyList())
         `when`(reservationRepository.save(any())).thenReturn(mockedReservation)
 
         val response = reservationService.create(mockedRequest)
@@ -114,8 +136,28 @@ class CreateReservationTest : BaseReservationServiceTest() {
 
         verify(userRepository, times(1)).findById(mockedUser.id)
         verify(venueRepository, times(1)).findById(mockedVenue.id)
-        verify(reservationRepository, times(1)).findByVenueIdAndDatetimeIn(anyInt(), anyList() ?: emptyList())
-        verify(reservationRepository, times(1)).save(reservationArgumentCaptor.capture())
+        verify(reservationRepository, times(1)).findByVenueIdAndDatetimeBetween(
+            mockedVenue.id, lowerBound, upperBound
+        )
         verifyNoMoreInteractions(userRepository, venueRepository, reservationRepository)
+    }
+
+    private fun getSurroundingHalfHours(time: LocalDateTime): Pair<LocalDateTime, LocalDateTime> {
+        val minute = time.minute
+        val second = time.second
+        val nano = time.nano
+        val truncated = time.minusSeconds(second.toLong()).minusNanos(nano.toLong())
+
+        val previous = when {
+            minute < 30 -> truncated.withMinute(0)
+            else -> truncated.withMinute(30)
+        }
+
+        val next = when {
+            minute < 30 -> truncated.withMinute(30)
+            else -> truncated.plusHours(1).withMinute(0)
+        }
+
+        return previous to next
     }
 }

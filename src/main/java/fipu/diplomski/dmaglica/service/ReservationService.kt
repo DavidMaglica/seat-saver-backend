@@ -43,8 +43,8 @@ class ReservationService(
         val currentTimestamp: LocalDateTime = request.reservationDate
         val (lowerBound, upperBound) = getSurroundingHalfHours(currentTimestamp)
 
-        val reservations = reservationRepository.findByVenueIdAndDatetimeIn(
-            request.venueId, listOf(lowerBound, upperBound)
+        val reservations = reservationRepository.findByVenueIdAndDatetimeBetween(
+            request.venueId, lowerBound, upperBound
         )
 
         if (reservations.isNotEmpty()) {

@@ -40,8 +40,8 @@ class VenueService(
         val currentTimestamp: LocalDateTime = LocalDateTime.now()
         val (lowerBound, upperBound) = getSurroundingHalfHours(currentTimestamp)
 
-        val reservations = reservationRepository.findByVenueIdAndDatetimeIn(
-            venueId, listOf(lowerBound, upperBound)
+        val reservations = reservationRepository.findByVenueIdAndDatetimeBetween(
+            venueId, lowerBound, upperBound
         )
 
         if (reservations.isNotEmpty()) {
@@ -60,7 +60,7 @@ class VenueService(
         val currentTimestamp: LocalDateTime = LocalDateTime.now()
         val (lowerBound, upperBound) = getSurroundingHalfHours(currentTimestamp)
         val reservationsByVenueId =
-            reservationRepository.findByDatetimeIn(listOf(lowerBound, upperBound)).groupBy { it.venueId }
+            reservationRepository.findByDatetimeBetween(lowerBound, upperBound).groupBy { it.venueId }
 
         val averageRatingByVenueId = ratings.groupBy { it.venueId }
             .mapValues { (_, venueRatings) -> venueRatings.map { it.rating }.average() }
