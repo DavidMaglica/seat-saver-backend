@@ -54,7 +54,7 @@ class ImageService(
             )
         }
 
-        return BasicResponse(true, "Image '${file.originalFilename}' uploaded successfully")
+        return BasicResponse(true, "Image '${file.originalFilename}' uploaded successfully.")
     }
 
     @Transactional
@@ -72,7 +72,7 @@ class ImageService(
             )
         }
 
-        return BasicResponse(true, "Image '${file.originalFilename}' uploaded successfully")
+        return BasicResponse(true, "Image '${file.originalFilename}' uploaded successfully.")
     }
 
     private fun validateImage(file: MultipartFile) {

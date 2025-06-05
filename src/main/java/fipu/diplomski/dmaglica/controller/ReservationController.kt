@@ -19,8 +19,8 @@ class ReservationController(private val reservationService: ReservationService) 
 
     @GetMapping(Paths.GET_RESERVATIONS)
     fun getReservations(
-        @RequestParam("email") email: String
-    ): List<Reservation> = reservationService.getAll(email)
+        @RequestParam("userId") userId: Int
+    ): List<Reservation> = reservationService.getAll(userId)
 
     @PatchMapping(Paths.UPDATE_RESERVATION)
     fun updateReservation(
@@ -29,8 +29,8 @@ class ReservationController(private val reservationService: ReservationService) 
 
     @DeleteMapping(Paths.DELETE_RESERVATION)
     fun deleteReservation(
-        @RequestParam("email") email: String,
+        @RequestParam("userId") userId: Int,
         @RequestParam("reservationId") reservationId: Int,
         @RequestParam("venueId") venueId: Int
-    ): BasicResponse = reservationService.delete(email, reservationId, venueId)
+    ): BasicResponse = reservationService.delete(userId, reservationId, venueId)
 }

@@ -49,7 +49,7 @@ class CreateVenueTest : BaseVenueServiceTest() {
         val result = venueService.create(request)
 
         result.success `should be equal to` true
-        result.message `should be equal to` "Venue ${mockedVenue.name} created successfully"
+        result.message `should be equal to` "Venue ${mockedVenue.name} created successfully."
 
         verify(venueRepository).save(venueArgumentCaptor.capture())
         val savedVenue = venueArgumentCaptor.value

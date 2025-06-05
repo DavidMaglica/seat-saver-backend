@@ -1,15 +1,13 @@
 package fipu.diplomski.dmaglica.mobile.user
 
-import fipu.diplomski.dmaglica.exception.UserNotFoundException
 import org.amshove.kluent.`should be`
 import org.amshove.kluent.`should be equal to`
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.test.context.ActiveProfiles
-import java.sql.SQLException
+import java.util.*
 
 @ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
@@ -20,54 +18,61 @@ class UpdatePasswordTest : BaseUserServiceTest() {
     }
 
     @Test
-    fun `should throw if user not found`() {
-        `when`(userRepository.findByEmail(anyString())).thenReturn(null)
+    fun `should return failure response if new password is empty`() {
+        val result = userService.updatePassword(mockedUser.id, "")
 
-        val exception =
-            assertThrows<UserNotFoundException> {
-                userService.updatePassword(
-                    mockedUser.email,
-                    NEW_PASSWORD
-                )
-            }
+        result.success `should be` false
+        result.message `should be equal to` "Password cannot be empty."
 
-        exception.message `should be equal to` "User with email ${mockedUser.email} does not exist"
+        verifyNoInteractions(userRepository)
     }
 
     @Test
-    fun `should throw if can't update password`() {
-        `when`(userRepository.findByEmail(anyString())).thenReturn(mockedUser)
+    fun `should return failure response if user not found`() {
+        `when`(userRepository.findById(anyInt())).thenReturn(Optional.empty())
+
+        val result = userService.updatePassword(mockedUser.id, NEW_PASSWORD)
+
+        result.success `should be` false
+        result.message `should be equal to` "User not found."
+
+        verify(userRepository, times(1)).findById(mockedUser.id)
+        verifyNoMoreInteractions(userRepository)
+    }
+
+    @Test
+    fun `should return failure response if can't update password`() {
+        `when`(userRepository.findById(anyInt())).thenReturn(Optional.of(mockedUser))
         `when`(userRepository.save(any())).thenThrow(RuntimeException())
 
-        val exception = assertThrows<SQLException> {
-            userService.updatePassword(
-                mockedUser.email,
-                NEW_PASSWORD
-            )
-        }
+        val result = userService.updatePassword(mockedUser.id, NEW_PASSWORD)
 
-        exception.message `should be equal to` "Error while updating password for user with email ${mockedUser.email}"
+        result.success `should be` false
+        result.message `should be equal to` "Error while updating password. Please try again later."
 
-        verify(userRepository, times(1)).findByEmail(mockedUser.email)
+        verify(userRepository, times(1)).findById(mockedUser.id)
+        verify(userRepository, times(1)).save(any())
+        verifyNoMoreInteractions(userRepository)
     }
 
     @Test
     fun `should update password`() {
-        `when`(userRepository.findByEmail(anyString())).thenReturn(mockedUser)
+        `when`(userRepository.findById(anyInt())).thenReturn(Optional.of(mockedUser))
 
         val result = userService.updatePassword(
-            mockedUser.email,
+            mockedUser.id,
             NEW_PASSWORD
         )
 
         result.success `should be` true
-        result.message `should be equal to` "Password for user with email ${mockedUser.email} successfully updated"
+        result.message `should be equal to` "Password successfully updated."
 
         verify(userRepository).save(userEntityArgumentCaptor.capture())
         val updatedUser = userEntityArgumentCaptor.value
         updatedUser.password `should be equal to` NEW_PASSWORD
 
-        verify(userRepository, times(1)).findByEmail(mockedUser.email)
+        verify(userRepository, times(1)).findById(mockedUser.id)
         verify(userRepository, times(1)).save(any())
+        verifyNoMoreInteractions(userRepository)
     }
 }

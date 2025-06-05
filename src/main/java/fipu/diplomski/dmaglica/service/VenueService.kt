@@ -7,11 +7,7 @@ import fipu.diplomski.dmaglica.repo.ReservationRepository
 import fipu.diplomski.dmaglica.repo.VenueRatingRepository
 import fipu.diplomski.dmaglica.repo.VenueRepository
 import fipu.diplomski.dmaglica.repo.VenueTypeRepository
-import fipu.diplomski.dmaglica.repo.entity.MenuImageEntity
-import fipu.diplomski.dmaglica.repo.entity.ReservationEntity
-import fipu.diplomski.dmaglica.repo.entity.VenueEntity
-import fipu.diplomski.dmaglica.repo.entity.VenueRatingEntity
-import fipu.diplomski.dmaglica.repo.entity.VenueTypeEntity
+import fipu.diplomski.dmaglica.repo.entity.*
 import fipu.diplomski.dmaglica.util.dbActionWithTryCatch
 import jakarta.persistence.EntityNotFoundException
 import org.springframework.stereotype.Service
@@ -36,7 +32,8 @@ class VenueService(
         val venueRating: List<VenueRatingEntity> = venueRatingRepository.findByVenueId(venueId)
         venue.averageRating = venueRating.map { it.rating }.average()
 
-        val (lowerBound, upperBound) = getSurroundingHalfHours(LocalDateTime.now())
+        val currentTimestamp: LocalDateTime = LocalDateTime.now()
+        val (lowerBound, upperBound) = getSurroundingHalfHours(currentTimestamp)
 
         val reservations = reservationRepository.findByVenueIdAndDatetimeIn(
             venueId, listOf(lowerBound, upperBound)
@@ -55,7 +52,8 @@ class VenueService(
     fun getAll(): List<VenueEntity> {
         val venues = venueRepository.findAll()
         val ratings = venueRatingRepository.findAll()
-        val (lowerBound, upperBound) = getSurroundingHalfHours(LocalDateTime.now())
+        val currentTimestamp: LocalDateTime = LocalDateTime.now()
+        val (lowerBound, upperBound) = getSurroundingHalfHours(currentTimestamp)
         val reservationsByVenueId =
             reservationRepository.findByDatetimeIn(listOf(lowerBound, upperBound)).groupBy { it.venueId }
 
@@ -109,7 +107,7 @@ class VenueService(
             venueRepository.save(venue)
         }
 
-        return BasicResponse(true, "Venue ${request.name} created successfully")
+        return BasicResponse(true, "Venue ${request.name} created successfully.")
     }
 
     fun uploadVenueImage(venueId: Int, image: MultipartFile): BasicResponse =
@@ -123,9 +121,12 @@ class VenueService(
         val venue = venueRepository.findById(venueId)
             .orElseThrow { EntityNotFoundException("Venue with id $venueId not found") }
 
-        if (!isRequestValid(request)) return BasicResponse(false, "Request is not valid")
+        if (!isRequestValid(request)) return BasicResponse(false, "Request is not valid.")
 
-        if (!containsVenueChanges(request, venue)) return BasicResponse(false, "Request does not update anything")
+        if (!containsVenueChanges(request, venue)) return BasicResponse(
+            false,
+            "No modifications found. Please change at least one field."
+        )
 
         venue.apply {
             name = request?.name ?: venue.name
@@ -141,12 +142,12 @@ class VenueService(
             venueRepository.save(venue)
         }
 
-        return BasicResponse(true, "Venue updated successfully")
+        return BasicResponse(true, "Venue updated successfully.")
     }
 
     @Transactional
     fun rate(venueId: Int, userRating: Double): BasicResponse {
-        if (userRating < 0.5 || userRating > 5.0) return BasicResponse(false, "Rating must be between 0.5 and 5")
+        if (userRating < 0.5 || userRating > 5.0) return BasicResponse(false, "Rating must be between 0.5 and 5.")
 
         val venue = venueRepository.findById(venueId)
             .orElseThrow { EntityNotFoundException("Venue with id $venueId not found") }
@@ -168,7 +169,7 @@ class VenueService(
             venueRepository.save(updatedVenue)
         }
 
-        return BasicResponse(true, "Venue with id $venueId successfully rated with rating $userRating")
+        return BasicResponse(true, "Venue with id $venueId successfully rated with rating $userRating.")
     }
 
     private fun calculateNewAverageRating(
@@ -187,7 +188,7 @@ class VenueService(
             venueRepository.deleteById(venueId)
         }
 
-        return BasicResponse(true, "Venue with id: $venueId successfully deleted")
+        return BasicResponse(true, "Venue with id: $venueId successfully deleted.")
     }
 
     private fun isRequestValid(request: UpdateVenueRequest?): Boolean = request?.let {

@@ -8,6 +8,5 @@ Create Table IF NOT EXISTS users
     last_known_longitude DOUBLE,
     role_id              INT         NOT NULL,
     FOREIGN KEY (role_id) REFERENCES roles (id),
-    CONSTRAINT uc_email UNIQUE (email),
-    CONSTRAINT uc_username UNIQUE (username)
+    CONSTRAINT uc_email UNIQUE (email)
 );

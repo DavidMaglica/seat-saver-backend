@@ -2,6 +2,7 @@ package fipu.diplomski.dmaglica.mobile.user
 
 import org.amshove.kluent.`should be`
 import org.amshove.kluent.`should be equal to`
+import org.amshove.kluent.`should not be equal to`
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentMatchers.anyString
@@ -22,10 +23,10 @@ class LoginTest : BaseUserServiceTest() {
     fun `should return early when user not found`() {
         `when`(userRepository.findByEmail(anyString())).thenReturn(null)
 
-        val result = userService.login(WRONG_EMAIL, mockedUser.password)
+        val response = userService.login(WRONG_EMAIL, mockedUser.password)
 
-        result.success `should be` false
-        result.message `should be equal to` "User with email $WRONG_EMAIL does not exist"
+        response.success `should be` false
+        response.message `should be equal to` "User with email $WRONG_EMAIL does not exist."
 
         verify(userRepository, times(1)).findByEmail(anyString())
     }
@@ -34,10 +35,10 @@ class LoginTest : BaseUserServiceTest() {
     fun `should return early if wrong password`() {
         `when`(userRepository.findByEmail(anyString())).thenReturn(mockedUser)
 
-        val result = userService.login(mockedUser.email, WRONG_PASSWORD)
+        val response = userService.login(mockedUser.email, WRONG_PASSWORD)
 
-        result.success `should be` false
-        result.message `should be equal to` "Incorrect password"
+        response.success `should be` false
+        response.message `should be equal to` "Incorrect password."
 
         verify(userRepository, times(1)).findByEmail(anyString())
     }
@@ -46,10 +47,16 @@ class LoginTest : BaseUserServiceTest() {
     fun `when user is found and password is correct user should be returned`() {
         `when`(userRepository.findByEmail(anyString())).thenReturn(mockedUser)
 
-        val result = userService.login(mockedUser.email, mockedUser.password)
+        val response = userService.login(mockedUser.email, mockedUser.password)
 
-        result.success `should be` true
-        result.message `should be equal to` "User with email ${mockedUser.email} successfully logged in"
+        response.success `should be` true
+        response.message `should be equal to` "User with email ${mockedUser.email} successfully logged in"
+        response.data `should not be equal to` null
+        response.data?.id `should be equal to` mockedUser.id
+        response.data?.email `should be equal to` mockedUser.email
+        response.data?.username `should be equal to` mockedUser.username
+        response.data?.password `should be equal to` mockedUser.password
+        response.data?.roleId `should be equal to` mockedUser.roleId
 
         verify(userRepository, times(1)).findByEmail(anyString())
     }
