@@ -2,6 +2,7 @@ package fipu.diplomski.dmaglica.util
 
 import fipu.diplomski.dmaglica.exception.ImageDataException
 import java.io.ByteArrayOutputStream
+import java.time.LocalDateTime
 import java.util.zip.Deflater
 import java.util.zip.Inflater
 
@@ -46,4 +47,23 @@ fun decompressImage(data: ByteArray): ByteArray {
     }
 
     return outputStream.toByteArray()
+}
+
+fun getSurroundingHalfHours(time: LocalDateTime): Pair<LocalDateTime, LocalDateTime> {
+    val minute = time.minute
+    val second = time.second
+    val nano = time.nano
+    val truncated = time.minusSeconds(second.toLong()).minusNanos(nano.toLong())
+
+    val previous = when {
+        minute < 30 -> truncated.withMinute(0)
+        else -> truncated.withMinute(30)
+    }
+
+    val next = when {
+        minute < 30 -> truncated.withMinute(30)
+        else -> truncated.plusHours(1).withMinute(0)
+    }
+
+    return previous to next
 }

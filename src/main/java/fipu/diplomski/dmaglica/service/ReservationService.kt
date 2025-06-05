@@ -11,9 +11,12 @@ import fipu.diplomski.dmaglica.repo.UserRepository
 import fipu.diplomski.dmaglica.repo.VenueRepository
 import fipu.diplomski.dmaglica.repo.entity.ReservationEntity
 import fipu.diplomski.dmaglica.repo.entity.UserEntity
+import fipu.diplomski.dmaglica.util.getSurroundingHalfHours
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Isolation
 import org.springframework.transaction.annotation.Transactional
+import java.time.LocalDateTime
 import kotlin.jvm.optionals.getOrElse
 
 @Service
@@ -27,14 +30,31 @@ class ReservationService(
         private val logger = KotlinLogging.logger(ReservationService::class.java.name)
     }
 
-    @Transactional
+    @Transactional(isolation = Isolation.SERIALIZABLE)
     fun create(request: CreateReservationRequest): BasicResponse {
         val user: UserEntity = userRepository.findById(request.userId).getOrElse {
             return BasicResponse(false, "User not found.")
         }
 
-        venueRepository.findById(request.venueId).orElseThrow {
+        val venue = venueRepository.findById(request.venueId).orElseThrow {
             VenueNotFoundException("Venue with id ${request.venueId} not found")
+        }
+
+        val currentTimestamp: LocalDateTime = request.reservationDate
+        val (lowerBound, upperBound) = getSurroundingHalfHours(currentTimestamp)
+
+        val reservations = reservationRepository.findByVenueIdAndDatetimeBetween(
+            request.venueId, lowerBound, upperBound
+        )
+
+        if (reservations.isNotEmpty()) {
+            val totalGuests = reservations.sumOf { it.numberOfGuests }
+            if (totalGuests + request.numberOfPeople > venue.maximumCapacity) {
+                return BasicResponse(
+                    false,
+                    "The venue is fully booked for the selected time. Please choose a different time."
+                )
+            }
         }
 
         val reservation = ReservationEntity().apply {

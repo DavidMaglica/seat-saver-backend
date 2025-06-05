@@ -8,6 +8,7 @@ import fipu.diplomski.dmaglica.repo.VenueRatingRepository
 import fipu.diplomski.dmaglica.repo.VenueRepository
 import fipu.diplomski.dmaglica.repo.VenueTypeRepository
 import fipu.diplomski.dmaglica.repo.entity.*
+import fipu.diplomski.dmaglica.util.getSurroundingHalfHours
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.persistence.EntityNotFoundException
 import org.springframework.stereotype.Service
@@ -39,8 +40,8 @@ class VenueService(
         val currentTimestamp: LocalDateTime = LocalDateTime.now()
         val (lowerBound, upperBound) = getSurroundingHalfHours(currentTimestamp)
 
-        val reservations = reservationRepository.findByVenueIdAndDatetimeIn(
-            venueId, listOf(lowerBound, upperBound)
+        val reservations = reservationRepository.findByVenueIdAndDatetimeBetween(
+            venueId, lowerBound, upperBound
         )
 
         if (reservations.isNotEmpty()) {
@@ -59,7 +60,7 @@ class VenueService(
         val currentTimestamp: LocalDateTime = LocalDateTime.now()
         val (lowerBound, upperBound) = getSurroundingHalfHours(currentTimestamp)
         val reservationsByVenueId =
-            reservationRepository.findByDatetimeIn(listOf(lowerBound, upperBound)).groupBy { it.venueId }
+            reservationRepository.findByDatetimeBetween(lowerBound, upperBound).groupBy { it.venueId }
 
         val averageRatingByVenueId = ratings.groupBy { it.venueId }
             .mapValues { (_, venueRatings) -> venueRatings.map { it.rating }.average() }
@@ -235,22 +236,4 @@ class VenueService(
         venue.availableCapacity = venue.maximumCapacity - totalGuests
     }
 
-    private fun getSurroundingHalfHours(time: LocalDateTime): Pair<LocalDateTime, LocalDateTime> {
-        val minute = time.minute
-        val second = time.second
-        val nano = time.nano
-        val truncated = time.minusSeconds(second.toLong()).minusNanos(nano.toLong())
-
-        val previous = when {
-            minute < 30 -> truncated.withMinute(0)
-            else -> truncated.withMinute(30)
-        }
-
-        val next = when {
-            minute < 30 -> truncated.withMinute(30)
-            else -> truncated.plusHours(1).withMinute(0)
-        }
-
-        return previous to next
-    }
 }

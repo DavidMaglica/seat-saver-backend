@@ -6,6 +6,10 @@ import java.time.LocalDateTime
 
 interface ReservationRepository : JpaRepository<ReservationEntity, Int> {
     fun findByUserId(userId: Int): List<ReservationEntity>
-    fun findByVenueIdAndDatetimeIn(venueId: Int, datetimes: List<LocalDateTime>): List<ReservationEntity>
-    fun findByDatetimeIn(datetimes: List<LocalDateTime>): List<ReservationEntity>
+    fun findByDatetimeBetween(first: LocalDateTime, second: LocalDateTime): List<ReservationEntity>
+    fun findByVenueIdAndDatetimeBetween(
+        venueId: Int,
+        first: LocalDateTime,
+        second: LocalDateTime
+    ): List<ReservationEntity>
 }
