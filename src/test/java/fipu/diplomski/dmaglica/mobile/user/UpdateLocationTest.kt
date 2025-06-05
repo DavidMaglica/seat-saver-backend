@@ -28,6 +28,7 @@ class UpdateLocationTest : BaseUserServiceTest() {
         result.message `should be equal to` "User not found."
 
         verify(userRepository, times(1)).findById(mockedUser.id)
+        verifyNoMoreInteractions(userRepository)
     }
 
     @Test
