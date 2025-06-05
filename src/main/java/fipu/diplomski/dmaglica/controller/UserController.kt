@@ -4,6 +4,8 @@ import fipu.diplomski.dmaglica.model.data.NotificationOptions
 import fipu.diplomski.dmaglica.model.data.User
 import fipu.diplomski.dmaglica.model.data.UserLocation
 import fipu.diplomski.dmaglica.model.response.BasicResponse
+import fipu.diplomski.dmaglica.model.response.DataResponse
+import fipu.diplomski.dmaglica.repo.entity.UserEntity
 import fipu.diplomski.dmaglica.service.UserService
 import fipu.diplomski.dmaglica.util.Paths
 import org.springframework.web.bind.annotation.*
@@ -17,47 +19,47 @@ class UserController(private val userService: UserService) {
         @RequestParam("email") email: String,
         @RequestParam("username") username: String,
         @RequestParam("password") password: String
-    ): BasicResponse = userService.signup(email, username, password)
+    ): DataResponse<UserEntity> = userService.signup(email, username, password)
 
     @GetMapping(Paths.LOGIN)
     fun login(
         @RequestParam("email") email: String,
         @RequestParam("password") password: String
-    ): BasicResponse = userService.login(email, password)
+    ): DataResponse<UserEntity> = userService.login(email, password)
 
     @GetMapping(Paths.GET_NOTIFICATION_OPTIONS)
-    fun getUserNotificationOptions(@RequestParam("email") email: String): NotificationOptions =
-        userService.getNotificationOptions(email)
+    fun getUserNotificationOptions(@RequestParam("userId") userId: Int): NotificationOptions? =
+        userService.getNotificationOptions(userId)
 
     @GetMapping(Paths.GET_LOCATION)
-    fun getUserLocation(@RequestParam("email") email: String): UserLocation? = userService.getLocation(email)
+    fun getUserLocation(@RequestParam("userId") userId: Int): UserLocation? = userService.getLocation(userId)
 
     @PatchMapping(Paths.UPDATE_EMAIL)
     fun updateUserEmail(
-        @RequestParam("email") email: String,
+        @RequestParam("userId") userId: Int,
         @RequestParam("newEmail") newEmail: String
-    ): BasicResponse = userService.updateEmail(email, newEmail)
+    ): BasicResponse = userService.updateEmail(userId, newEmail)
 
     @PatchMapping(Paths.UPDATE_USERNAME)
     fun updateUserUsername(
-        @RequestParam("email") email: String,
+        @RequestParam("userId") userId: Int,
         @RequestParam("newUsername") newUsername: String
-    ): BasicResponse = userService.updateUsername(email, newUsername)
+    ): BasicResponse = userService.updateUsername(userId, newUsername)
 
     @PatchMapping(Paths.UPDATE_PASSWORD)
     fun updateUserPassword(
-        @RequestParam("email") email: String,
+        @RequestParam("userId") userId: Int,
         @RequestParam("newPassword") newPassword: String
-    ): BasicResponse = userService.updatePassword(email, newPassword)
+    ): BasicResponse = userService.updatePassword(userId, newPassword)
 
     @PatchMapping(Paths.UPDATE_NOTIFICATION_OPTIONS)
     fun updateUserNotificationOptions(
-        @RequestParam("email") email: String,
+        @RequestParam("userId") userId: Int,
         @RequestParam("pushNotificationsTurnedOn") pushNotificationsTurnedOn: Boolean,
         @RequestParam("emailNotificationsTurnedOn") emailNotificationsTurnedOn: Boolean,
         @RequestParam("locationServicesTurnedOn") locationServicesTurnedOn: Boolean
     ): BasicResponse = userService.updateNotificationOptions(
-        email,
+        userId,
         pushNotificationsTurnedOn,
         emailNotificationsTurnedOn,
         locationServicesTurnedOn
@@ -65,15 +67,15 @@ class UserController(private val userService: UserService) {
 
     @PatchMapping(Paths.UPDATE_LOCATION)
     fun updateUserLocation(
-        @RequestParam("email") email: String,
+        @RequestParam("userId") userId: Int,
         @RequestParam("latitude") latitude: Double,
         @RequestParam("longitude") longitude: Double
-    ): BasicResponse = userService.updateLocation(email, latitude, longitude)
+    ): BasicResponse = userService.updateLocation(userId, latitude, longitude)
 
     @DeleteMapping(Paths.DELETE_USER)
-    fun deleteUser(@RequestParam("email") email: String): BasicResponse = userService.delete(email)
+    fun deleteUser(@RequestParam("userId") userId: Int): BasicResponse = userService.delete(userId)
 
     @GetMapping(Paths.GET_USER)
-    fun getUser(@RequestParam("email") email: String): User = userService.getUser(email)
+    fun getUser(@RequestParam("userId") userId: Int): User? = userService.getUser(userId)
 
 }

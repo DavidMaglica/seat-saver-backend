@@ -7,11 +7,7 @@ import fipu.diplomski.dmaglica.repo.ReservationRepository
 import fipu.diplomski.dmaglica.repo.VenueRatingRepository
 import fipu.diplomski.dmaglica.repo.VenueRepository
 import fipu.diplomski.dmaglica.repo.VenueTypeRepository
-import fipu.diplomski.dmaglica.repo.entity.MenuImageEntity
-import fipu.diplomski.dmaglica.repo.entity.ReservationEntity
-import fipu.diplomski.dmaglica.repo.entity.VenueEntity
-import fipu.diplomski.dmaglica.repo.entity.VenueRatingEntity
-import fipu.diplomski.dmaglica.repo.entity.VenueTypeEntity
+import fipu.diplomski.dmaglica.repo.entity.*
 import fipu.diplomski.dmaglica.util.dbActionWithTryCatch
 import jakarta.persistence.EntityNotFoundException
 import org.springframework.stereotype.Service
@@ -36,7 +32,8 @@ class VenueService(
         val venueRating: List<VenueRatingEntity> = venueRatingRepository.findByVenueId(venueId)
         venue.averageRating = venueRating.map { it.rating }.average()
 
-        val (lowerBound, upperBound) = getSurroundingHalfHours(LocalDateTime.now())
+        val currentTimestamp: LocalDateTime = LocalDateTime.now()
+        val (lowerBound, upperBound) = getSurroundingHalfHours(currentTimestamp)
 
         val reservations = reservationRepository.findByVenueIdAndDatetimeIn(
             venueId, listOf(lowerBound, upperBound)
@@ -55,7 +52,8 @@ class VenueService(
     fun getAll(): List<VenueEntity> {
         val venues = venueRepository.findAll()
         val ratings = venueRatingRepository.findAll()
-        val (lowerBound, upperBound) = getSurroundingHalfHours(LocalDateTime.now())
+        val currentTimestamp: LocalDateTime = LocalDateTime.now()
+        val (lowerBound, upperBound) = getSurroundingHalfHours(currentTimestamp)
         val reservationsByVenueId =
             reservationRepository.findByDatetimeIn(listOf(lowerBound, upperBound)).groupBy { it.venueId }
 

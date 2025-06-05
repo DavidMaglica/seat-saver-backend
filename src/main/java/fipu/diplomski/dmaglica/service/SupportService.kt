@@ -14,7 +14,7 @@ class SupportService(
 ) {
 
     companion object {
-        private val logger = KotlinLogging.logger {}
+        private val logger = KotlinLogging.logger(SupportService::class.java.name)
     }
 
     fun sendEmail(userEmail: String, subject: String, body: String): BasicResponse {

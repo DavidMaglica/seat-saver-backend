@@ -1,7 +1,6 @@
 package fipu.diplomski.dmaglica.service
 
 import fipu.diplomski.dmaglica.exception.ReservationNotFoundException
-import fipu.diplomski.dmaglica.exception.UserNotFoundException
 import fipu.diplomski.dmaglica.exception.VenueNotFoundException
 import fipu.diplomski.dmaglica.model.data.Reservation
 import fipu.diplomski.dmaglica.model.request.CreateReservationRequest
@@ -11,9 +10,11 @@ import fipu.diplomski.dmaglica.repo.ReservationRepository
 import fipu.diplomski.dmaglica.repo.UserRepository
 import fipu.diplomski.dmaglica.repo.VenueRepository
 import fipu.diplomski.dmaglica.repo.entity.ReservationEntity
+import fipu.diplomski.dmaglica.repo.entity.UserEntity
 import fipu.diplomski.dmaglica.util.dbActionWithTryCatch
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import kotlin.jvm.optionals.getOrElse
 
 @Service
 class ReservationService(
@@ -24,8 +25,9 @@ class ReservationService(
 
     @Transactional
     fun create(request: CreateReservationRequest): BasicResponse {
-        val user = userRepository.findByEmail(request.userEmail)
-            ?: throw UserNotFoundException("User with email ${request.userEmail} not found")
+        val user: UserEntity = userRepository.findById(request.userId).getOrElse {
+            return BasicResponse(false, "User not found.")
+        }
 
         venueRepository.findById(request.venueId).orElseThrow {
             VenueNotFoundException("Venue with id ${request.venueId} not found")
@@ -38,7 +40,7 @@ class ReservationService(
             numberOfGuests = request.numberOfPeople
         }
 
-        dbActionWithTryCatch("Error while creating reservation for user with email ${request.userEmail}") {
+        dbActionWithTryCatch("Error while creating reservation. Please try again later.") {
             reservationRepository.save(reservation)
         }
 
@@ -46,16 +48,17 @@ class ReservationService(
     }
 
     @Transactional(readOnly = true)
-    fun getAll(email: String): List<Reservation> {
-        val user = userRepository.findByEmail(email) ?: throw UserNotFoundException("User with email $email not found")
+    fun getAll(userId: Int): List<Reservation> {
+        userRepository.findById(userId).getOrElse { return emptyList() }
 
-        return reservationRepository.findByUserId(user.id).map { it.toReservation() }
+        return reservationRepository.findByUserId(userId).map { it.toReservation() }
     }
 
     @Transactional
     fun update(request: UpdateReservationRequest): BasicResponse {
-        userRepository.findByEmail(request.userEmail)
-            ?: throw UserNotFoundException("User with email ${request.userEmail} not found")
+        userRepository.findById(request.userId).getOrElse {
+            return BasicResponse(false, "User not found.")
+        }
 
         val reservation = reservationRepository.findById(request.reservationId)
             .orElseThrow { ReservationNotFoundException("Reservation not found") }
@@ -79,8 +82,11 @@ class ReservationService(
     }
 
     @Transactional
-    fun delete(email: String, reservationId: Int, venueId: Int): BasicResponse {
-        userRepository.findByEmail(email) ?: throw UserNotFoundException("User with email $email not found")
+    fun delete(userId: Int, reservationId: Int, venueId: Int): BasicResponse {
+        userRepository.findById(userId).getOrElse {
+            return BasicResponse(false, "User not found.")
+        }
+
         reservationRepository.findById(reservationId).orElseThrow {
             ReservationNotFoundException("Reservation with id $reservationId not found")
         }
@@ -88,7 +94,7 @@ class ReservationService(
             VenueNotFoundException("Venue with id $venueId not found")
         }
 
-        dbActionWithTryCatch("Error while deleting reservation for user with email $email") {
+        dbActionWithTryCatch("Error while deleting reservation. Please try again later.") {
             reservationRepository.deleteById(reservationId)
         }
 
@@ -96,7 +102,7 @@ class ReservationService(
     }
 
     private fun ReservationEntity.toReservation() = Reservation(
-        reservationId = this.id,
+        id = this.id,
         userId = this.userId,
         venueId = this.venueId,
         datetime = this.datetime,

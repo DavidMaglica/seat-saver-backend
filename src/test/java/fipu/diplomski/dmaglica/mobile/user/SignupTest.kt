@@ -1,13 +1,12 @@
 package fipu.diplomski.dmaglica.mobile.user
 
 import org.amshove.kluent.`should be equal to`
+import org.amshove.kluent.`should not be`
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.test.context.ActiveProfiles
-import java.sql.SQLException
 
 @ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
@@ -27,44 +26,38 @@ class SignupTest : BaseUserServiceTest() {
     }
 
     @Test
-    fun `should throw if user not saved`() {
+    fun `should return failure response if user not save`() {
         `when`(userRepository.findByEmail(anyString())).thenReturn(null)
         `when`(userRepository.save(any())).thenThrow(RuntimeException("Error while saving user"))
 
-        val exception = assertThrows<SQLException> {
-            userService.signup(
-                mockedUser.email,
-                mockedUser.username,
-                mockedUser.password
-            )
-        }
+        val response = userService.signup(mockedUser.email, mockedUser.username, mockedUser.password)
 
-        exception.message `should be equal to` "Error while saving user with email ${mockedUser.email}"
+        response.success `should be equal to` false
+        response.message `should be equal to` "Error while creating user. Please try again later."
+        response.data `should be equal to` null
 
         verify(userRepository, times(1)).findByEmail(mockedUser.email)
         verify(userRepository, times(1)).save(any())
         verifyNoInteractions(notificationOptionsRepository)
+        verifyNoMoreInteractions(userRepository)
     }
 
     @Test
-    fun `should throw if notification options not saved`() {
+    fun `should return failure response if notification options not saved`() {
         `when`(userRepository.findByEmail(anyString())).thenReturn(null)
         `when`(userRepository.save(any())).thenReturn(mockedUser)
         `when`(notificationOptionsRepository.save(any())).thenThrow(RuntimeException("Error while saving notification options"))
 
-        val exception = assertThrows<SQLException> {
-            userService.signup(
-                mockedUser.email,
-                mockedUser.username,
-                mockedUser.password
-            )
-        }
+        val response = userService.signup(mockedUser.email, mockedUser.username, mockedUser.password)
 
-        exception.message `should be equal to` "Error while saving user with email ${mockedUser.email}"
+        response.success `should be equal to` false
+        response.message `should be equal to` "Error while creating user notification options. Please try again later."
+        response.data `should be equal to` null
 
         verify(userRepository, times(1)).findByEmail(mockedUser.email)
         verify(userRepository, times(1)).save(any())
         verify(notificationOptionsRepository, times(1)).save(any())
+        verifyNoMoreInteractions(userRepository, notificationOptionsRepository)
     }
 
     @Test
@@ -77,6 +70,13 @@ class SignupTest : BaseUserServiceTest() {
 
         response.success `should be equal to` true
         response.message `should be equal to` "User with email ${mockedUser.email} successfully created"
+        response.data `should not be` null
+        response.data?.id `should be equal to` mockedUser.id
+        response.data?.email `should be equal to` mockedUser.email
+        response.data?.username `should be equal to` mockedUser.username
+        response.data?.password `should be equal to` mockedUser.password
+        response.data?.roleId `should be equal to` mockedUser.roleId
+
 
         verify(userRepository).save(userEntityArgumentCaptor.capture())
         verify(notificationOptionsRepository).save(notificationOptionsArgumentCaptor.capture())
@@ -95,5 +95,6 @@ class SignupTest : BaseUserServiceTest() {
         verify(userRepository, times(1)).findByEmail(mockedUser.email)
         verify(userRepository, times(1)).save(any())
         verify(notificationOptionsRepository, times(1)).save(any())
+        verifyNoMoreInteractions(userRepository, notificationOptionsRepository)
     }
 }
