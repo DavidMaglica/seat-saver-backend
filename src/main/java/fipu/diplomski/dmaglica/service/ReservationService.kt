@@ -47,7 +47,7 @@ class ReservationService(
         try {
             reservationRepository.save(reservation)
         } catch (e: Exception) {
-            logger.error { "Error while creating reservation: ${e.message}" }
+            logger.error(e) { "Error while creating reservation: ${e.message}" }
             return BasicResponse(false, "Error while creating reservation. Please try again later.")
         }
 
