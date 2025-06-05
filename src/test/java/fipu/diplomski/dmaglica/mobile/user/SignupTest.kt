@@ -26,7 +26,7 @@ class SignupTest : BaseUserServiceTest() {
     }
 
     @Test
-    fun `should return failure response if user not save`() {
+    fun `should return failure response if user not saved`() {
         `when`(userRepository.findByEmail(anyString())).thenReturn(null)
         `when`(userRepository.save(any())).thenThrow(RuntimeException("Error while saving user"))
 
