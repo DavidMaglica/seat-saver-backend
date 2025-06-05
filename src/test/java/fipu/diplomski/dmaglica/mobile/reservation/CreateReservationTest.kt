@@ -58,6 +58,24 @@ class CreateReservationTest : BaseReservationServiceTest() {
     }
 
     @Test
+    fun `should return failure response if venue is fully booked`() {
+        `when`(userRepository.findById(anyInt())).thenReturn(Optional.of(mockedUser))
+        `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
+        `when`(reservationRepository.findByVenueIdAndDatetimeIn(anyInt(), anyList()))
+            .thenReturn(listOf(mockedReservation.copy(numberOfGuests = mockedVenue.maximumCapacity)))
+
+        val response = reservationService.create(mockedRequest)
+
+        response.success `should be equal to` false
+        response.message `should be equal to` "The venue is fully booked for the selected time. Please choose a different time."
+
+        verify(userRepository, times(1)).findById(mockedUser.id)
+        verify(venueRepository, times(1)).findById(mockedVenue.id)
+        verify(reservationRepository, times(1)).findByVenueIdAndDatetimeIn(anyInt(), anyList() ?: emptyList())
+        verifyNoMoreInteractions(userRepository, venueRepository, reservationRepository)
+    }
+
+    @Test
     fun `should return failure response if unable to save reservation`() {
         `when`(userRepository.findById(anyInt())).thenReturn(Optional.of(mockedUser))
         `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
