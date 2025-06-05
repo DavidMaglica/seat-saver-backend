@@ -10,7 +10,6 @@ import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.test.context.ActiveProfiles
-import java.sql.SQLException
 import java.util.*
 
 @ExtendWith(MockitoExtension::class)
@@ -42,35 +41,38 @@ class RateVenueTest : BaseVenueServiceTest() {
     }
 
     @Test
-    fun `should throw if saving rating entity fails`() {
-        `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
-        `when`(venueRatingRepository.save(any())).thenThrow(RuntimeException())
-
-        val exception = assertThrows<SQLException> {
-            venueService.rate(mockedVenue.id, 3.0)
-        }
-
-        exception.message?.let { it `should be equal to` "Error while updating rating for venue with id ${mockedVenue.id}" }
-
-        verify(venueRepository, times(1)).findById(mockedVenue.id)
-        verify(venueRatingRepository, times(1)).save(any())
-    }
-
-    @Test
-    fun `should throw if saving updated rating fails`() {
+    fun `should return failure response if saving rating fails`() {
         `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
         `when`(venueRatingRepository.findByVenueId(anyInt())).thenReturn(listOf(mockedRating))
         `when`(venueRatingRepository.save(any())).thenThrow(RuntimeException())
 
-        val exception = assertThrows<SQLException> {
-            venueService.rate(mockedVenue.id, 3.0)
-        }
+        val response = venueService.rate(mockedVenue.id, 3.0)
 
-        exception.message?.let { it `should be equal to` "Error while updating rating for venue with id ${mockedVenue.id}" }
+        response.success `should be equal to` false
+        response.message `should be equal to` "Error while updating rating. Please try again later."
 
         verify(venueRepository, times(1)).findById(mockedVenue.id)
         verify(venueRatingRepository, times(1)).findByVenueId(mockedVenue.id)
         verify(venueRatingRepository, times(1)).save(venueRatingArgumentCaptor.capture())
+        verifyNoMoreInteractions(venueRatingRepository, venueRepository)
+    }
+
+    @Test
+    fun `should return failure response if saving venue fails`() {
+        `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
+        `when`(venueRatingRepository.findByVenueId(anyInt())).thenReturn(listOf(mockedRating))
+        `when`(venueRepository.save(any())).thenThrow(RuntimeException())
+
+        val response = venueService.rate(mockedVenue.id, 3.0)
+
+        response.success `should be equal to` false
+        response.message `should be equal to` "Error while updating venue after rating. Please try again later."
+
+        verify(venueRepository, times(1)).findById(mockedVenue.id)
+        verify(venueRatingRepository, times(1)).findByVenueId(mockedVenue.id)
+        verify(venueRatingRepository, times(1)).save(venueRatingArgumentCaptor.capture())
+        verify(venueRepository, times(1)).save(venueArgumentCaptor.capture())
+        verifyNoMoreInteractions(venueRatingRepository, venueRepository)
     }
 
     @Test
