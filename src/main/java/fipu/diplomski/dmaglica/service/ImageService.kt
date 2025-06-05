@@ -55,7 +55,7 @@ class ImageService(
             }
             venueImageRepository.save(venueImageEntity)
         } catch (e: Exception) {
-            logger.error { "Error while saving venue image: ${e.message}" }
+            logger.error(e) { "Error while saving venue image: ${e.message}" }
             return BasicResponse(
                 false,
                 "Error while saving venue image. Please try again later."
