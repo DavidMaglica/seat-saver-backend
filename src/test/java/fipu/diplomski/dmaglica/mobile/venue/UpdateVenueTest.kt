@@ -12,7 +12,7 @@ import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.test.context.ActiveProfiles
 import java.sql.SQLException
-import java.util.Optional
+import java.util.*
 
 @ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
@@ -38,7 +38,7 @@ class UpdateVenueTest : BaseVenueServiceTest() {
         val result = venueService.update(mockedVenue.id, null)
 
         result.success `should be` false
-        result.message `should be` "Request is not valid"
+        result.message `should be` "Request is not valid."
 
         verify(venueRepository, times(1)).findById(mockedVenue.id)
     }
@@ -59,7 +59,7 @@ class UpdateVenueTest : BaseVenueServiceTest() {
         )
 
         result.success `should be` false
-        result.message `should be` "Request does not update anything"
+        result.message `should be` "No modifications found. Please change at least one field."
 
         verify(venueRepository, times(1)).findById(mockedVenue.id)
     }
@@ -102,7 +102,7 @@ class UpdateVenueTest : BaseVenueServiceTest() {
         val savedVenue = venueArgumentCaptor.value
 
         result.success `should be equal to` true
-        result.message `should be equal to` "Venue updated successfully"
+        result.message `should be equal to` "Venue updated successfully."
 
         savedVenue.name `should be equal to` newVenue.name
         savedVenue.location `should be equal to` mockedVenue.location
@@ -144,7 +144,7 @@ class UpdateVenueTest : BaseVenueServiceTest() {
         val savedVenue = venueArgumentCaptor.value
 
         result.success `should be equal to` true
-        result.message `should be equal to` "Venue updated successfully"
+        result.message `should be equal to` "Venue updated successfully."
 
         savedVenue.name `should be equal to` newVenue.name
         savedVenue.location `should be equal to` newVenue.location

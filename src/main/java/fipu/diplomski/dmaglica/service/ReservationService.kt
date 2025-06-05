@@ -44,7 +44,7 @@ class ReservationService(
             reservationRepository.save(reservation)
         }
 
-        return BasicResponse(true, "Reservation created successfully")
+        return BasicResponse(true, "Reservation created successfully.")
     }
 
     @Transactional(readOnly = true)
@@ -63,8 +63,11 @@ class ReservationService(
         val reservation = reservationRepository.findById(request.reservationId)
             .orElseThrow { ReservationNotFoundException("Reservation not found") }
 
-        if (!isRequestValid(request)) return BasicResponse(false, "Request is not valid")
-        if (!containsReservationChanges(request, reservation)) return BasicResponse(false, "No changes to update")
+        if (!isRequestValid(request)) return BasicResponse(false, "Request is not valid.")
+        if (!containsReservationChanges(request, reservation)) return BasicResponse(
+            false,
+            "No modifications found. Please change at least one field."
+        )
 
         venueRepository.findById(request.venueId)
             .orElseThrow { VenueNotFoundException("Venue with id ${request.venueId} not found") }
@@ -78,7 +81,7 @@ class ReservationService(
             reservationRepository.save(reservation)
         }
 
-        return BasicResponse(true, "Reservation updated successfully")
+        return BasicResponse(true, "Reservation updated successfully.")
     }
 
     @Transactional
@@ -98,7 +101,7 @@ class ReservationService(
             reservationRepository.deleteById(reservationId)
         }
 
-        return BasicResponse(true, "Reservation deleted successfully")
+        return BasicResponse(true, "Reservation deleted successfully.")
     }
 
     private fun ReservationEntity.toReservation() = Reservation(

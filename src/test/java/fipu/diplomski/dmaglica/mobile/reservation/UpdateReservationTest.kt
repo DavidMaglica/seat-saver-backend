@@ -83,7 +83,7 @@ class UpdateReservationTest : BaseReservationServiceTest() {
             reservationService.update(invalidRequest)
 
         result.success `should be` false
-        result.message `should be equal to` "Request is not valid"
+        result.message `should be equal to` "Request is not valid."
 
         verify(userRepository, times(1)).findById(mockedUser.id)
         verify(reservationRepository, times(1)).findById(mockedReservation.id)
@@ -98,7 +98,7 @@ class UpdateReservationTest : BaseReservationServiceTest() {
         val result = reservationService.update(noChangeRequest)
 
         result.success `should be` false
-        result.message `should be equal to` "No changes to update"
+        result.message `should be equal to` "No modifications found. Please change at least one field."
 
         verify(userRepository, times(1)).findById(mockedUser.id)
         verify(reservationRepository, times(1)).findById(mockedReservation.id)
@@ -152,7 +152,7 @@ class UpdateReservationTest : BaseReservationServiceTest() {
         val result = reservationService.update(mockedRequest)
 
         result.success `should be` true
-        result.message `should be equal to` "Reservation updated successfully"
+        result.message `should be equal to` "Reservation updated successfully."
 
         verify(reservationRepository).save(reservationArgumentCaptor.capture())
         val updatedReservation = reservationArgumentCaptor.value

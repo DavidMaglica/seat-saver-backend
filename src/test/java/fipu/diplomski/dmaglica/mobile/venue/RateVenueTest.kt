@@ -11,7 +11,7 @@ import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.test.context.ActiveProfiles
 import java.sql.SQLException
-import java.util.Optional
+import java.util.*
 
 @ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
@@ -22,7 +22,7 @@ class RateVenueTest : BaseVenueServiceTest() {
         val response = venueService.rate(mockedVenue.id, 6.0)
 
         response.success `should be` false
-        response.message `should be equal to` "Rating must be between 0.5 and 5"
+        response.message `should be equal to` "Rating must be between 0.5 and 5."
 
         verifyNoInteractions(venueRatingRepository, venueRepository)
     }
@@ -81,7 +81,7 @@ class RateVenueTest : BaseVenueServiceTest() {
         val response = venueService.rate(mockedVenue.id, 3.0)
 
         response.success `should be` true
-        response.message `should be equal to` "Venue with id ${mockedVenue.id} successfully rated with rating 3.0"
+        response.message `should be equal to` "Venue with id ${mockedVenue.id} successfully rated with rating 3.0."
 
         verify(venueRatingRepository).save(venueRatingArgumentCaptor.capture())
         val updatedRating = venueRatingArgumentCaptor.value
@@ -107,7 +107,7 @@ class RateVenueTest : BaseVenueServiceTest() {
         val response = venueService.rate(mockedVenue.id, 5.0)
 
         response.success `should be` true
-        response.message `should be equal to` "Venue with id ${mockedVenue.id} successfully rated with rating 5.0"
+        response.message `should be equal to` "Venue with id ${mockedVenue.id} successfully rated with rating 5.0."
 
         verify(venueRatingRepository).save(venueRatingArgumentCaptor.capture())
         val updatedRating = venueRatingArgumentCaptor.value

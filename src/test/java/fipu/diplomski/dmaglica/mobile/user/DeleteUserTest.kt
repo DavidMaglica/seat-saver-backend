@@ -20,7 +20,7 @@ class DeleteUserTest : BaseUserServiceTest() {
         val result = userService.delete(mockedUser.id)
 
         result.success `should be` false
-        result.message `should be equal to` "User not found"
+        result.message `should be equal to` "User not found."
 
         verify(userRepository, times(1)).findById(mockedUser.id)
     }

@@ -85,7 +85,7 @@ class CreateReservationTest : BaseReservationServiceTest() {
         val response = reservationService.create(mockedRequest)
 
         response.success `should be equal to` true
-        response.message `should be equal to` "Reservation created successfully"
+        response.message `should be equal to` "Reservation created successfully."
 
         verify(reservationRepository).save(reservationArgumentCaptor.capture())
         val reservation = reservationArgumentCaptor.value

@@ -219,7 +219,7 @@ class UserService(
     @Transactional
     fun delete(userId: Int): BasicResponse {
         val user: UserEntity = userRepository.findById(userId).getOrElse {
-            return BasicResponse(false, "User not found")
+            return BasicResponse(false, "User not found.")
         }
 
         try {

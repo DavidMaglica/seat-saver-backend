@@ -94,7 +94,7 @@ class DeleteReservationTest : BaseReservationServiceTest() {
         val result = reservationService.delete(mockedUser.id, mockedReservation.id, mockedReservation.venueId)
 
         result.success `should be equal to` true
-        result.message `should be equal to` "Reservation deleted successfully"
+        result.message `should be equal to` "Reservation deleted successfully."
 
         verify(userRepository, times(1)).findById(mockedUser.id)
         verify(venueRepository, times(1)).findById(mockedReservation.venueId)
