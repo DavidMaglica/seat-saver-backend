@@ -30,7 +30,7 @@ class DeleteVenueTest : BaseVenueServiceTest() {
         val response = venueService.delete(mockedVenue.id)
 
         response.success `should be equal to` true
-        response.message `should be equal to` "Venue with id: ${mockedVenue.id} successfully deleted."
+        response.message `should be equal to` "Venue successfully deleted."
 
         verify(venueRepository, times(1)).deleteById(anyInt())
     }
