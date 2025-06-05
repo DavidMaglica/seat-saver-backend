@@ -12,7 +12,6 @@ import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.test.context.ActiveProfiles
-import java.sql.SQLException
 import java.time.LocalDateTime
 import java.util.*
 
@@ -48,10 +47,10 @@ class UpdateReservationTest : BaseReservationServiceTest() {
     fun `should return failure response if user does not exist`() {
         `when`(userRepository.findById(anyInt())).thenReturn(Optional.empty())
 
-        val result = reservationService.update(mockedRequest)
+        val response = reservationService.update(mockedRequest)
 
-        result.success `should be` false
-        result.message `should be equal to` "User not found."
+        response.success `should be` false
+        response.message `should be equal to` "User not found."
 
         verify(userRepository, times(1)).findById(mockedUser.id)
         verifyNoInteractions(reservationRepository)
@@ -79,11 +78,11 @@ class UpdateReservationTest : BaseReservationServiceTest() {
         `when`(userRepository.findById(anyInt())).thenReturn(Optional.of(mockedUser))
         `when`(reservationRepository.findById(anyInt())).thenReturn(Optional.of(mockedReservation))
 
-        val result =
+        val response =
             reservationService.update(invalidRequest)
 
-        result.success `should be` false
-        result.message `should be equal to` "Request is not valid."
+        response.success `should be` false
+        response.message `should be equal to` "Request is not valid."
 
         verify(userRepository, times(1)).findById(mockedUser.id)
         verify(reservationRepository, times(1)).findById(mockedReservation.id)
@@ -95,10 +94,10 @@ class UpdateReservationTest : BaseReservationServiceTest() {
         `when`(userRepository.findById(anyInt())).thenReturn(Optional.of(mockedUser))
         `when`(reservationRepository.findById(anyInt())).thenReturn(Optional.of(mockedReservation))
 
-        val result = reservationService.update(noChangeRequest)
+        val response = reservationService.update(noChangeRequest)
 
-        result.success `should be` false
-        result.message `should be equal to` "No modifications found. Please change at least one field."
+        response.success `should be` false
+        response.message `should be equal to` "No modifications found. Please change at least one field."
 
         verify(userRepository, times(1)).findById(mockedUser.id)
         verify(reservationRepository, times(1)).findById(mockedReservation.id)
@@ -130,11 +129,10 @@ class UpdateReservationTest : BaseReservationServiceTest() {
         `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
         `when`(reservationRepository.save(any())).thenThrow(RuntimeException())
 
-        val exception = assertThrows<SQLException> {
-            reservationService.update(mockedRequest)
-        }
+        val response = reservationService.update(mockedRequest)
 
-        exception.message `should be equal to` "Error while updating reservation with id ${mockedRequest.reservationId}"
+        response.success `should be equal to` false
+        response.message `should be equal to` "Error while updating reservation. Please try again later."
 
         verify(userRepository, times(1)).findById(mockedUser.id)
         verify(reservationRepository, times(1)).findById(mockedReservation.id)
@@ -149,10 +147,10 @@ class UpdateReservationTest : BaseReservationServiceTest() {
         `when`(reservationRepository.findById(anyInt())).thenReturn(Optional.of(mockedReservation))
         `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
 
-        val result = reservationService.update(mockedRequest)
+        val response = reservationService.update(mockedRequest)
 
-        result.success `should be` true
-        result.message `should be equal to` "Reservation updated successfully."
+        response.success `should be` true
+        response.message `should be equal to` "Reservation updated successfully."
 
         verify(reservationRepository).save(reservationArgumentCaptor.capture())
         val updatedReservation = reservationArgumentCaptor.value

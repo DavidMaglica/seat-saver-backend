@@ -9,7 +9,6 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.test.context.ActiveProfiles
-import java.sql.SQLException
 import java.util.*
 
 @ExtendWith(MockitoExtension::class)
@@ -20,10 +19,10 @@ class DeleteReservationTest : BaseReservationServiceTest() {
     fun `should return failure response if user does not exist`() {
         `when`(userRepository.findById(anyInt())).thenReturn(Optional.empty())
 
-        val result = reservationService.delete(mockedUser.id, mockedReservation.id, mockedReservation.venueId)
+        val response = reservationService.delete(mockedUser.id, mockedReservation.id, mockedReservation.venueId)
 
-        result.success `should be equal to` false
-        result.message `should be equal to` "User not found."
+        response.success `should be equal to` false
+        response.message `should be equal to` "User not found."
 
         verify(userRepository, times(1)).findById(mockedUser.id)
         verifyNoMoreInteractions(userRepository)
@@ -73,11 +72,10 @@ class DeleteReservationTest : BaseReservationServiceTest() {
         `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
         `when`(reservationRepository.deleteById(anyInt())).thenThrow(RuntimeException())
 
-        val exception = assertThrows<SQLException> {
-            reservationService.delete(mockedUser.id, mockedReservation.id, mockedReservation.venueId)
-        }
+        val response = reservationService.delete(mockedUser.id, mockedReservation.id, mockedReservation.venueId)
 
-        exception.message `should be equal to` "Error while deleting reservation. Please try again later."
+        response.success `should be equal to` false
+        response.message `should be equal to` "Error while deleting reservation. Please try again later."
 
         verify(userRepository, times(1)).findById(mockedUser.id)
         verify(venueRepository, times(1)).findById(mockedReservation.venueId)
@@ -91,10 +89,10 @@ class DeleteReservationTest : BaseReservationServiceTest() {
         `when`(reservationRepository.findById(anyInt())).thenReturn(Optional.of(mockedReservation))
         `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
 
-        val result = reservationService.delete(mockedUser.id, mockedReservation.id, mockedReservation.venueId)
+        val response = reservationService.delete(mockedUser.id, mockedReservation.id, mockedReservation.venueId)
 
-        result.success `should be equal to` true
-        result.message `should be equal to` "Reservation deleted successfully."
+        response.success `should be equal to` true
+        response.message `should be equal to` "Reservation deleted successfully."
 
         verify(userRepository, times(1)).findById(mockedUser.id)
         verify(venueRepository, times(1)).findById(mockedReservation.venueId)

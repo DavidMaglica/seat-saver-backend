@@ -22,10 +22,10 @@ class UpdateLocationTest : BaseUserServiceTest() {
     fun `should return failure response when user not found`() {
         `when`(userRepository.findById(anyInt())).thenReturn(Optional.empty())
 
-        val result = userService.updateLocation(mockedUser.id, NEW_LATITUDE, NEW_LONGITUDE)
+        val response = userService.updateLocation(mockedUser.id, NEW_LATITUDE, NEW_LONGITUDE)
 
-        result.success `should be` false
-        result.message `should be equal to` "User not found."
+        response.success `should be` false
+        response.message `should be equal to` "User not found."
 
         verify(userRepository, times(1)).findById(mockedUser.id)
         verifyNoMoreInteractions(userRepository)
@@ -36,10 +36,10 @@ class UpdateLocationTest : BaseUserServiceTest() {
         `when`(userRepository.findById(anyInt())).thenReturn(Optional.of(mockedUser))
         `when`(userRepository.save(any())).thenThrow(RuntimeException())
 
-        val result = userService.updateLocation(mockedUser.id, NEW_LATITUDE, NEW_LONGITUDE)
+        val response = userService.updateLocation(mockedUser.id, NEW_LATITUDE, NEW_LONGITUDE)
 
-        result.success `should be` false
-        result.message `should be equal to` "Error while updating location. Please try again later."
+        response.success `should be` false
+        response.message `should be equal to` "Error while updating location. Please try again later."
 
         verify(userRepository, times(1)).findById(mockedUser.id)
     }
@@ -48,10 +48,10 @@ class UpdateLocationTest : BaseUserServiceTest() {
     fun `should update location`() {
         `when`(userRepository.findById(anyInt())).thenReturn(Optional.of(mockedUser))
 
-        val result = userService.updateLocation(mockedUser.id, NEW_LATITUDE, NEW_LONGITUDE)
+        val response = userService.updateLocation(mockedUser.id, NEW_LATITUDE, NEW_LONGITUDE)
 
-        result.success `should be` true
-        result.message `should be equal to` "Location successfully updated."
+        response.success `should be` true
+        response.message `should be equal to` "Location successfully updated."
 
         verify(userRepository).save(userEntityArgumentCaptor.capture())
         val updatedUser = userEntityArgumentCaptor.value
