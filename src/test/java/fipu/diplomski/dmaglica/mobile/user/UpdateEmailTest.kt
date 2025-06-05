@@ -28,8 +28,23 @@ class UpdateEmailTest : BaseUserServiceTest() {
     }
 
     @Test
+    fun `should return failure response if email already exists`() {
+        `when`(userRepository.findById(anyInt())).thenReturn(Optional.of(mockedUser))
+        `when`(userRepository.findByEmail(NEW_EMAIL)).thenReturn(mockedUser)
+
+        val result = userService.updateEmail(mockedUser.id, NEW_EMAIL)
+
+        result.success `should be` false
+        result.message `should be equal to` "User with email $NEW_EMAIL already exists."
+
+        verify(userRepository, times(1)).findByEmail(NEW_EMAIL)
+        verifyNoMoreInteractions(userRepository)
+    }
+
+    @Test
     fun `should return failure response if user not found`() {
         `when`(userRepository.findById(anyInt())).thenReturn(Optional.empty())
+        `when`(userRepository.findByEmail(NEW_EMAIL)).thenReturn(null)
 
         val result = userService.updateEmail(mockedUser.id, NEW_EMAIL)
 
@@ -37,12 +52,14 @@ class UpdateEmailTest : BaseUserServiceTest() {
         result.message `should be equal to` "User not found."
 
         verify(userRepository, times(1)).findById(mockedUser.id)
+        verify(userRepository, times(1)).findByEmail(NEW_EMAIL)
         verifyNoMoreInteractions(userRepository)
     }
 
     @Test
     fun `should return failure response if can't update email`() {
         `when`(userRepository.findById(anyInt())).thenReturn(Optional.of(mockedUser))
+        `when`(userRepository.findByEmail(NEW_EMAIL)).thenReturn(null)
         `when`(userRepository.save(any())).thenThrow(RuntimeException())
 
         val result = userService.updateEmail(mockedUser.id, NEW_EMAIL)
@@ -51,6 +68,7 @@ class UpdateEmailTest : BaseUserServiceTest() {
         result.message `should be equal to` "Error while updating email. Please try again later."
 
         verify(userRepository, times(1)).findById(mockedUser.id)
+        verify(userRepository, times(1)).findByEmail(NEW_EMAIL)
         verify(userRepository, times(1)).save(any())
         verifyNoMoreInteractions(userRepository)
     }
@@ -58,6 +76,7 @@ class UpdateEmailTest : BaseUserServiceTest() {
     @Test
     fun `should update email`() {
         `when`(userRepository.findById(anyInt())).thenReturn(Optional.of(mockedUser))
+        `when`(userRepository.findByEmail(anyString())).thenReturn(null)
 
         val result = userService.updateEmail(mockedUser.id, NEW_EMAIL)
 
@@ -69,7 +88,8 @@ class UpdateEmailTest : BaseUserServiceTest() {
         updatedUser.email `should be equal to` NEW_EMAIL
 
         verify(userRepository, times(1)).findById(mockedUser.id)
-        verify(userRepository, times(1)).save(any())
+        verify(userRepository, times(1)).findByEmail(NEW_EMAIL)
+        verify(userRepository, times(1)).save(userEntityArgumentCaptor.capture())
         verifyNoMoreInteractions(userRepository)
     }
 }

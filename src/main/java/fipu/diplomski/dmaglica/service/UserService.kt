@@ -107,6 +107,10 @@ class UserService(
             return BasicResponse(false, "Email cannot be empty.")
         }
 
+        userRepository.findByEmail(newEmail)?.let {
+            return BasicResponse(false, "User with email $newEmail already exists.")
+        }
+
         val user = userRepository.findById(userId).getOrElse {
             return BasicResponse(false, "User not found.")
         }.apply {
