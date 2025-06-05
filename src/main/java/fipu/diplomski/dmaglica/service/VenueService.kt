@@ -207,7 +207,7 @@ class VenueService(
             return BasicResponse(false, "Error while deleting venue. Please try again later.")
         }
 
-        return BasicResponse(true, "Venue with id: $venueId successfully deleted.")
+        return BasicResponse(true, "Venue successfully deleted.")
     }
 
     private fun isRequestValid(request: UpdateVenueRequest?): Boolean = request?.let {
