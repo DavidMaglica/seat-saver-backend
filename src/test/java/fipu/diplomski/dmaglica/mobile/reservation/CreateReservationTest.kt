@@ -61,6 +61,7 @@ class CreateReservationTest : BaseReservationServiceTest() {
     fun `should return failure response if unable to save reservation`() {
         `when`(userRepository.findById(anyInt())).thenReturn(Optional.of(mockedUser))
         `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
+        `when`(reservationRepository.findByVenueIdAndDatetimeIn(anyInt(), anyList())).thenReturn(emptyList())
         `when`(reservationRepository.save(any())).thenThrow(RuntimeException())
 
         val response = reservationService.create(mockedRequest)
@@ -70,6 +71,7 @@ class CreateReservationTest : BaseReservationServiceTest() {
 
         verify(userRepository, times(1)).findById(mockedUser.id)
         verify(venueRepository, times(1)).findById(mockedVenue.id)
+        verify(reservationRepository, times(1)).findByVenueIdAndDatetimeIn(anyInt(), anyList() ?: emptyList())
         verify(reservationRepository, times(1)).save(any())
         verifyNoMoreInteractions(userRepository, venueRepository, reservationRepository)
     }
@@ -94,6 +96,7 @@ class CreateReservationTest : BaseReservationServiceTest() {
 
         verify(userRepository, times(1)).findById(mockedUser.id)
         verify(venueRepository, times(1)).findById(mockedVenue.id)
+        verify(reservationRepository, times(1)).findByVenueIdAndDatetimeIn(anyInt(), anyList() ?: emptyList())
         verify(reservationRepository, times(1)).save(reservationArgumentCaptor.capture())
         verifyNoMoreInteractions(userRepository, venueRepository, reservationRepository)
     }
