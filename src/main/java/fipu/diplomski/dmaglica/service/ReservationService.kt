@@ -11,7 +11,7 @@ import fipu.diplomski.dmaglica.repo.UserRepository
 import fipu.diplomski.dmaglica.repo.VenueRepository
 import fipu.diplomski.dmaglica.repo.entity.ReservationEntity
 import fipu.diplomski.dmaglica.repo.entity.UserEntity
-import fipu.diplomski.dmaglica.util.dbActionWithTryCatch
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import kotlin.jvm.optionals.getOrElse
@@ -22,6 +22,10 @@ class ReservationService(
     private val userRepository: UserRepository,
     private val venueRepository: VenueRepository,
 ) {
+
+    companion object {
+        private val logger = KotlinLogging.logger(ReservationService::class.java.name)
+    }
 
     @Transactional
     fun create(request: CreateReservationRequest): BasicResponse {
@@ -40,8 +44,11 @@ class ReservationService(
             numberOfGuests = request.numberOfPeople
         }
 
-        dbActionWithTryCatch("Error while creating reservation. Please try again later.") {
+        try {
             reservationRepository.save(reservation)
+        } catch (e: Exception) {
+            logger.error { "Error while creating reservation: ${e.message}" }
+            return BasicResponse(false, "Error while creating reservation. Please try again later.")
         }
 
         return BasicResponse(true, "Reservation created successfully.")
@@ -77,8 +84,11 @@ class ReservationService(
             datetime = request.reservationDate ?: reservation.datetime
         }
 
-        dbActionWithTryCatch("Error while updating reservation with id ${request.reservationId}") {
+        try {
             reservationRepository.save(reservation)
+        } catch (e: Exception) {
+            logger.error { "Error while updating reservation with id ${request.reservationId}: ${e.message}" }
+            return BasicResponse(false, "Error while updating reservation. Please try again later.")
         }
 
         return BasicResponse(true, "Reservation updated successfully.")
@@ -97,8 +107,11 @@ class ReservationService(
             VenueNotFoundException("Venue with id $venueId not found")
         }
 
-        dbActionWithTryCatch("Error while deleting reservation. Please try again later.") {
+        try {
             reservationRepository.deleteById(reservationId)
+        } catch (e: Exception) {
+            logger.error { "Error while deleting reservation with id $reservationId: ${e.message}" }
+            return BasicResponse(false, "Error while deleting reservation. Please try again later.")
         }
 
         return BasicResponse(true, "Reservation deleted successfully.")

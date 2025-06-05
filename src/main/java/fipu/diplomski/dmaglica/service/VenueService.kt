@@ -8,7 +8,7 @@ import fipu.diplomski.dmaglica.repo.VenueRatingRepository
 import fipu.diplomski.dmaglica.repo.VenueRepository
 import fipu.diplomski.dmaglica.repo.VenueTypeRepository
 import fipu.diplomski.dmaglica.repo.entity.*
-import fipu.diplomski.dmaglica.util.dbActionWithTryCatch
+import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.persistence.EntityNotFoundException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -23,6 +23,10 @@ class VenueService(
     private val imageService: ImageService,
     private val reservationRepository: ReservationRepository,
 ) {
+
+    companion object {
+        private val logger = KotlinLogging.logger(VenueService::class.java.name)
+    }
 
     @Transactional(readOnly = true)
     fun get(venueId: Int): VenueEntity {
@@ -103,8 +107,11 @@ class VenueService(
             averageRating = 0.0
         }
 
-        dbActionWithTryCatch("Error while saving venue: ${request.name}") {
+        try {
             venueRepository.save(venue)
+        } catch (e: Exception) {
+            logger.error { "Error while creating venue: ${e.message}" }
+            return BasicResponse(false, "Error while creating venue. Please try again later.")
         }
 
         return BasicResponse(true, "Venue ${request.name} created successfully.")
@@ -138,8 +145,11 @@ class VenueService(
             description = request?.description ?: venue.description
         }
 
-        dbActionWithTryCatch("Error while updating venue with id $venueId") {
+        try {
             venueRepository.save(venue)
+        } catch (e: Exception) {
+            logger.error { "Error while updating venue with id $venueId: ${e.message}" }
+            return BasicResponse(false, "Error while updating venue. Please try again later.")
         }
 
         return BasicResponse(true, "Venue updated successfully.")
@@ -151,22 +161,28 @@ class VenueService(
 
         val venue = venueRepository.findById(venueId)
             .orElseThrow { EntityNotFoundException("Venue with id $venueId not found") }
-        val venueRating =
-            venueRatingRepository.findByVenueId(venueId)
+        val venueRating = venueRatingRepository.findByVenueId(venueId)
 
-        val newRatingEntity = VenueRatingEntity().also {
-            it.id
-            it.venueId = venueId
-            it.rating = userRating
+        val newRatingEntity = VenueRatingEntity().apply {
+            this.venueId = venueId
+            this.rating = userRating
         }
-        dbActionWithTryCatch("Error while updating rating for venue with id $venueId") {
+
+        try {
             venueRatingRepository.save(newRatingEntity)
+        } catch (e: Exception) {
+            logger.error { "Error while updating rating for venue with id $venueId: ${e.message}" }
+            return BasicResponse(false, "Error while updating rating. Please try again later.")
         }
 
         val newAverageRating = calculateNewAverageRating(venueRating, userRating)
-        val updatedVenue = venue.also { it.averageRating = newAverageRating }
-        dbActionWithTryCatch("Error while updating venue with id $venueId") {
+        val updatedVenue = venue.apply { averageRating = newAverageRating }
+
+        try {
             venueRepository.save(updatedVenue)
+        } catch (e: Exception) {
+            logger.error { "Error while updating venue with id $venueId after rating: ${e.message}" }
+            return BasicResponse(false, "Error while updating venue after rating. Please try again later.")
         }
 
         return BasicResponse(true, "Venue with id $venueId successfully rated with rating $userRating.")
@@ -184,8 +200,11 @@ class VenueService(
 
     @Transactional
     fun delete(venueId: Int): BasicResponse {
-        dbActionWithTryCatch("Error while deleting venue with id: $venueId") {
+        try {
             venueRepository.deleteById(venueId)
+        } catch (e: Exception) {
+            logger.error { "Error while deleting venue with id $venueId: ${e.message}" }
+            return BasicResponse(false, "Error while deleting venue. Please try again later.")
         }
 
         return BasicResponse(true, "Venue with id: $venueId successfully deleted.")

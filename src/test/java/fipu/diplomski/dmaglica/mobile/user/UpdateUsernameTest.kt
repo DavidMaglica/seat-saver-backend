@@ -20,10 +20,10 @@ class UpdateUsernameTest : BaseUserServiceTest() {
 
     @Test
     fun `should return failure response if new username is empty`() {
-        val result = userService.updateUsername(mockedUser.id, "")
+        val response = userService.updateUsername(mockedUser.id, "")
 
-        result.success `should be` false
-        result.message `should be equal to` "Username cannot be empty."
+        response.success `should be` false
+        response.message `should be equal to` "Username cannot be empty."
 
         verifyNoInteractions(userRepository)
     }
@@ -32,10 +32,10 @@ class UpdateUsernameTest : BaseUserServiceTest() {
     fun `should throw if user not found`() {
         `when`(userRepository.findById(anyInt())).thenReturn(Optional.empty())
 
-        val result = userService.updateUsername(mockedUser.id, NEW_USERNAME)
+        val response = userService.updateUsername(mockedUser.id, NEW_USERNAME)
 
-        result.success `should be` false
-        result.message `should be equal to` "User not found."
+        response.success `should be` false
+        response.message `should be equal to` "User not found."
 
         verify(userRepository, times(1)).findById(mockedUser.id)
         verifyNoMoreInteractions(userRepository)
@@ -46,10 +46,10 @@ class UpdateUsernameTest : BaseUserServiceTest() {
         `when`(userRepository.findById(anyInt())).thenReturn(Optional.of(mockedUser))
         `when`(userRepository.save(any())).thenThrow(RuntimeException())
 
-        val result = userService.updateUsername(mockedUser.id, NEW_USERNAME)
+        val response = userService.updateUsername(mockedUser.id, NEW_USERNAME)
 
-        result.success `should be` false
-        result.message `should be equal to` "Error while updating username. Please try again later."
+        response.success `should be` false
+        response.message `should be equal to` "Error while updating username. Please try again later."
 
         verify(userRepository, times(1)).findById(mockedUser.id)
         verifyNoMoreInteractions(userRepository)
@@ -59,10 +59,10 @@ class UpdateUsernameTest : BaseUserServiceTest() {
     fun `should update username`() {
         `when`(userRepository.findById(anyInt())).thenReturn(Optional.of(mockedUser))
 
-        val result = userService.updateUsername(mockedUser.id, NEW_USERNAME)
+        val response = userService.updateUsername(mockedUser.id, NEW_USERNAME)
 
-        result.success `should be` true
-        result.message `should be equal to` "Username successfully updated."
+        response.success `should be` true
+        response.message `should be equal to` "Username successfully updated."
 
         verify(userRepository).save(userEntityArgumentCaptor.capture())
         val updatedUser = userEntityArgumentCaptor.value

@@ -11,7 +11,6 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.test.context.ActiveProfiles
-import java.sql.SQLException
 import java.util.*
 
 @ExtendWith(MockitoExtension::class)
@@ -35,10 +34,10 @@ class UpdateVenueTest : BaseVenueServiceTest() {
     fun `should return early if request is null`() {
         `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
 
-        val result = venueService.update(mockedVenue.id, null)
+        val response = venueService.update(mockedVenue.id, null)
 
-        result.success `should be` false
-        result.message `should be` "Request is not valid."
+        response.success `should be` false
+        response.message `should be` "Request is not valid."
 
         verify(venueRepository, times(1)).findById(mockedVenue.id)
     }
@@ -47,7 +46,7 @@ class UpdateVenueTest : BaseVenueServiceTest() {
     fun `should return early if request does not change anything`() {
         `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
 
-        val result = venueService.update(
+        val response = venueService.update(
             mockedVenue.id,
             UpdateVenueRequest(
                 name = mockedVenue.name,
@@ -58,22 +57,21 @@ class UpdateVenueTest : BaseVenueServiceTest() {
             )
         )
 
-        result.success `should be` false
-        result.message `should be` "No modifications found. Please change at least one field."
+        response.success `should be` false
+        response.message `should be` "No modifications found. Please change at least one field."
 
         verify(venueRepository, times(1)).findById(mockedVenue.id)
     }
 
     @Test
-    fun `should throw if save fails`() {
+    fun `should return failure response if save fails`() {
         `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
         `when`(venueRepository.save(any())).thenThrow(RuntimeException("Save failed"))
 
-        val exception = assertThrows<SQLException> {
-            venueService.update(mockedVenue.id, UpdateVenueRequest(name = "New name"))
-        }
+        val response = venueService.update(mockedVenue.id, UpdateVenueRequest(name = "New name"))
 
-        exception.message?.let { it `should be equal to` "Error while updating venue with id ${mockedVenue.id}" }
+        response.success `should be equal to` false
+        response.message `should be equal to` "Error while updating venue. Please try again later."
 
         verify(venueRepository, times(1)).findById(mockedVenue.id)
         verify(venueRepository, times(1)).save(any())
@@ -93,7 +91,7 @@ class UpdateVenueTest : BaseVenueServiceTest() {
         `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
         `when`(venueRepository.save(any())).thenReturn(newVenue)
 
-        val result = venueService.update(
+        val response = venueService.update(
             mockedVenue.id,
             UpdateVenueRequest(name = newVenue.name, description = newVenue.description)
         )
@@ -101,8 +99,8 @@ class UpdateVenueTest : BaseVenueServiceTest() {
         verify(venueRepository).save(venueArgumentCaptor.capture())
         val savedVenue = venueArgumentCaptor.value
 
-        result.success `should be equal to` true
-        result.message `should be equal to` "Venue updated successfully."
+        response.success `should be equal to` true
+        response.message `should be equal to` "Venue updated successfully."
 
         savedVenue.name `should be equal to` newVenue.name
         savedVenue.location `should be equal to` mockedVenue.location
@@ -127,7 +125,7 @@ class UpdateVenueTest : BaseVenueServiceTest() {
         `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
         `when`(venueRepository.save(any())).thenReturn(newVenue)
 
-        val result = venueService.update(
+        val response = venueService.update(
             mockedVenue.id,
             UpdateVenueRequest(
                 name = newVenue.name,
@@ -143,8 +141,8 @@ class UpdateVenueTest : BaseVenueServiceTest() {
         verify(venueRepository).save(venueArgumentCaptor.capture())
         val savedVenue = venueArgumentCaptor.value
 
-        result.success `should be equal to` true
-        result.message `should be equal to` "Venue updated successfully."
+        response.success `should be equal to` true
+        response.message `should be equal to` "Venue updated successfully."
 
         savedVenue.name `should be equal to` newVenue.name
         savedVenue.location `should be equal to` newVenue.location

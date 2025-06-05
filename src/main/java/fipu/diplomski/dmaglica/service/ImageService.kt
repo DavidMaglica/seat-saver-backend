@@ -7,8 +7,8 @@ import fipu.diplomski.dmaglica.repo.VenueImageRepository
 import fipu.diplomski.dmaglica.repo.entity.MenuImageEntity
 import fipu.diplomski.dmaglica.repo.entity.VenueImageEntity
 import fipu.diplomski.dmaglica.util.compressImage
-import fipu.diplomski.dmaglica.util.dbActionWithTryCatch
 import fipu.diplomski.dmaglica.util.decompressImage
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
@@ -19,6 +19,10 @@ class ImageService(
     private val venueImageRepository: VenueImageRepository,
     private val menuImageRepository: MenuImageRepository,
 ) {
+
+    companion object {
+        private val logger = KotlinLogging.logger(ImageService::class.java.name)
+    }
 
     @Transactional(readOnly = true)
     fun getVenueImages(venueId: Int, venueName: String): List<ByteArray> {
@@ -43,14 +47,18 @@ class ImageService(
     fun uploadVenueImage(venueId: Int, file: MultipartFile): BasicResponse {
         validateImage(file)
 
-        dbActionWithTryCatch("Error while saving venue image") {
-            venueImageRepository.save(
-                VenueImageEntity().also {
-                    it.id
-                    it.venueId = venueId
-                    it.name = file.originalFilename!!
-                    it.imageData = compressImage(file.bytes)
-                }
+        try {
+            val venueImageEntity = VenueImageEntity().apply {
+                this.venueId = venueId
+                this.name = file.originalFilename!!
+                this.imageData = compressImage(file.bytes)
+            }
+            venueImageRepository.save(venueImageEntity)
+        } catch (e: Exception) {
+            logger.error { "Error while saving venue image: ${e.message}" }
+            return BasicResponse(
+                false,
+                "Error while saving venue image. Please try again later."
             )
         }
 
@@ -61,14 +69,18 @@ class ImageService(
     fun uploadMenuImage(venueId: Int, file: MultipartFile): BasicResponse {
         validateImage(file)
 
-        dbActionWithTryCatch("Error while saving menu image") {
-            menuImageRepository.save(
-                MenuImageEntity().also {
-                    it.id
-                    it.venueId = venueId
-                    it.name = file.originalFilename!!
-                    it.imageData = compressImage(file.bytes)
-                }
+        try {
+            val menuImageEntity = MenuImageEntity().apply {
+                this.venueId = venueId
+                this.name = file.originalFilename!!
+                this.imageData = compressImage(file.bytes)
+            }
+            menuImageRepository.save(menuImageEntity)
+        } catch (e: Exception) {
+            logger.error { "Error while saving menu image: ${e.message}" }
+            return BasicResponse(
+                false,
+                "Error while saving menu image. Please try again later."
             )
         }
 

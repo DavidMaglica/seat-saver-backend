@@ -19,10 +19,10 @@ class UpdateEmailTest : BaseUserServiceTest() {
 
     @Test
     fun `should return failure response if new email is empty`() {
-        val result = userService.updateEmail(mockedUser.id, "")
+        val response = userService.updateEmail(mockedUser.id, "")
 
-        result.success `should be` false
-        result.message `should be equal to` "Email cannot be empty."
+        response.success `should be` false
+        response.message `should be equal to` "Email cannot be empty."
 
         verifyNoInteractions(userRepository)
     }
@@ -31,10 +31,10 @@ class UpdateEmailTest : BaseUserServiceTest() {
     fun `should return failure response if user not found`() {
         `when`(userRepository.findById(anyInt())).thenReturn(Optional.empty())
 
-        val result = userService.updateEmail(mockedUser.id, NEW_EMAIL)
+        val response = userService.updateEmail(mockedUser.id, NEW_EMAIL)
 
-        result.success `should be` false
-        result.message `should be equal to` "User not found."
+        response.success `should be` false
+        response.message `should be equal to` "User not found."
 
         verify(userRepository, times(1)).findById(mockedUser.id)
         verifyNoMoreInteractions(userRepository)
@@ -45,10 +45,10 @@ class UpdateEmailTest : BaseUserServiceTest() {
         `when`(userRepository.findById(anyInt())).thenReturn(Optional.of(mockedUser))
         `when`(userRepository.save(any())).thenThrow(RuntimeException())
 
-        val result = userService.updateEmail(mockedUser.id, NEW_EMAIL)
+        val response = userService.updateEmail(mockedUser.id, NEW_EMAIL)
 
-        result.success `should be` false
-        result.message `should be equal to` "Error while updating email. Please try again later."
+        response.success `should be` false
+        response.message `should be equal to` "Error while updating email. Please try again later."
 
         verify(userRepository, times(1)).findById(mockedUser.id)
         verify(userRepository, times(1)).save(any())
@@ -59,10 +59,10 @@ class UpdateEmailTest : BaseUserServiceTest() {
     fun `should update email`() {
         `when`(userRepository.findById(anyInt())).thenReturn(Optional.of(mockedUser))
 
-        val result = userService.updateEmail(mockedUser.id, NEW_EMAIL)
+        val response = userService.updateEmail(mockedUser.id, NEW_EMAIL)
 
-        result.success `should be` true
-        result.message `should be equal to` "Email updated to $NEW_EMAIL successfully."
+        response.success `should be` true
+        response.message `should be equal to` "Email updated to $NEW_EMAIL successfully."
 
         verify(userRepository).save(userEntityArgumentCaptor.capture())
         val updatedUser = userEntityArgumentCaptor.value

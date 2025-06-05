@@ -44,19 +44,19 @@ class SendEmailTest {
     fun `should return failure response when email sending fails`() {
         `when`(mailSender.send(any<SimpleMailMessage>())).thenThrow(RuntimeException::class.java)
 
-        val result = supportService.sendEmail(USER_EMAIL, SUBJECT, BODY)
+        val response = supportService.sendEmail(USER_EMAIL, SUBJECT, BODY)
 
-        result.success `should be` false
-        result.message `should be equal to` "There was an error while sending the email. Please try again later."
+        response.success `should be` false
+        response.message `should be equal to` "There was an error while sending the email. Please try again later."
     }
 
     @Test
     fun `should send email successfully`() {
         doNothing().`when`(mailSender).send(any<SimpleMailMessage>())
 
-        val result = supportService.sendEmail(USER_EMAIL, SUBJECT, BODY)
+        val response = supportService.sendEmail(USER_EMAIL, SUBJECT, BODY)
 
-        result.success `should be equal to` true
-        result.message `should be equal to` "Email sent successfully."
+        response.success `should be equal to` true
+        response.message `should be equal to` "Email sent successfully."
     }
 }

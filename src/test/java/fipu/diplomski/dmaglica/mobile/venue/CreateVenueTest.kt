@@ -3,13 +3,11 @@ package fipu.diplomski.dmaglica.mobile.venue
 import fipu.diplomski.dmaglica.model.request.CreateVenueRequest
 import org.amshove.kluent.`should be equal to`
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.test.context.ActiveProfiles
-import java.sql.SQLException
 
 @ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
@@ -28,9 +26,10 @@ class CreateVenueTest : BaseVenueServiceTest() {
             mockedVenue.availableCapacity,
         )
 
-        val exception = assertThrows<SQLException> { venueService.create(request) }
+        val response = venueService.create(request)
 
-        exception.message `should be equal to` "Error while saving venue: ${mockedVenue.name}"
+        response.success `should be equal to` false
+        response.message `should be equal to` "Error while creating venue. Please try again later."
     }
 
     @Test
@@ -46,10 +45,10 @@ class CreateVenueTest : BaseVenueServiceTest() {
             mockedVenue.availableCapacity,
         )
 
-        val result = venueService.create(request)
+        val response = venueService.create(request)
 
-        result.success `should be equal to` true
-        result.message `should be equal to` "Venue ${mockedVenue.name} created successfully."
+        response.success `should be equal to` true
+        response.message `should be equal to` "Venue ${mockedVenue.name} created successfully."
 
         verify(venueRepository).save(venueArgumentCaptor.capture())
         val savedVenue = venueArgumentCaptor.value

@@ -9,7 +9,6 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.test.context.ActiveProfiles
-import java.sql.SQLException
 import java.time.LocalDateTime
 import java.util.*
 
@@ -30,10 +29,10 @@ class CreateReservationTest : BaseReservationServiceTest() {
     fun `should return failure response if user does not exist`() {
         `when`(userRepository.findById(anyInt())).thenReturn(Optional.empty())
 
-        val result = reservationService.create(mockedRequest)
+        val response = reservationService.create(mockedRequest)
 
-        result.success `should be equal to` false
-        result.message `should be equal to` "User not found."
+        response.success `should be equal to` false
+        response.message `should be equal to` "User not found."
 
         verify(userRepository, times(1)).findById(mockedUser.id)
         verifyNoInteractions(venueRepository)
@@ -59,16 +58,15 @@ class CreateReservationTest : BaseReservationServiceTest() {
     }
 
     @Test
-    fun `should throw if unable to save reservation`() {
+    fun `should return failure response if unable to save reservation`() {
         `when`(userRepository.findById(anyInt())).thenReturn(Optional.of(mockedUser))
         `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
         `when`(reservationRepository.save(any())).thenThrow(RuntimeException())
 
-        val exception = assertThrows<SQLException> {
-            reservationService.create(mockedRequest)
-        }
+        val response = reservationService.create(mockedRequest)
 
-        exception.message `should be equal to` "Error while creating reservation. Please try again later."
+        response.success `should be equal to` false
+        response.message `should be equal to` "Error while creating reservation. Please try again later."
 
         verify(userRepository, times(1)).findById(mockedUser.id)
         verify(venueRepository, times(1)).findById(mockedVenue.id)

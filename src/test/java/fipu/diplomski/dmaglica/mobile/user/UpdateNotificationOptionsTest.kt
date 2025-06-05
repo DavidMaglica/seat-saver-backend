@@ -17,15 +17,15 @@ class UpdateNotificationOptionsTest : BaseUserServiceTest() {
     fun `should return failure response if user not found`() {
         `when`(userRepository.findById(anyInt())).thenReturn(Optional.empty())
 
-        val result = userService.updateNotificationOptions(
+        val response = userService.updateNotificationOptions(
             mockedUser.id,
             pushNotificationsTurnedOn = true,
             emailNotificationsTurnedOn = true,
             locationServicesTurnedOn = true
         )
 
-        result.success `should be` false
-        result.message `should be equal to` "User not found."
+        response.success `should be` false
+        response.message `should be equal to` "User not found."
 
         verify(userRepository, times(1)).findById(mockedUser.id)
         verifyNoMoreInteractions(userRepository)
@@ -38,15 +38,15 @@ class UpdateNotificationOptionsTest : BaseUserServiceTest() {
         `when`(notificationOptionsRepository.findByUserId(anyInt())).thenReturn(mockedNotificationOptions)
         `when`(notificationOptionsRepository.save(any())).thenThrow(RuntimeException())
 
-        val result = userService.updateNotificationOptions(
+        val response = userService.updateNotificationOptions(
             mockedUser.id,
             pushNotificationsTurnedOn = false,
             emailNotificationsTurnedOn = false,
             locationServicesTurnedOn = false
         )
 
-        result.success `should be` false
-        result.message `should be equal to` "Error while updating notification options. Please try again later."
+        response.success `should be` false
+        response.message `should be equal to` "Error while updating notification options. Please try again later."
 
         verify(userRepository, times(1)).findById(mockedUser.id)
         verify(notificationOptionsRepository, times(1)).findByUserId(mockedUser.id)
@@ -59,15 +59,15 @@ class UpdateNotificationOptionsTest : BaseUserServiceTest() {
         `when`(userRepository.findById(anyInt())).thenReturn(Optional.of(mockedUser))
         `when`(notificationOptionsRepository.findByUserId(anyInt())).thenReturn(mockedNotificationOptions)
 
-        val result = userService.updateNotificationOptions(
+        val response = userService.updateNotificationOptions(
             mockedUser.id,
             pushNotificationsTurnedOn = true,
             emailNotificationsTurnedOn = false,
             locationServicesTurnedOn = false
         )
 
-        result.success `should be` true
-        result.message `should be equal to` "Notification options successfully updated."
+        response.success `should be` true
+        response.message `should be equal to` "Notification options successfully updated."
 
         verify(notificationOptionsRepository).save(notificationOptionsArgumentCaptor.capture())
         val updatedNotificationOptions = notificationOptionsArgumentCaptor.value
@@ -86,15 +86,15 @@ class UpdateNotificationOptionsTest : BaseUserServiceTest() {
         `when`(userRepository.findById(anyInt())).thenReturn(Optional.of(mockedUser))
         `when`(notificationOptionsRepository.findByUserId(anyInt())).thenReturn(mockedNotificationOptions)
 
-        val result = userService.updateNotificationOptions(
+        val response = userService.updateNotificationOptions(
             mockedUser.id,
             pushNotificationsTurnedOn = true,
             emailNotificationsTurnedOn = true,
             locationServicesTurnedOn = true
         )
 
-        result.success `should be` true
-        result.message `should be equal to` "Notification options successfully updated."
+        response.success `should be` true
+        response.message `should be equal to` "Notification options successfully updated."
 
         verify(notificationOptionsRepository).save(notificationOptionsArgumentCaptor.capture())
         val updatedNotificationOptions = notificationOptionsArgumentCaptor.value
