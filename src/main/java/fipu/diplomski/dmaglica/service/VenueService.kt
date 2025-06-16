@@ -11,6 +11,8 @@ import fipu.diplomski.dmaglica.repo.entity.*
 import fipu.diplomski.dmaglica.util.getSurroundingHalfHours
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.persistence.EntityNotFoundException
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
@@ -21,8 +23,9 @@ class VenueService(
     private val venueRepository: VenueRepository,
     private val venueRatingRepository: VenueRatingRepository,
     private val venueTypeRepository: VenueTypeRepository,
-    private val imageService: ImageService,
     private val reservationRepository: ReservationRepository,
+    private val imageService: ImageService,
+    private val geolocationService: GeolocationService,
 ) {
 
     companion object {
@@ -56,27 +59,87 @@ class VenueService(
     @Transactional(readOnly = true)
     fun getAll(): List<VenueEntity> {
         val venues = venueRepository.findAll()
-        val ratings = venueRatingRepository.findAll()
+        if (venues.isEmpty()) return emptyList()
+
+        venues.sortBy { it.name }
+        val venueIds = venues.map { it.id }
         val currentTimestamp: LocalDateTime = LocalDateTime.now()
         val (lowerBound, upperBound) = getSurroundingHalfHours(currentTimestamp)
-        val reservationsByVenueId =
-            reservationRepository.findByDatetimeBetween(lowerBound, upperBound).groupBy { it.venueId }
 
-        val averageRatingByVenueId = ratings.groupBy { it.venueId }
-            .mapValues { (_, venueRatings) -> venueRatings.map { it.rating }.average() }
+        return buildVenueStats(venueIds, lowerBound, upperBound, venues)
+    }
 
-        for (venue in venues) {
-            venue.averageRating = averageRatingByVenueId[venue.id] ?: 0.0
-
-            val venueReservations = reservationsByVenueId[venue.id].orEmpty()
-            if (venueReservations.isNotEmpty()) {
-                calculateCurrentAvailableCapacity(venue, venueReservations)
-            } else {
-                venue.availableCapacity = venue.maximumCapacity
-            }
+    @Transactional(readOnly = true)
+    fun getNearbyVenues(latitude: Double?, longitude: Double?): List<VenueEntity> {
+        val currentTimestamp: LocalDateTime = LocalDateTime.now()
+        val (lowerBound, upperBound) = getSurroundingHalfHours(currentTimestamp)
+        if (latitude == null || longitude == null) {
+            val venues = venueRepository.findByLocation("Zagreb")
+            val venueIds = venues.map { it.id }
+            return buildVenueStats(
+                venueIds,
+                lowerBound,
+                upperBound,
+                venues
+            )
         }
 
-        return venues
+        val currentCity = geolocationService.getGeolocation(latitude, longitude)
+        val nearbyCities = geolocationService.getNearbyCities(latitude, longitude)
+
+        if (nearbyCities.isNullOrEmpty()) {
+            val venues = venueRepository.findByLocation(currentCity)
+            val venueIds = venues.map { it.id }
+            return buildVenueStats(
+                venueIds,
+                lowerBound,
+                upperBound,
+                venues
+            )
+        }
+
+        nearbyCities.add(currentCity)
+
+        val venues = venueRepository.findByLocationIn(nearbyCities)
+        val venueIds = venues.map { it.id }
+
+        return buildVenueStats(venueIds, lowerBound, upperBound, venues)
+    }
+
+    @Transactional(readOnly = true)
+    fun getNewVenues(): List<VenueEntity> {
+        val currentTimestamp: LocalDateTime = LocalDateTime.now()
+        val (lowerBound, upperBound) = getSurroundingHalfHours(currentTimestamp)
+
+        val venues = venueRepository.findAll(PageRequest.of(0, 20, Sort.by(Sort.Order.desc("id")))).content
+        if (venues.isEmpty()) return emptyList()
+        val venueIds = venues.map { it.id }
+
+        return buildVenueStats(venueIds, lowerBound, upperBound, venues)
+    }
+
+    @Transactional(readOnly = true)
+    fun getTrendingVenues(): List<VenueEntity> {
+        val currentTimestamp: LocalDateTime = LocalDateTime.now()
+        val (lowerBound, upperBound) = getSurroundingHalfHours(currentTimestamp)
+
+        val venues = venueRepository.findAll(PageRequest.of(0, 20, Sort.by(Sort.Order.desc("averageRating")))).content
+        if (venues.isEmpty()) return emptyList()
+        val venueIds = venues.map { it.id }
+
+        return buildVenueStats(venueIds, lowerBound, upperBound, venues)
+    }
+
+    @Transactional(readOnly = true)
+    fun getSuggestedVenues(): List<VenueEntity> {
+        val currentTimestamp: LocalDateTime = LocalDateTime.now()
+        val (lowerBound, upperBound) = getSurroundingHalfHours(currentTimestamp)
+
+        val venues = venueRepository.findSuggestedVenues()
+        if (venues.isEmpty()) return emptyList()
+        val venueIds = venues.map { it.id }
+
+        return buildVenueStats(venueIds, lowerBound, upperBound, venues)
     }
 
     @Transactional(readOnly = true)
@@ -234,6 +297,32 @@ class VenueService(
         val totalGuests = reservations.sumOf { it.numberOfGuests }
 
         venue.availableCapacity = venue.maximumCapacity - totalGuests
+    }
+
+    private fun buildVenueStats(
+        venueIds: List<Int>,
+        lowerBound: LocalDateTime,
+        upperBound: LocalDateTime,
+        venues: List<VenueEntity>
+    ): List<VenueEntity> {
+        val ratings = venueRatingRepository.findByVenueIdIn(venueIds)
+        val reservationsByVenueId =
+            reservationRepository.findByDatetimeBetween(lowerBound, upperBound).groupBy { it.venueId }
+        val averageRatingByVenueId = ratings.groupBy { it.venueId }
+            .mapValues { (_, venueRatings) -> venueRatings.map { it.rating }.average() }
+
+        for (venue in venues) {
+            venue.averageRating = averageRatingByVenueId[venue.id] ?: 0.0
+
+            val venueReservations = reservationsByVenueId[venue.id].orEmpty()
+            if (venueReservations.isNotEmpty()) {
+                calculateCurrentAvailableCapacity(venue, venueReservations)
+            } else {
+                venue.availableCapacity = venue.maximumCapacity
+            }
+        }
+
+        return venues
     }
 
 }
