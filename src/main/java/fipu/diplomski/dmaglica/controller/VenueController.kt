@@ -25,6 +25,20 @@ class VenueController(
     @GetMapping(Paths.GET_ALL_VENUES)
     fun getAllVenues(): List<VenueEntity> = venueService.getAll()
 
+    @GetMapping(Paths.GET_VENUES_BY_CATEGORY)
+    fun getVenuesByCategory(
+        @RequestParam("category") category: String,
+        @RequestParam("latitude", required = false) latitude: Double? = null,
+        @RequestParam("longitude", required = false) longitude: Double? = null,
+    ): List<VenueEntity> = when (category.lowercase()) {
+        "nearby" -> venueService.getNearbyVenues(latitude, longitude)
+        "new" -> venueService.getNewVenues()
+        "trending" -> venueService.getTrendingVenues()
+        "suggested" -> venueService.getSuggestedVenues()
+        else -> throw IllegalArgumentException("Unsupported venue type.")
+    }
+
+
     @GetMapping(Paths.GET_VENUE_TYPE)
     fun getVenueType(
         @RequestParam("typeId") typeId: Int,

@@ -1,21 +1,36 @@
 package fipu.diplomski.dmaglica.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import io.github.oshai.kotlinlogging.KotlinLogging
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.util.UriComponentsBuilder
+import java.net.URI
+import java.net.http.HttpClient
+import java.net.http.HttpRequest
+import java.net.http.HttpResponse
+
 
 @Service
 class GeolocationService(
-    private val restTemplate: RestTemplate
+    private val restTemplate: RestTemplate,
+    @Value("\${rapidapi.key}")
+    private val apiKey: String
 ) {
+
+    companion object {
+        private val objectMapper = ObjectMapper()
+        private val logger = KotlinLogging.logger(GeolocationService::class.java.name)
+    }
 
     fun fetchGeolocation(): String {
         val url = "https://api-bdc.net/data/reverse-geocode-client"
 
-        val response = restTemplate.getForObject(url, Map::class.java)?.let {
+        restTemplate.getForObject(url, Map::class.java)?.let {
             return it["city"] as String
         }
-        return response ?: "No city found"
+        return "No city found"
     }
 
     fun getGeolocation(latitude: Double, longitude: Double): String {
@@ -34,26 +49,26 @@ class GeolocationService(
         return "Latitude: $latitude, Longitude: $longitude"
     }
 
-    fun getNearbyCities(latitude: Double, longitude: Double): List<String>? {
-        val baseUrl = "http://getnearbycities.geobytes.com/GetNearbyCities"
-        val uri = UriComponentsBuilder.fromHttpUrl(baseUrl)
-            .queryParam("radius", 100)
-            .queryParam("latitude", latitude)
-            .queryParam("longitude", longitude)
+    fun getNearbyCities(latitude: Double, longitude: Double): MutableList<String>? {
+        val limit = 10
+        val radius = 100
+
+        val request: HttpRequest? = HttpRequest.newBuilder()
+            .uri(URI.create("https://wft-geo-db.p.rapidapi.com/v1/geo/locations/$latitude%2B$longitude/nearbyCities?radius=$radius&limit=$limit"))
+            .header("x-rapidapi-key", apiKey)
+            .header("x-rapidapi-host", "wft-geo-db.p.rapidapi.com")
+            .method("GET", HttpRequest.BodyPublishers.noBody())
             .build()
-            .toUri()
-
-        val response = restTemplate.getForObject(uri, List::class.java).let {
-            it?.let {
-                val regex = Regex("^\\[\\s*[^,]*,\\s*([^,]*)")
-                it.mapNotNull { element -> regex.find(element.toString())?.groupValues?.get(1) }
-            }
-        }
-
-        if (response.isNullOrEmpty()) {
+        val response: HttpResponse<String?> = try {
+            HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString())
+        } catch (e: Exception) {
+            logger.error { "Failed to fetch geolocation. Error: ${e.message}" }
             return null
         }
 
-        return response
+        val responseBody = objectMapper.readTree(response.body())
+        val cities = responseBody["data"].mapNotNull { it["city"]?.asText() }
+
+        return cities.toMutableList()
     }
 }

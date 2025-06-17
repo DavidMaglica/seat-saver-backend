@@ -46,6 +46,7 @@
         <logback.version>1.5.18</logback.version>
         <xmlunit.version>2.10.1</xmlunit.version>
         <klogging.version>7.0.7</klogging.version>
+        <commons-net.version>3.11.1</commons-net.version>
     </properties>
 
     <dependencies>
@@ -127,6 +128,12 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-core</artifactId>
             <version>${logback.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-net</groupId>
+            <artifactId>commons-net</artifactId>
+            <version>${commons-net.version}</version>
         </dependency>
 
         <dependency>
