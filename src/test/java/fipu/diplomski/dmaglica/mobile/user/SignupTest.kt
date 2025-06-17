@@ -1,5 +1,6 @@
 package fipu.diplomski.dmaglica.mobile.user
 
+import org.amshove.kluent.`should be`
 import org.amshove.kluent.`should be equal to`
 import org.amshove.kluent.`should not be`
 import org.junit.jupiter.api.Test
@@ -74,7 +75,7 @@ class SignupTest : BaseUserServiceTest() {
         response.data?.id `should be equal to` mockedUser.id
         response.data?.email `should be equal to` mockedUser.email
         response.data?.username `should be equal to` mockedUser.username
-        response.data?.password `should be equal to` mockedUser.password
+        passwordEncoder.matches(mockedUser.password, response.data?.password) `should be` true
         response.data?.roleId `should be equal to` mockedUser.roleId
 
 
@@ -85,7 +86,7 @@ class SignupTest : BaseUserServiceTest() {
 
         newUser.email `should be equal to` mockedUser.email
         newUser.username `should be equal to` mockedUser.username
-        newUser.password `should be equal to` mockedUser.password
+        passwordEncoder.matches(mockedUser.password, newUser.password)
         newUser.roleId `should be equal to` mockedUser.roleId
         newNotificationOptions.userId `should be equal to` mockedUser.id
         newNotificationOptions.emailNotificationsEnabled `should be equal to` mockedNotificationOptions.emailNotificationsEnabled

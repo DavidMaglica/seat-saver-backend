@@ -11,6 +11,7 @@ import fipu.diplomski.dmaglica.repo.UserRepository
 import fipu.diplomski.dmaglica.repo.entity.NotificationOptionsEntity
 import fipu.diplomski.dmaglica.repo.entity.UserEntity
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import kotlin.jvm.optionals.getOrElse
@@ -23,6 +24,7 @@ class UserService(
 
     companion object {
         private val logger = KotlinLogging.logger(UserService::class.java.name)
+        private val passwordEncoder = BCryptPasswordEncoder()
     }
 
     @Transactional
@@ -31,10 +33,12 @@ class UserService(
             return DataResponse(false, "User with email $email already exists")
         }
 
+        val hashedPassword = passwordEncoder.encode(password)
+
         val user = UserEntity().also {
             it.email = email
             it.username = username
-            it.password = password
+            it.password = hashedPassword
             it.roleId = Role.USER.ordinal
         }
 
@@ -70,7 +74,7 @@ class UserService(
         val user = userRepository.findByEmail(email)
             ?: return DataResponse(false, "User with email $email does not exist.", null)
 
-        if (user.password.lowercase() != password.lowercase()) {
+        if (!passwordEncoder.matches(password, user.password)) {
             return DataResponse(false, "Incorrect password.", null)
         }
 
