@@ -159,10 +159,12 @@ class UserService(
             return BasicResponse(false, "Password cannot be empty.")
         }
 
+        val hashedPassword = passwordEncoder.encode(newPassword)
+
         val user = userRepository.findById(userId).getOrElse {
             return BasicResponse(false, "User not found.")
         }.apply {
-            password = newPassword
+            password = hashedPassword
         }
 
         try {
@@ -255,7 +257,7 @@ class UserService(
         return User(
             id = user.id,
             username = user.username,
-            password = user.password,
+            password = "", // Password should not be returned for security reasons
             email = user.email,
             notificationOptions = notificationOptions,
             role = Role.entries[user.roleId],
