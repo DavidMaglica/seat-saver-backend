@@ -6,6 +6,7 @@ import fipu.diplomski.dmaglica.repo.VenueRepository
 import fipu.diplomski.dmaglica.repo.VenueTypeRepository
 import fipu.diplomski.dmaglica.repo.entity.VenueEntity
 import fipu.diplomski.dmaglica.repo.entity.VenueRatingEntity
+import fipu.diplomski.dmaglica.service.GeolocationService
 import fipu.diplomski.dmaglica.service.ImageService
 import fipu.diplomski.dmaglica.service.VenueService
 import org.junit.jupiter.api.AfterEach
@@ -32,6 +33,9 @@ abstract class BaseVenueServiceTest {
 
     @Mock
     protected lateinit var reservationRepository: ReservationRepository
+
+    @Mock
+    protected lateinit var geolocationService: GeolocationService
 
     @Mock
     protected lateinit var imageService: ImageService
