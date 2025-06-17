@@ -16,7 +16,6 @@ interface VenueRepository : JpaRepository<VenueEntity, Int> {
         SELECT v FROM VenueEntity v
         WHERE v.averageRating > 4.0 AND v.availableCapacity > 0
         ORDER BY v.id DESC, v.averageRating DESC, v.availableCapacity DESC
-        LIMIT 20
     """
     )
     fun findSuggestedVenues(): List<VenueEntity>
