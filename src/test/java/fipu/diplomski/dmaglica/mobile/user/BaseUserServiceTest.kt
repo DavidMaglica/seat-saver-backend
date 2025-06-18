@@ -13,6 +13,7 @@ import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.Mockito.reset
 import org.mockito.junit.jupiter.MockitoExtension
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.test.context.ActiveProfiles
 
 @ExtendWith(MockitoExtension::class)
@@ -37,6 +38,8 @@ abstract class BaseUserServiceTest {
     protected val notificationOptionsArgumentCaptor: ArgumentCaptor<NotificationOptionsEntity> =
         ArgumentCaptor.forClass(NotificationOptionsEntity::class.java)
 
+    protected val passwordEncoder = BCryptPasswordEncoder()
+
     protected val mockedUser: UserEntity = UserEntity().apply {
         id = 0
         email = "user1@mail.com"
@@ -45,6 +48,16 @@ abstract class BaseUserServiceTest {
         lastKnownLatitude = 0.0
         lastKnownLongitude = 0.0
         roleId = Role.USER.ordinal
+    }
+
+    protected val mockedUserWithEncryptedPassword = UserEntity().apply {
+        id = mockedUser.id
+        email = mockedUser.email
+        username = mockedUser.username
+        password = passwordEncoder.encode(mockedUser.password)
+        lastKnownLatitude = mockedUser.lastKnownLatitude
+        lastKnownLongitude = mockedUser.lastKnownLongitude
+        roleId = mockedUser.roleId
     }
 
     protected val mockedNotificationOptions: NotificationOptionsEntity = NotificationOptionsEntity().apply {

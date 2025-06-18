@@ -69,7 +69,7 @@ class UpdatePasswordTest : BaseUserServiceTest() {
 
         verify(userRepository).save(userEntityArgumentCaptor.capture())
         val updatedUser = userEntityArgumentCaptor.value
-        updatedUser.password `should be equal to` NEW_PASSWORD
+        passwordEncoder.matches(NEW_PASSWORD, updatedUser.password) `should be` true
 
         verify(userRepository, times(1)).findById(mockedUser.id)
         verify(userRepository, times(1)).save(any())

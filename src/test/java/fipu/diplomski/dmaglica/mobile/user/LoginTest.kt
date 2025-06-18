@@ -45,7 +45,7 @@ class LoginTest : BaseUserServiceTest() {
 
     @Test
     fun `when user is found and password is correct user should be returned`() {
-        `when`(userRepository.findByEmail(anyString())).thenReturn(mockedUser)
+        `when`(userRepository.findByEmail(anyString())).thenReturn(mockedUserWithEncryptedPassword)
 
         val response = userService.login(mockedUser.email, mockedUser.password)
 
@@ -55,7 +55,7 @@ class LoginTest : BaseUserServiceTest() {
         response.data?.id `should be equal to` mockedUser.id
         response.data?.email `should be equal to` mockedUser.email
         response.data?.username `should be equal to` mockedUser.username
-        response.data?.password `should be equal to` mockedUser.password
+        passwordEncoder.matches(mockedUser.password, response.data?.password) `should be` true
         response.data?.roleId `should be equal to` mockedUser.roleId
 
         verify(userRepository, times(1)).findByEmail(anyString())
