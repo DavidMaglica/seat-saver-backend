@@ -12,4 +12,8 @@ class VenueRatingEntity {
     var venueId: Int = 0
 
     var rating: Double = 0.0
+
+    var username: String = ""
+
+    var comment: String? = null
 }
