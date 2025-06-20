@@ -3,10 +3,7 @@ package fipu.diplomski.dmaglica.service
 import fipu.diplomski.dmaglica.model.request.CreateVenueRequest
 import fipu.diplomski.dmaglica.model.request.UpdateVenueRequest
 import fipu.diplomski.dmaglica.model.response.BasicResponse
-import fipu.diplomski.dmaglica.repo.ReservationRepository
-import fipu.diplomski.dmaglica.repo.VenueRatingRepository
-import fipu.diplomski.dmaglica.repo.VenueRepository
-import fipu.diplomski.dmaglica.repo.VenueTypeRepository
+import fipu.diplomski.dmaglica.repo.*
 import fipu.diplomski.dmaglica.repo.entity.*
 import fipu.diplomski.dmaglica.util.getSurroundingHalfHours
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -17,6 +14,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
 import java.time.LocalDateTime
+import kotlin.jvm.optionals.getOrElse
 
 @Service
 class VenueService(
@@ -26,6 +24,7 @@ class VenueService(
     private val reservationRepository: ReservationRepository,
     private val imageService: ImageService,
     private val geolocationService: GeolocationService,
+    private val userRepository: UserRepository,
 ) {
 
     companion object {
@@ -151,6 +150,10 @@ class VenueService(
         .orElseThrow { EntityNotFoundException("Venue with id: $venueId not found.") }.averageRating
 
     @Transactional(readOnly = true)
+    fun getAllRatings(venueId: Int): List<VenueRatingEntity> =
+        venueRatingRepository.findByVenueId(venueId).sortedByDescending { it.id }
+
+    @Transactional(readOnly = true)
     fun getAllTypes(): List<VenueTypeEntity> = venueTypeRepository.findAll()
 
     fun getVenueImages(venueId: Int, venueName: String): List<ByteArray> =
@@ -220,8 +223,13 @@ class VenueService(
     }
 
     @Transactional
-    fun rate(venueId: Int, userRating: Double): BasicResponse {
+    fun rate(venueId: Int, userRating: Double, userId: Int, comment: String?): BasicResponse {
         if (userRating < 0.5 || userRating > 5.0) return BasicResponse(false, "Rating must be between 0.5 and 5.")
+
+        val username = userRepository.findById(userId).getOrElse {
+            logger.error { "User with id $userId not found." }
+            return BasicResponse(false, "User with id $userId not found.")
+        }.username
 
         val venue = venueRepository.findById(venueId)
             .orElseThrow { EntityNotFoundException("Venue with id $venueId not found") }
@@ -230,6 +238,8 @@ class VenueService(
         val newRatingEntity = VenueRatingEntity().apply {
             this.venueId = venueId
             this.rating = userRating
+            this.username = username
+            this.comment = comment
         }
 
         try {

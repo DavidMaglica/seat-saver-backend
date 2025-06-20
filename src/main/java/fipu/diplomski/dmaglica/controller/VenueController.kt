@@ -5,6 +5,7 @@ import fipu.diplomski.dmaglica.model.request.UpdateVenueRequest
 import fipu.diplomski.dmaglica.model.response.BasicResponse
 import fipu.diplomski.dmaglica.repo.entity.MenuImageEntity
 import fipu.diplomski.dmaglica.repo.entity.VenueEntity
+import fipu.diplomski.dmaglica.repo.entity.VenueRatingEntity
 import fipu.diplomski.dmaglica.repo.entity.VenueTypeEntity
 import fipu.diplomski.dmaglica.service.VenueService
 import fipu.diplomski.dmaglica.util.Paths
@@ -49,6 +50,11 @@ class VenueController(
         @RequestParam("venueId") venueId: Int,
     ): Double = venueService.getVenueRating(venueId)
 
+    @GetMapping(Paths.GET_ALL_VENUE_RATINGS)
+    fun getAllVenueRatings(
+        @RequestParam("venueId") venueId: Int,
+    ): List<VenueRatingEntity> = venueService.getAllRatings(venueId)
+
     @GetMapping(Paths.GET_ALL_VENUE_TYPES)
     fun getAllVenueTypes(): List<VenueTypeEntity> = venueService.getAllTypes()
 
@@ -91,7 +97,9 @@ class VenueController(
     fun rateVenue(
         @RequestParam("venueId") venueId: Int,
         @RequestParam("rating") rating: Double,
-    ): BasicResponse = venueService.rate(venueId, rating)
+        @RequestParam("userId") userId: Int,
+        @RequestParam("comment", required = false) comment: String? = null
+    ): BasicResponse = venueService.rate(venueId, rating, userId, comment)
 
     @DeleteMapping(Paths.DELETE_VENUE)
     fun deleteVenue(

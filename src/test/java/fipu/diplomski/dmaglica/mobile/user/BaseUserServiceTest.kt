@@ -7,9 +7,9 @@ import fipu.diplomski.dmaglica.repo.entity.NotificationOptionsEntity
 import fipu.diplomski.dmaglica.repo.entity.UserEntity
 import fipu.diplomski.dmaglica.service.UserService
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentCaptor
-import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.Mockito.reset
 import org.mockito.junit.jupiter.MockitoExtension
@@ -26,8 +26,15 @@ abstract class BaseUserServiceTest {
     @Mock
     protected lateinit var notificationOptionsRepository: NotificationOptionsRepository
 
-    @InjectMocks
     protected lateinit var userService: UserService
+
+    @BeforeEach
+    protected fun setUp() {
+        userService = UserService(
+            userRepository,
+            notificationOptionsRepository,
+        )
+    }
 
     @AfterEach
     protected fun tearDown() {
