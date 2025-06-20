@@ -9,9 +9,9 @@ import fipu.diplomski.dmaglica.repo.entity.UserEntity
 import fipu.diplomski.dmaglica.repo.entity.VenueEntity
 import fipu.diplomski.dmaglica.service.ReservationService
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentCaptor
-import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.Mockito.reset
 import org.mockito.junit.jupiter.MockitoExtension
@@ -31,8 +31,16 @@ abstract class BaseReservationServiceTest {
     @Mock
     protected lateinit var venueRepository: VenueRepository
 
-    @InjectMocks
     protected lateinit var reservationService: ReservationService
+
+    @BeforeEach
+    protected fun setUp() {
+        reservationService = ReservationService(
+            reservationRepository,
+            userRepository,
+            venueRepository
+        )
+    }
 
     @AfterEach
     protected fun tearDown() {

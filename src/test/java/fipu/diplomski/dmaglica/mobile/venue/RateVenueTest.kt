@@ -23,11 +23,12 @@ class RateVenueTest : BaseVenueServiceTest() {
         response.success `should be` false
         response.message `should be equal to` "Rating must be between 0.5 and 5."
 
-        verifyNoInteractions(venueRatingRepository, venueRepository)
+        verifyNoInteractions(userRepository, venueRatingRepository, venueRepository)
     }
 
     @Test
     fun `should throw if venue not found`() {
+        `when`(userRepository.findById(anyInt())).thenReturn(Optional.of(mockedUser))
         `when`(venueRepository.findById(anyInt())).thenReturn(Optional.empty())
 
         val exception = assertThrows<EntityNotFoundException> {
@@ -36,12 +37,15 @@ class RateVenueTest : BaseVenueServiceTest() {
 
         exception.message?.let { it `should be equal to` "Venue with id ${mockedVenue.id} not found" }
 
+        verify(userRepository, times(1)).findById(mockedUser.id)
         verify(venueRepository, times(1)).findById(mockedVenue.id)
+        verifyNoMoreInteractions(userRepository, venueRepository)
         verifyNoInteractions(venueRatingRepository)
     }
 
     @Test
     fun `should return failure response if saving rating fails`() {
+        `when`(userRepository.findById(anyInt())).thenReturn(Optional.of(mockedUser))
         `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
         `when`(venueRatingRepository.findByVenueId(anyInt())).thenReturn(listOf(mockedRating))
         `when`(venueRatingRepository.save(any())).thenThrow(RuntimeException())
@@ -51,14 +55,16 @@ class RateVenueTest : BaseVenueServiceTest() {
         response.success `should be equal to` false
         response.message `should be equal to` "Error while updating rating. Please try again later."
 
+        verify(userRepository, times(1)).findById(mockedUser.id)
         verify(venueRepository, times(1)).findById(mockedVenue.id)
         verify(venueRatingRepository, times(1)).findByVenueId(mockedVenue.id)
         verify(venueRatingRepository, times(1)).save(venueRatingArgumentCaptor.capture())
-        verifyNoMoreInteractions(venueRatingRepository, venueRepository)
+        verifyNoMoreInteractions(userRepository, venueRatingRepository, venueRepository)
     }
 
     @Test
     fun `should return failure response if saving venue fails`() {
+        `when`(userRepository.findById(anyInt())).thenReturn(Optional.of(mockedUser))
         `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
         `when`(venueRatingRepository.findByVenueId(anyInt())).thenReturn(listOf(mockedRating))
         `when`(venueRepository.save(any())).thenThrow(RuntimeException())
@@ -68,15 +74,17 @@ class RateVenueTest : BaseVenueServiceTest() {
         response.success `should be equal to` false
         response.message `should be equal to` "Error while updating venue after rating. Please try again later."
 
+        verify(userRepository, times(1)).findById(mockedUser.id)
         verify(venueRepository, times(1)).findById(mockedVenue.id)
         verify(venueRatingRepository, times(1)).findByVenueId(mockedVenue.id)
         verify(venueRatingRepository, times(1)).save(venueRatingArgumentCaptor.capture())
         verify(venueRepository, times(1)).save(venueArgumentCaptor.capture())
-        verifyNoMoreInteractions(venueRatingRepository, venueRepository)
+        verifyNoMoreInteractions(userRepository, venueRatingRepository, venueRepository)
     }
 
     @Test
     fun `should insert new rating and update if does not exist earlier`() {
+        `when`(userRepository.findById(anyInt())).thenReturn(Optional.of(mockedUser))
         `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
         `when`(venueRatingRepository.findByVenueId(anyInt())).thenReturn(emptyList())
 
@@ -96,14 +104,17 @@ class RateVenueTest : BaseVenueServiceTest() {
         updatedVenue.id `should be equal to` mockedVenue.id
         updatedVenue.averageRating `should be equal to` 3.0
 
+        verify(userRepository, times(1)).findById(mockedUser.id)
         verify(venueRepository, times(1)).findById(mockedVenue.id)
         verify(venueRatingRepository, times(1)).findByVenueId(mockedVenue.id)
         verify(venueRatingRepository, times(1)).save(venueRatingArgumentCaptor.capture())
         verify(venueRepository, times(1)).save(venueArgumentCaptor.capture())
+        verifyNoMoreInteractions(userRepository, venueRatingRepository, venueRepository)
     }
 
     @Test
     fun `should insert new rating and calculate new average correctly`() {
+        `when`(userRepository.findById(anyInt())).thenReturn(Optional.of(mockedUser))
         `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
         `when`(venueRatingRepository.findByVenueId(anyInt())).thenReturn(listOf(mockedRating))
 
@@ -123,14 +134,17 @@ class RateVenueTest : BaseVenueServiceTest() {
         updatedVenue.id `should be equal to` mockedVenue.id
         updatedVenue.averageRating `should be equal to` 4.5
 
+        verify(userRepository, times(1)).findById(mockedUser.id)
         verify(venueRepository, times(1)).findById(mockedVenue.id)
         verify(venueRatingRepository, times(1)).findByVenueId(mockedVenue.id)
         verify(venueRatingRepository, times(1)).save(venueRatingArgumentCaptor.capture())
         verify(venueRepository, times(1)).save(venueArgumentCaptor.capture())
+        verifyNoMoreInteractions(userRepository, venueRatingRepository, venueRepository)
     }
 
     @Test
     fun `should insert new rating with comment and update average rating correctly`() {
+        `when`(userRepository.findById(anyInt())).thenReturn(Optional.of(mockedUser))
         `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
         `when`(venueRatingRepository.findByVenueId(anyInt())).thenReturn(listOf(mockedRating))
 
@@ -150,10 +164,11 @@ class RateVenueTest : BaseVenueServiceTest() {
         updatedVenue.id `should be equal to` mockedVenue.id
         updatedVenue.averageRating `should be equal to` 4.5
 
+        verify(userRepository, times(1)).findById(mockedUser.id)
         verify(venueRepository, times(1)).findById(mockedVenue.id)
         verify(venueRatingRepository, times(1)).findByVenueId(mockedVenue.id)
         verify(venueRatingRepository, times(1)).save(venueRatingArgumentCaptor.capture())
         verify(venueRepository, times(1)).save(venueArgumentCaptor.capture())
+        verifyNoMoreInteractions(userRepository, venueRatingRepository, venueRepository)
     }
-
 }

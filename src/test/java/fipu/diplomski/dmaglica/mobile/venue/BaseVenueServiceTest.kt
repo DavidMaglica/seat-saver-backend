@@ -1,18 +1,17 @@
 package fipu.diplomski.dmaglica.mobile.venue
 
-import fipu.diplomski.dmaglica.repo.ReservationRepository
-import fipu.diplomski.dmaglica.repo.VenueRatingRepository
-import fipu.diplomski.dmaglica.repo.VenueRepository
-import fipu.diplomski.dmaglica.repo.VenueTypeRepository
+import fipu.diplomski.dmaglica.model.data.Role
+import fipu.diplomski.dmaglica.repo.*
+import fipu.diplomski.dmaglica.repo.entity.UserEntity
 import fipu.diplomski.dmaglica.repo.entity.VenueEntity
 import fipu.diplomski.dmaglica.repo.entity.VenueRatingEntity
 import fipu.diplomski.dmaglica.service.GeolocationService
 import fipu.diplomski.dmaglica.service.ImageService
 import fipu.diplomski.dmaglica.service.VenueService
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentCaptor
-import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.Mockito.reset
 import org.mockito.junit.jupiter.MockitoExtension
@@ -35,13 +34,28 @@ abstract class BaseVenueServiceTest {
     protected lateinit var reservationRepository: ReservationRepository
 
     @Mock
+    protected lateinit var userRepository: UserRepository
+
+    @Mock
     protected lateinit var geolocationService: GeolocationService
 
     @Mock
     protected lateinit var imageService: ImageService
 
-    @InjectMocks
     protected lateinit var venueService: VenueService
+
+    @BeforeEach
+    fun setUp() {
+        venueService = VenueService(
+            venueRepository,
+            venueRatingRepository,
+            venueTypeRepository,
+            reservationRepository,
+            imageService,
+            geolocationService,
+            userRepository,
+        )
+    }
 
     @AfterEach
     fun tearDown() {
@@ -68,6 +82,16 @@ abstract class BaseVenueServiceTest {
         id = 1
         venueId = mockedVenue.id
         rating = 4.0
+    }
+
+    protected val mockedUser: UserEntity = UserEntity().apply {
+        id = 1
+        email = "user1@mail.com"
+        username = "user1"
+        password = "password"
+        lastKnownLatitude = 0.0
+        lastKnownLongitude = 0.0
+        roleId = Role.USER.ordinal
     }
 
 }
