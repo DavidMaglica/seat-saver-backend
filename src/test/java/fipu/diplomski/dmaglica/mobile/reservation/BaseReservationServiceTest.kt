@@ -44,7 +44,7 @@ abstract class BaseReservationServiceTest {
 
     @AfterEach
     protected fun tearDown() {
-        reset(reservationRepository, userRepository)
+        reset(reservationRepository, userRepository, venueRepository)
     }
 
     protected val reservationArgumentCaptor: ArgumentCaptor<ReservationEntity> =

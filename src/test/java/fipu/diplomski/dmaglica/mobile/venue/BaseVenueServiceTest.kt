@@ -59,7 +59,15 @@ abstract class BaseVenueServiceTest {
 
     @AfterEach
     fun tearDown() {
-        reset(venueRepository, venueRatingRepository, venueTypeRepository, reservationRepository)
+        reset(
+            venueRepository,
+            venueRatingRepository,
+            venueTypeRepository,
+            reservationRepository,
+            imageService,
+            geolocationService,
+            userRepository,
+        )
     }
 
     protected val venueArgumentCaptor: ArgumentCaptor<VenueEntity> = ArgumentCaptor.forClass(VenueEntity::class.java)

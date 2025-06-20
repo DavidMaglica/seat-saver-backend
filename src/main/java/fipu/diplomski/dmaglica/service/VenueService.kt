@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
 import java.time.LocalDateTime
+import kotlin.jvm.optionals.getOrElse
 
 @Service
 class VenueService(
@@ -225,7 +226,10 @@ class VenueService(
     fun rate(venueId: Int, userRating: Double, userId: Int, comment: String?): BasicResponse {
         if (userRating < 0.5 || userRating > 5.0) return BasicResponse(false, "Rating must be between 0.5 and 5.")
 
-        val username = userRepository.findById(userId).get().username
+        val username = userRepository.findById(userId).getOrElse {
+            logger.error { "User with id $userId not found." }
+            return BasicResponse(false, "User with id $userId not found.")
+        }.username
 
         val venue = venueRepository.findById(venueId)
             .orElseThrow { EntityNotFoundException("Venue with id $venueId not found") }

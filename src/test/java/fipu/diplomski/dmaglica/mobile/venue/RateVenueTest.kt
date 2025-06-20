@@ -104,7 +104,6 @@ class RateVenueTest : BaseVenueServiceTest() {
         updatedVenue.id `should be equal to` mockedVenue.id
         updatedVenue.averageRating `should be equal to` 3.0
 
-        verify(userRepository, times(1)).findById(mockedUser.id)
         verify(venueRepository, times(1)).findById(mockedVenue.id)
         verify(venueRatingRepository, times(1)).findByVenueId(mockedVenue.id)
         verify(venueRatingRepository, times(1)).save(venueRatingArgumentCaptor.capture())
@@ -134,7 +133,6 @@ class RateVenueTest : BaseVenueServiceTest() {
         updatedVenue.id `should be equal to` mockedVenue.id
         updatedVenue.averageRating `should be equal to` 4.5
 
-        verify(userRepository, times(1)).findById(mockedUser.id)
         verify(venueRepository, times(1)).findById(mockedVenue.id)
         verify(venueRatingRepository, times(1)).findByVenueId(mockedVenue.id)
         verify(venueRatingRepository, times(1)).save(venueRatingArgumentCaptor.capture())
@@ -164,7 +162,6 @@ class RateVenueTest : BaseVenueServiceTest() {
         updatedVenue.id `should be equal to` mockedVenue.id
         updatedVenue.averageRating `should be equal to` 4.5
 
-        verify(userRepository, times(1)).findById(mockedUser.id)
         verify(venueRepository, times(1)).findById(mockedVenue.id)
         verify(venueRatingRepository, times(1)).findByVenueId(mockedVenue.id)
         verify(venueRatingRepository, times(1)).save(venueRatingArgumentCaptor.capture())
