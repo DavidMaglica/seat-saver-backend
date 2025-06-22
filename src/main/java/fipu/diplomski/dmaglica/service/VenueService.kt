@@ -4,7 +4,10 @@ import fipu.diplomski.dmaglica.model.request.CreateVenueRequest
 import fipu.diplomski.dmaglica.model.request.UpdateVenueRequest
 import fipu.diplomski.dmaglica.model.response.BasicResponse
 import fipu.diplomski.dmaglica.repo.*
-import fipu.diplomski.dmaglica.repo.entity.*
+import fipu.diplomski.dmaglica.repo.entity.ReservationEntity
+import fipu.diplomski.dmaglica.repo.entity.VenueEntity
+import fipu.diplomski.dmaglica.repo.entity.VenueRatingEntity
+import fipu.diplomski.dmaglica.repo.entity.VenueTypeEntity
 import fipu.diplomski.dmaglica.util.getSurroundingHalfHours
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.persistence.EntityNotFoundException
@@ -156,10 +159,10 @@ class VenueService(
     @Transactional(readOnly = true)
     fun getAllTypes(): List<VenueTypeEntity> = venueTypeRepository.findAll()
 
-    fun getVenueImages(venueId: Int, venueName: String): List<ByteArray> =
-        imageService.getVenueImages(venueId, venueName)
+    fun getVenueImages(venueId: Int): List<String> =
+        imageService.getVenueImages(venueId)
 
-    fun getMenuImage(venueId: Int, venueName: String): MenuImageEntity = imageService.getMenuImage(venueId, venueName)
+    fun getMenuImage(venueId: Int): List<String> = imageService.getMenuImage(venueId)
 
     @Transactional
     fun create(request: CreateVenueRequest): BasicResponse {

@@ -3,7 +3,6 @@ package fipu.diplomski.dmaglica.controller
 import fipu.diplomski.dmaglica.model.request.CreateVenueRequest
 import fipu.diplomski.dmaglica.model.request.UpdateVenueRequest
 import fipu.diplomski.dmaglica.model.response.BasicResponse
-import fipu.diplomski.dmaglica.repo.entity.MenuImageEntity
 import fipu.diplomski.dmaglica.repo.entity.VenueEntity
 import fipu.diplomski.dmaglica.repo.entity.VenueRatingEntity
 import fipu.diplomski.dmaglica.repo.entity.VenueTypeEntity
@@ -58,17 +57,15 @@ class VenueController(
     @GetMapping(Paths.GET_ALL_VENUE_TYPES)
     fun getAllVenueTypes(): List<VenueTypeEntity> = venueService.getAllTypes()
 
-    @GetMapping
+    @GetMapping(Paths.GET_VENUE_IMAGES)
     fun getVenueImages(
         @RequestParam("venueId") venueId: Int,
-        @RequestParam("venueName") venueName: String,
-    ): List<ByteArray> = venueService.getVenueImages(venueId, venueName)
+    ): List<String> = venueService.getVenueImages(venueId)
 
     @GetMapping(Paths.GET_VENUE_MENU)
     fun getMenuImage(
         @RequestParam("venueId") venueId: Int,
-        @RequestParam("venueName") venueName: String,
-    ): MenuImageEntity = venueService.getMenuImage(venueId, venueName)
+    ): List<String> = venueService.getMenuImage(venueId)
 
     @PostMapping(Paths.CREATE_VENUE)
     fun createVenue(
