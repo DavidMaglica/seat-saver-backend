@@ -12,6 +12,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
+import java.util.*
 
 
 @Service
@@ -25,23 +26,32 @@ class ImageService(
     }
 
     @Transactional(readOnly = true)
-    fun getVenueImages(venueId: Int, venueName: String): List<ByteArray> {
-        val imageDataEntities = venueImageRepository.findByVenueId(venueId)
+    fun getVenueImages(venueId: Int): List<String> {
+        val venueImages = venueImageRepository.findByVenueId(venueId)
 
-        if (imageDataEntities.isEmpty()) throw ImageDataException("Images for venue $venueName do not exist", null)
-
-        val images = mutableListOf(ByteArray(0))
-        imageDataEntities.map {
-            images.add(decompressImage(it.imageData))
+        if (venueImages.isEmpty()) {
+            logger.warn { "No venue images found for venue id: $venueId" }
+            return emptyList()
         }
 
-        return images
+        return venueImages.map {
+            Base64.getEncoder().encodeToString(decompressImage(it.imageData))
+        }
     }
 
     @Transactional(readOnly = true)
-    fun getMenuImage(venueId: Int, venueName: String): MenuImageEntity =
-        menuImageRepository.findByVenueId(venueId)
-            ?: throw ImageDataException("Menu image for venue $venueName does not exist", null)
+    fun getMenuImages(venueId: Int): List<String> {
+        val menuImages = menuImageRepository.findByVenueId(venueId)
+
+        if (menuImages.isEmpty()) {
+            logger.warn { "No menu images found for venue id: $venueId" }
+            return emptyList()
+        }
+
+        return menuImages.map {
+            Base64.getEncoder().encodeToString(decompressImage(it.imageData))
+        }
+    }
 
     @Transactional
     fun uploadVenueImage(venueId: Int, file: MultipartFile): BasicResponse {

@@ -25,6 +25,7 @@ class Paths {
         const val GET_VENUE_RATING = "/get-rating"
         const val GET_ALL_VENUE_RATINGS = "/get-all-ratings"
         const val GET_ALL_VENUE_TYPES = "/get-all-types"
+        const val GET_VENUE_IMAGES = "/get-images"
         const val GET_VENUE_MENU = "/get-menu"
         const val UPLOAD_MENU_IMAGE = "/upload-menu-image"
         const val UPDATE_VENUE = "/update"

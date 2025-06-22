@@ -4,5 +4,5 @@ import fipu.diplomski.dmaglica.repo.entity.MenuImageEntity
 import org.springframework.data.jpa.repository.JpaRepository
 
 interface MenuImageRepository : JpaRepository<MenuImageEntity, Int> {
-    fun findByVenueId(venueId: Int): MenuImageEntity?
+    fun findByVenueId(venueId: Int): List<MenuImageEntity>
 }
