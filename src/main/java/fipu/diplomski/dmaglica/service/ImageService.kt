@@ -30,7 +30,7 @@ class ImageService(
         val venueImages = venueImageRepository.findByVenueId(venueId)
 
         if (venueImages.isEmpty()) {
-            logger.warn { "No menu images found for venue id: $venueId" }
+            logger.warn { "No venue images found for venue id: $venueId" }
             return emptyList()
         }
 
@@ -40,7 +40,7 @@ class ImageService(
     }
 
     @Transactional(readOnly = true)
-    fun getMenuImage(venueId: Int): List<String> {
+    fun getMenuImages(venueId: Int): List<String> {
         val menuImages = menuImageRepository.findByVenueId(venueId)
 
         if (menuImages.isEmpty()) {

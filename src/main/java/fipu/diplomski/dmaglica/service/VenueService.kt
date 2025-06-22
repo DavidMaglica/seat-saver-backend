@@ -162,7 +162,7 @@ class VenueService(
     fun getVenueImages(venueId: Int): List<String> =
         imageService.getVenueImages(venueId)
 
-    fun getMenuImage(venueId: Int): List<String> = imageService.getMenuImage(venueId)
+    fun getMenuImages(venueId: Int): List<String> = imageService.getMenuImages(venueId)
 
     @Transactional
     fun create(request: CreateVenueRequest): BasicResponse {

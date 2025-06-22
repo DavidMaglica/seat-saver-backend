@@ -65,7 +65,7 @@ class VenueController(
     @GetMapping(Paths.GET_VENUE_MENU)
     fun getMenuImage(
         @RequestParam("venueId") venueId: Int,
-    ): List<String> = venueService.getMenuImage(venueId)
+    ): List<String> = venueService.getMenuImages(venueId)
 
     @PostMapping(Paths.CREATE_VENUE)
     fun createVenue(
