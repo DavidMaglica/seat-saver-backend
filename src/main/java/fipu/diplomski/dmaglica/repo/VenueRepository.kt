@@ -8,8 +8,8 @@ import org.springframework.data.jpa.repository.Query
 
 interface VenueRepository : JpaRepository<VenueEntity, Int> {
     override fun findAll(pageable: Pageable): Page<VenueEntity>
-    fun findByLocation(location: String): List<VenueEntity>
-    fun findByLocationIn(locations: List<String>): List<VenueEntity>
+    fun findByLocation(location: String, pageable: Pageable): Page<VenueEntity>
+    fun findByLocationIn(locations: List<String>, pageable: Pageable): Page<VenueEntity>
 
     @Query(
         """
@@ -18,5 +18,5 @@ interface VenueRepository : JpaRepository<VenueEntity, Int> {
         ORDER BY v.id DESC, v.averageRating DESC, v.availableCapacity DESC
     """
     )
-    fun findSuggestedVenues(): List<VenueEntity>
+    fun findSuggestedVenues(pageable: Pageable): Page<VenueEntity>
 }
