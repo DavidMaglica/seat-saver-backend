@@ -12,10 +12,7 @@ import fipu.diplomski.dmaglica.repo.entity.VenueTypeEntity
 import fipu.diplomski.dmaglica.util.getSurroundingHalfHours
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.persistence.EntityNotFoundException
-import org.springframework.data.domain.Page
-import org.springframework.data.domain.PageRequest
-import org.springframework.data.domain.Pageable
-import org.springframework.data.domain.Sort
+import org.springframework.data.domain.*
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
@@ -117,16 +114,19 @@ class VenueService(
 
     @Transactional(readOnly = true)
     fun getTrendingVenues(pageable: Pageable): PagedResponse<VenueEntity> {
-        val sortedPageable = PageRequest.of(
-            pageable.pageNumber,
-            pageable.pageSize,
-            Sort.by("averageRating").descending()
-        )
         val currentTimestamp: LocalDateTime = LocalDateTime.now()
         val (lowerBound, upperBound) = getSurroundingHalfHours(currentTimestamp)
-        val venues = venueRepository.findAll(sortedPageable)
 
-        return venuesToPagedResponse(venues, lowerBound, upperBound)
+        val topVenueStats = reservationRepository.findTopVenuesByReservationCount(pageable)
+
+        val venueIds = topVenueStats.map { it.getVenueId() }.content
+        val venues = venueRepository.findAllById(venueIds)
+
+        val orderedVenues = venueIds.mapNotNull { venueId -> venues.find { it.id == venueId } }
+
+        val paged = PageImpl(orderedVenues, pageable, topVenueStats.totalElements)
+
+        return venuesToPagedResponse(paged, lowerBound, upperBound)
     }
 
     @Transactional(readOnly = true)
