@@ -71,6 +71,7 @@ class VenueService(
 
     @Transactional(readOnly = true)
     fun getNearbyVenues(pageable: Pageable, latitude: Double?, longitude: Double?): PagedResponse<VenueEntity> {
+        // TODO cover with tests
         val currentTimestamp: LocalDateTime = LocalDateTime.now()
         val (lowerBound, upperBound) = getSurroundingHalfHours(currentTimestamp)
         if (latitude == null || longitude == null) {
@@ -95,6 +96,7 @@ class VenueService(
 
     @Transactional(readOnly = true)
     fun getNewVenues(pageable: Pageable): PagedResponse<VenueEntity> {
+        // TODO cover with tests
         val sortedPageable = PageRequest.of(
             pageable.pageNumber,
             pageable.pageSize,
@@ -110,6 +112,7 @@ class VenueService(
 
     @Transactional(readOnly = true)
     fun getTrendingVenues(pageable: Pageable): PagedResponse<VenueEntity> {
+        // TODO cover with tests
         val currentTimestamp: LocalDateTime = LocalDateTime.now()
         val (lowerBound, upperBound) = getSurroundingHalfHours(currentTimestamp)
 
@@ -127,6 +130,7 @@ class VenueService(
 
     @Transactional(readOnly = true)
     fun getSuggestedVenues(pageable: Pageable): PagedResponse<VenueEntity> {
+        // TODO cover with tests
         val currentTimestamp: LocalDateTime = LocalDateTime.now()
         val (lowerBound, upperBound) = getSurroundingHalfHours(currentTimestamp)
 
