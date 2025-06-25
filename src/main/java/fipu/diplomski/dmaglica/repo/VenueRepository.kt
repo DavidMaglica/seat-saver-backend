@@ -19,4 +19,18 @@ interface VenueRepository : JpaRepository<VenueEntity, Int> {
     """
     )
     fun findSuggestedVenues(pageable: Pageable): Page<VenueEntity>
+
+    @Query(
+        """
+        SELECT v FROM VenueEntity v
+        WHERE (:searchQuery IS NULL OR LOWER(v.name) LIKE LOWER(CONCAT('%', :searchQuery, '%')))
+        AND (:typeIds IS NULL OR v.venueTypeId IN :typeIds)
+        ORDER BY v.name ASC
+    """
+    )
+    fun findFilteredVenues(
+        searchQuery: String?,
+        typeIds: List<Int>?,
+        pageable: Pageable
+    ): Page<VenueEntity>
 }

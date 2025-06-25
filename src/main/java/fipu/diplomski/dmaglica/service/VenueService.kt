@@ -59,17 +59,13 @@ class VenueService(
     }
 
     @Transactional(readOnly = true)
-    fun getAll(pageable: Pageable): PagedResponse<VenueEntity> {
-        val sortedPageable = PageRequest.of(
-            pageable.pageNumber,
-            pageable.pageSize,
-            Sort.by(Sort.Order.asc("name"))
+    fun getAll(pageable: Pageable, searchQuery: String?, typeIds: List<Int>?): PagedResponse<VenueEntity> {
+        val (lowerBound, upperBound) = getSurroundingHalfHours(LocalDateTime.now())
+        val venues = venueRepository.findFilteredVenues(
+            pageable = pageable,
+            searchQuery = searchQuery,
+            typeIds = typeIds,
         )
-        val currentTimestamp: LocalDateTime = LocalDateTime.now()
-        val (lowerBound, upperBound) = getSurroundingHalfHours(currentTimestamp)
-
-        val venues = venueRepository.findAll(sortedPageable)
-
         return venuesToPagedResponse(venues, lowerBound, upperBound)
     }
 

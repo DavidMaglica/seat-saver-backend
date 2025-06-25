@@ -3,7 +3,7 @@ package fipu.diplomski.dmaglica.repo.entity
 import jakarta.persistence.*
 
 @Entity
-@Table(name = "venues")
+@Table(name = "venues", indexes = [Index(name = "idx_venue_name_lower", columnList = "name")])
 class VenueEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -28,7 +28,9 @@ class VenueController(
     fun getAllVenues(
         @RequestParam("page", defaultValue = "0") page: Int,
         @RequestParam("size", defaultValue = "20") size: Int,
-    ): PagedResponse<VenueEntity> = venueService.getAll(PageRequest.of(page, size))
+        @RequestParam("searchQuery", required = false) searchQuery: String? = null,
+        @RequestParam("typeIds", required = false) typeIds: List<Int>? = null,
+    ): PagedResponse<VenueEntity> = venueService.getAll(PageRequest.of(page, size), searchQuery, typeIds)
 
     @GetMapping(Paths.GET_VENUES_BY_CATEGORY)
     fun getVenuesByCategory(

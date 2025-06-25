@@ -10,30 +10,31 @@ name: Java CI with Maven
 
 on:
   push:
-    branches: [ "**" ]
+    branches: [ "**" ]    # Triggers on all branches
   pull_request:
     branches: [ "master" ]
-    
-permissions:
-  contents: read
-  security-events: write
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up JDK 21
-      uses: actions/setup-java@v4
-      with:
-        java-version: '21'
-        distribution: 'graalvm'
-        cache: maven
-      
-    - name: Install dependencies
-      run: mvn clean install -DskipTests
+      - uses: actions/checkout@v4
 
-    - name: Run tests
-      run: mvn test
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "temurin"
+          cache: "maven"
+
+      - name: Build and Test
+        run: mvn verify
+
+      - name: Test Report (Optional)
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: Test Results
+          path: "**/target/surefire-reports/*.xml"
+          reporter: "java-junit"
