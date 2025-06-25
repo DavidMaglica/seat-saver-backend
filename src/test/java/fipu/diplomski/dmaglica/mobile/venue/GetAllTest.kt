@@ -1,6 +1,5 @@
 package fipu.diplomski.dmaglica.mobile.venue
 
-import fipu.diplomski.dmaglica.repo.entity.VenueEntity
 import org.amshove.kluent.`should be equal to`
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.*
@@ -83,18 +82,5 @@ class GetAllTest : BaseVenueServiceTest() {
         result.content[1].name `should be equal to` "Venue B"
         verify(venueRepository).findFilteredVenues(null, null, pageable)
         verifyNoMoreInteractions(venueRepository)
-    }
-
-    private fun createVenue(
-        id: Int = 1,
-        name: String = "Test Venue",
-        venueTypeId: Int = 1
-    ): VenueEntity = VenueEntity().apply {
-        this.id = id
-        this.name = name
-        this.venueTypeId = venueTypeId
-        this.location = "Test Location"
-        this.workingHours = "9AM-5PM"
-        this.maximumCapacity = 100
     }
 }

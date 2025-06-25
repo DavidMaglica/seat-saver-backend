@@ -74,6 +74,19 @@ abstract class BaseVenueServiceTest {
     protected val venueRatingArgumentCaptor: ArgumentCaptor<VenueRatingEntity> =
         ArgumentCaptor.forClass(VenueRatingEntity::class.java)
 
+    protected fun createVenue(
+        id: Int = 1,
+        name: String = "Test Venue",
+        venueTypeId: Int = 1
+    ): VenueEntity = VenueEntity().apply {
+        this.id = id
+        this.name = name
+        this.venueTypeId = venueTypeId
+        this.location = "Test Location"
+        this.workingHours = "9AM-5PM"
+        this.maximumCapacity = 100
+    }
+
     protected val mockedVenue = VenueEntity().apply {
         id = 1
         name = "Test Venue"

@@ -36,11 +36,11 @@ class VenueService(
 
     @Transactional(readOnly = true)
     fun get(venueId: Int): VenueEntity {
-        val venue: VenueEntity =
-            venueRepository.findById(venueId)
-                .orElseThrow { EntityNotFoundException("Venue with id: $venueId not found.") }
+        val venue: VenueEntity = venueRepository.findById(venueId)
+            .orElseThrow { EntityNotFoundException("Venue with id: $venueId not found.") }
         val venueRating: List<VenueRatingEntity> = venueRatingRepository.findByVenueId(venueId)
         venue.averageRating = venueRating.map { it.rating }.average()
+            .takeIf { it.isFinite() } ?: 0.0
 
         val currentTimestamp: LocalDateTime = LocalDateTime.now()
         val (lowerBound, upperBound) = getSurroundingHalfHours(currentTimestamp)
