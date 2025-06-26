@@ -69,6 +69,24 @@ class VenueService(
         return venuesToPagedResponse(venues, lowerBound, upperBound)
     }
 
+    /**
+     * Retrieves venues near specified coordinates with real-time availability.
+     *
+     * Behavior:
+     * 1. Without coordinates: Returns venues in default location (Zagreb)
+     * 2. With coordinates: Finds venues in current city + nearby cities (within ~50km)
+     * 3. Always includes calculated capacity for next 30-minute window
+     *
+     * @param pageable Pagination configuration
+     * @param latitude Optional user latitude
+     * @param longitude Optional user longitude
+     * @return PagedResponse with:
+     *   - Venues in geographical proximity
+     *   - Current available capacity
+     *   - 30-minute time window bounds
+     *
+     * @implNote Uses geolocation service to determine nearby cities
+     */
     @Transactional(readOnly = true)
     fun getNearbyVenues(pageable: Pageable, latitude: Double?, longitude: Double?): PagedResponse<VenueEntity> {
         val currentTimestamp: LocalDateTime = LocalDateTime.now()
@@ -95,6 +113,19 @@ class VenueService(
         return venuesToPagedResponse(venues, lowerBound, upperBound)
     }
 
+    /**
+     * Retrieves recently added venues sorted by creation date (ID descending).
+     *
+     * Includes:
+     * - Real-time available capacity
+     * - Current average ratings
+     * - 30-minute availability window
+     *
+     * @param pageable Pagination configuration
+     * @return PagedResponse of newest venues with:
+     *   - Most recently added first
+     *   - Calculated availability
+     */
     @Transactional(readOnly = true)
     fun getNewVenues(pageable: Pageable): PagedResponse<VenueEntity> {
         val sortedPageable = PageRequest.of(
@@ -110,6 +141,22 @@ class VenueService(
         return venuesToPagedResponse(venues, lowerBound, upperBound)
     }
 
+    /**
+     * Retrieves venues with highest reservation volume.
+     *
+     * Calculation:
+     * 1. Gets top venues by reservation count
+     * 2. Enriches with venue details
+     * 3. Calculates current availability
+     *
+     * @param pageable Pagination configuration
+     * @return PagedResponse containing:
+     *   - Venues ordered by popularity
+     *   - Real-time capacity data
+     *   - Time window bounds
+     *
+     * @implNote Uses reservation statistics from the past 7 days
+     */
     @Transactional(readOnly = true)
     fun getTrendingVenues(pageable: Pageable): PagedResponse<VenueEntity> {
         val currentTimestamp: LocalDateTime = LocalDateTime.now()
@@ -127,6 +174,21 @@ class VenueService(
         return venuesToPagedResponse(paged, lowerBound, upperBound)
     }
 
+    /**
+     * Retrieves recommended venues based on quality and availability.
+     *
+     * Selection criteria:
+     * - Average rating > 4.0
+     * - Currently available capacity
+     * - Sorted by rating then capacity
+     *
+     * @param pageable Pagination configuration
+     * @return PagedResponse with:
+     *   - Highly-rated available venues
+     *   - Current time window availability
+     *
+     * @implNote Excludes fully-booked venues regardless of rating
+     */
     @Transactional(readOnly = true)
     fun getSuggestedVenues(pageable: Pageable): PagedResponse<VenueEntity> {
         val currentTimestamp: LocalDateTime = LocalDateTime.now()
@@ -137,6 +199,13 @@ class VenueService(
         return venuesToPagedResponse(venues, lowerBound, upperBound)
     }
 
+    /**
+     * Retrieves a venue type by its ID.
+     *
+     * @param typeId the unique identifier of the venue type to retrieve
+     * @return the name/type of the venue as a String
+     * @throws EntityNotFoundException if no venue type is found with the given ID
+     */
     @Transactional(readOnly = true)
     fun getType(typeId: Int): String =
         venueTypeRepository.getReferenceById(typeId).type
@@ -333,6 +402,29 @@ class VenueService(
         venue.availableCapacity = venue.maximumCapacity - totalGuests
     }
 
+    /**
+     * Builds enriched venue statistics by aggregating ratings and reservations data.
+     *
+     * For each venue, calculates:
+     * 1. Average rating from all user ratings (defaults to 0.0 if no ratings exist)
+     * 2. Current available capacity based on active reservations within the specified time window
+     *
+     * @param venueIds List of venue IDs to process
+     * @param lowerBound Start of time window for reservation checks (inclusive)
+     * @param upperBound End of time window for reservation checks (exclusive)
+     * @param venues Base list of venue entities to enrich
+     * @return List of enriched [VenueEntity] objects with:
+     *   - averageRating: Calculated mean of all ratings (finite value)
+     *   - availableCapacity: Updated based on active reservations
+     *
+     * @implNote This method:
+     *   - Performs batch database lookups for efficiency
+     *   - Modifies the input venue entities directly
+     *   - Handles null/empty cases gracefully (default ratings and capacities)
+     *   - Uses a single pass for all calculations after data aggregation
+     *
+     * @see calculateCurrentAvailableCapacity for capacity calculation details
+     */
     private fun buildVenueStats(
         venueIds: List<Int>,
         lowerBound: LocalDateTime,

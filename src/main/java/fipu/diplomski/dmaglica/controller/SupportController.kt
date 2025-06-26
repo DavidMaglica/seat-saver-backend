@@ -8,12 +8,45 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
+/**
+ * REST controller for handling customer support operations.
+ *
+ * Provides endpoints related to support ticket management and communication.
+ * All endpoints are prefixed with the base path defined in [Paths.SUPPORT].
+ *
+ * @property supportService The service handling support-related business logic
+ */
 @RestController
 @RequestMapping(Paths.SUPPORT)
 class SupportController(
     private val supportService: SupportService
 ) {
 
+    /**
+     * Processes and forwards a user support request via email.
+     *
+     * Sends an email to the configured support address with:
+     * - Subject: "Support Ticket from [userEmail] - [subject]"
+     * - Body: The user's original message content
+     *
+     * @param userEmail The email address of the requester (used for reply-to)
+     * @param subject Brief description of the support issue
+     * @param body Detailed description of the support request
+     * @return BasicResponse with:
+     *   - success: true if email was queued successfully
+     *   - message: Delivery status notification
+     *
+     * @implNote All email sending errors are caught and returned as error responses
+     *           rather than thrown exceptions
+     *
+     * @sample
+     * Request:
+     * POST /api/support/email?userEmail=user@example.com&subject=Help&body=Problem
+     *
+     * Response Examples:
+     * Success: {"success": true, "message": "Email sent successfully."}
+     * Failure: {"success": false, "message": "Error sending email. Please try again later."}
+     */
     @PostMapping(Paths.SEND_EMAIL)
     fun sendEmail(
         @RequestParam("userEmail") userEmail: String,
