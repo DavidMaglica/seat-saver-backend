@@ -12,11 +12,13 @@ import org.springframework.test.context.ActiveProfiles
 @ActiveProfiles("test")
 class DeleteVenueTest : BaseVenueServiceTest() {
 
+    private val venue = createVenue()
+
     @Test
     fun `should return failure response when venue does not exist`() {
         `when`(venueRepository.deleteById(anyInt())).thenThrow(IllegalArgumentException("Venue not found"))
 
-        val response = venueService.delete(mockedVenue.id)
+        val response = venueService.delete(venue.id)
 
         response.success `should be equal to` false
         response.message `should be equal to` "Error while deleting venue. Please try again later."
@@ -27,7 +29,7 @@ class DeleteVenueTest : BaseVenueServiceTest() {
 
     @Test
     fun `should delete venue successfully`() {
-        val response = venueService.delete(mockedVenue.id)
+        val response = venueService.delete(venue.id)
 
         response.success `should be equal to` true
         response.message `should be equal to` "Venue successfully deleted."

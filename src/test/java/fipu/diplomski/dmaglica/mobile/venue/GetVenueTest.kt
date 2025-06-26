@@ -13,10 +13,13 @@ import kotlin.test.Test
 
 class GetVenueTest : BaseVenueServiceTest() {
 
+    private val venue = createVenue()
+
     @Test
     fun `should return venue with calculated rating and capacity when found`() {
         val (lowerBound, upperBound) = getSurroundingHalfHours(LocalDateTime.now())
-        val mockReservations = listOf(
+        val rating = createRating(1, 1, 4.0)
+        val reservations = listOf(
             ReservationEntity(
                 id = 1,
                 userId = 1,
@@ -33,21 +36,21 @@ class GetVenueTest : BaseVenueServiceTest() {
             )
         )
 
-        `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
-        `when`(venueRatingRepository.findByVenueId(anyInt())).thenReturn(listOf(mockedRating))
-        `when`(
-            reservationRepository.findByVenueIdAndDatetimeBetween(mockedVenue.id, lowerBound, upperBound)
-        ).thenReturn(mockReservations)
+        `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(venue))
+        `when`(venueRatingRepository.findByVenueId(anyInt())).thenReturn(listOf(rating))
+        `when`(reservationRepository.findByVenueIdAndDatetimeBetween(venue.id, lowerBound, upperBound)).thenReturn(
+            reservations
+        )
 
-        val result = venueService.get(mockedVenue.id)
+        val result = venueService.get(venue.id)
 
-        result.id `should be equal to` mockedVenue.id
+        result.id `should be equal to` venue.id
         result.averageRating `should be equal to` 4.0
         result.availableCapacity `should be equal to` 50
 
-        verify(venueRepository).findById(mockedVenue.id)
-        verify(venueRatingRepository).findByVenueId(mockedVenue.id)
-        verify(reservationRepository).findByVenueIdAndDatetimeBetween(mockedVenue.id, lowerBound, upperBound)
+        verify(venueRepository).findById(venue.id)
+        verify(venueRatingRepository).findByVenueId(venue.id)
+        verify(reservationRepository).findByVenueIdAndDatetimeBetween(venue.id, lowerBound, upperBound)
         verifyNoMoreInteractions(venueRepository, venueRatingRepository, reservationRepository)
     }
 
@@ -55,42 +58,45 @@ class GetVenueTest : BaseVenueServiceTest() {
     fun `should set full capacity when no reservations exist`() {
         val (lowerBound, upperBound) = getSurroundingHalfHours(LocalDateTime.now())
 
-        `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
+        `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(venue))
         `when`(venueRatingRepository.findByVenueId(anyInt())).thenReturn(emptyList())
-        `when`(
-            reservationRepository.findByVenueIdAndDatetimeBetween(mockedVenue.id, lowerBound, upperBound)
-        ).thenReturn(emptyList())
+        `when`(reservationRepository.findByVenueIdAndDatetimeBetween(venue.id, lowerBound, upperBound)).thenReturn(
+            emptyList()
+        )
 
-        val result = venueService.get(mockedVenue.id)
+        val result = venueService.get(venue.id)
 
         result.availableCapacity `should be equal to` 100
-        verify(reservationRepository).findByVenueIdAndDatetimeBetween(mockedVenue.id, lowerBound, upperBound)
+        verify(reservationRepository).findByVenueIdAndDatetimeBetween(venue.id, lowerBound, upperBound)
     }
 
     @Test
     fun `should throw EntityNotFoundException when venue not found`() {
+        val venue = createVenue()
+
         `when`(venueRepository.findById(any())).thenReturn(Optional.empty())
 
         val exception = assertThrows<EntityNotFoundException> {
-            venueService.get(mockedVenue.id)
+            venueService.get(venue.id)
         }
 
         exception.message `should be equal to` "Venue with id: 1 not found."
-        verify(venueRepository).findById(mockedVenue.id)
+        verify(venueRepository).findById(venue.id)
         verifyNoInteractions(venueRatingRepository, reservationRepository)
     }
 
     @Test
     fun `should handle zero ratings by setting average to zero`() {
         val (lowerBound, upperBound) = getSurroundingHalfHours(LocalDateTime.now())
+        val venue = createVenue()
 
-        `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
+        `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(venue))
         `when`(venueRatingRepository.findByVenueId(anyInt())).thenReturn(emptyList())
-        `when`(
-            reservationRepository.findByVenueIdAndDatetimeBetween(mockedVenue.id, lowerBound, upperBound)
-        ).thenReturn(emptyList())
+        `when`(reservationRepository.findByVenueIdAndDatetimeBetween(venue.id, lowerBound, upperBound)).thenReturn(
+            emptyList()
+        )
 
-        val result = venueService.get(mockedVenue.id)
+        val result = venueService.get(venue.id)
 
         result.averageRating `should be equal to` 0.0
     }
