@@ -112,7 +112,6 @@ class VenueService(
 
     @Transactional(readOnly = true)
     fun getTrendingVenues(pageable: Pageable): PagedResponse<VenueEntity> {
-        // TODO cover with tests
         val currentTimestamp: LocalDateTime = LocalDateTime.now()
         val (lowerBound, upperBound) = getSurroundingHalfHours(currentTimestamp)
 
