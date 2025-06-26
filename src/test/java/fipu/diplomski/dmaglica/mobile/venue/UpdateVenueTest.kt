@@ -17,82 +17,84 @@ import java.util.*
 @ActiveProfiles("test")
 class UpdateVenueTest : BaseVenueServiceTest() {
 
+    private val venue = createVenue()
+
     @Test
     fun `should throw if venue not found`() {
         `when`(venueRepository.findById(anyInt())).thenReturn(Optional.empty())
 
         val exception = assertThrows<EntityNotFoundException> {
-            venueService.update(mockedVenue.id, null)
+            venueService.update(venue.id, null)
         }
 
-        exception.message?.let { it `should be equal to` "Venue with id ${mockedVenue.id} not found" }
+        exception.message?.let { it `should be equal to` "Venue with id ${venue.id} not found" }
 
-        verify(venueRepository, times(1)).findById(mockedVenue.id)
+        verify(venueRepository, times(1)).findById(venue.id)
     }
 
     @Test
     fun `should return early if request is null`() {
-        `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
+        `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(venue))
 
-        val response = venueService.update(mockedVenue.id, null)
+        val response = venueService.update(venue.id, null)
 
         response.success `should be` false
         response.message `should be` "Request is not valid."
 
-        verify(venueRepository, times(1)).findById(mockedVenue.id)
+        verify(venueRepository, times(1)).findById(venue.id)
     }
 
     @Test
     fun `should return early if request does not change anything`() {
-        `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
+        `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(venue))
 
         val response = venueService.update(
-            mockedVenue.id,
+            venue.id,
             UpdateVenueRequest(
-                name = mockedVenue.name,
-                location = mockedVenue.location,
-                description = mockedVenue.description,
-                typeId = mockedVenue.venueTypeId,
-                workingHours = mockedVenue.workingHours
+                name = venue.name,
+                location = venue.location,
+                description = venue.description,
+                typeId = venue.venueTypeId,
+                workingHours = venue.workingHours
             )
         )
 
         response.success `should be` false
         response.message `should be` "No modifications found. Please change at least one field."
 
-        verify(venueRepository, times(1)).findById(mockedVenue.id)
+        verify(venueRepository, times(1)).findById(venue.id)
     }
 
     @Test
     fun `should return failure response if save fails`() {
-        `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
+        `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(venue))
         `when`(venueRepository.save(any())).thenThrow(RuntimeException("Save failed"))
 
-        val response = venueService.update(mockedVenue.id, UpdateVenueRequest(name = "New name"))
+        val response = venueService.update(venue.id, UpdateVenueRequest(name = "New name"))
 
         response.success `should be equal to` false
         response.message `should be equal to` "Error while updating venue. Please try again later."
 
-        verify(venueRepository, times(1)).findById(mockedVenue.id)
+        verify(venueRepository, times(1)).findById(venue.id)
         verify(venueRepository, times(1)).save(any())
     }
 
     @Test
     fun `should update only select fields`() {
         val newVenue = VenueEntity().apply {
-            id = mockedVenue.id
+            id = venue.id
             name = "New name"
-            location = mockedVenue.location
+            location = venue.location
             description = "New description"
-            workingHours = mockedVenue.workingHours
-            averageRating = mockedVenue.averageRating
-            venueTypeId = mockedVenue.venueTypeId
+            workingHours = venue.workingHours
+            averageRating = venue.averageRating
+            venueTypeId = venue.venueTypeId
         }
-        `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
+        `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(venue))
         `when`(venueRepository.save(any())).thenReturn(newVenue)
 
         val response = venueService.update(
-            mockedVenue.id,
+            venue.id,
             UpdateVenueRequest(name = newVenue.name, description = newVenue.description)
         )
 
@@ -103,30 +105,30 @@ class UpdateVenueTest : BaseVenueServiceTest() {
         response.message `should be equal to` "Venue updated successfully."
 
         savedVenue.name `should be equal to` newVenue.name
-        savedVenue.location `should be equal to` mockedVenue.location
+        savedVenue.location `should be equal to` venue.location
         savedVenue.description `should be equal to` newVenue.description
-        savedVenue.workingHours `should be equal to` mockedVenue.workingHours
-        savedVenue.venueTypeId `should be equal to` mockedVenue.venueTypeId
+        savedVenue.workingHours `should be equal to` venue.workingHours
+        savedVenue.venueTypeId `should be equal to` venue.venueTypeId
     }
 
     @Test
     fun `should update venue`() {
         val newVenue = VenueEntity().apply {
-            id = mockedVenue.id
+            id = venue.id
             name = "New name"
             location = "New location"
             description = "New description"
             workingHours = "New working hours"
             maximumCapacity = 50
             availableCapacity = 25
-            averageRating = mockedVenue.averageRating
+            averageRating = venue.averageRating
             venueTypeId = 2
         }
-        `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
+        `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(venue))
         `when`(venueRepository.save(any())).thenReturn(newVenue)
 
         val response = venueService.update(
-            mockedVenue.id,
+            venue.id,
             UpdateVenueRequest(
                 name = newVenue.name,
                 location = newVenue.location,

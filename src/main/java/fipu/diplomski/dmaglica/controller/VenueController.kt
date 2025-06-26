@@ -3,11 +3,13 @@ package fipu.diplomski.dmaglica.controller
 import fipu.diplomski.dmaglica.model.request.CreateVenueRequest
 import fipu.diplomski.dmaglica.model.request.UpdateVenueRequest
 import fipu.diplomski.dmaglica.model.response.BasicResponse
+import fipu.diplomski.dmaglica.model.response.PagedResponse
 import fipu.diplomski.dmaglica.repo.entity.VenueEntity
 import fipu.diplomski.dmaglica.repo.entity.VenueRatingEntity
 import fipu.diplomski.dmaglica.repo.entity.VenueTypeEntity
 import fipu.diplomski.dmaglica.service.VenueService
 import fipu.diplomski.dmaglica.util.Paths
+import org.springframework.data.domain.PageRequest
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
 
@@ -23,21 +25,27 @@ class VenueController(
     ): VenueEntity = venueService.get(venueId)
 
     @GetMapping(Paths.GET_ALL_VENUES)
-    fun getAllVenues(): List<VenueEntity> = venueService.getAll()
+    fun getAllVenues(
+        @RequestParam("page", defaultValue = "0") page: Int,
+        @RequestParam("size", defaultValue = "20") size: Int,
+        @RequestParam("searchQuery", required = false) searchQuery: String? = null,
+        @RequestParam("typeIds", required = false) typeIds: List<Int>? = null,
+    ): PagedResponse<VenueEntity> = venueService.getAll(PageRequest.of(page, size), searchQuery, typeIds)
 
     @GetMapping(Paths.GET_VENUES_BY_CATEGORY)
     fun getVenuesByCategory(
-        @RequestParam("category") category: String,
+        @RequestParam category: String,
+        @RequestParam("page", defaultValue = "0") page: Int,
+        @RequestParam("size", defaultValue = "20") size: Int,
         @RequestParam("latitude", required = false) latitude: Double? = null,
         @RequestParam("longitude", required = false) longitude: Double? = null,
-    ): List<VenueEntity> = when (category.lowercase()) {
-        "nearby" -> venueService.getNearbyVenues(latitude, longitude)
-        "new" -> venueService.getNewVenues()
-        "trending" -> venueService.getTrendingVenues()
-        "suggested" -> venueService.getSuggestedVenues()
-        else -> throw IllegalArgumentException("Unsupported venue type.")
+    ): PagedResponse<VenueEntity> = when (category.lowercase()) {
+        "nearby" -> venueService.getNearbyVenues(PageRequest.of(page, size), latitude, longitude)
+        "new" -> venueService.getNewVenues(PageRequest.of(page, size))
+        "trending" -> venueService.getTrendingVenues(PageRequest.of(page, size))
+        "suggested" -> venueService.getSuggestedVenues(PageRequest.of(page, size))
+        else -> throw IllegalArgumentException("Unsupported venue category.")
     }
-
 
     @GetMapping(Paths.GET_VENUE_TYPE)
     fun getVenueType(

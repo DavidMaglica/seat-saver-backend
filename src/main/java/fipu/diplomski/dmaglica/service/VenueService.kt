@@ -3,6 +3,7 @@ package fipu.diplomski.dmaglica.service
 import fipu.diplomski.dmaglica.model.request.CreateVenueRequest
 import fipu.diplomski.dmaglica.model.request.UpdateVenueRequest
 import fipu.diplomski.dmaglica.model.response.BasicResponse
+import fipu.diplomski.dmaglica.model.response.PagedResponse
 import fipu.diplomski.dmaglica.repo.*
 import fipu.diplomski.dmaglica.repo.entity.ReservationEntity
 import fipu.diplomski.dmaglica.repo.entity.VenueEntity
@@ -11,8 +12,7 @@ import fipu.diplomski.dmaglica.repo.entity.VenueTypeEntity
 import fipu.diplomski.dmaglica.util.getSurroundingHalfHours
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.persistence.EntityNotFoundException
-import org.springframework.data.domain.PageRequest
-import org.springframework.data.domain.Sort
+import org.springframework.data.domain.*
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
@@ -36,11 +36,11 @@ class VenueService(
 
     @Transactional(readOnly = true)
     fun get(venueId: Int): VenueEntity {
-        val venue: VenueEntity =
-            venueRepository.findById(venueId)
-                .orElseThrow { EntityNotFoundException("Venue with id: $venueId not found.") }
+        val venue: VenueEntity = venueRepository.findById(venueId)
+            .orElseThrow { EntityNotFoundException("Venue with id: $venueId not found.") }
         val venueRating: List<VenueRatingEntity> = venueRatingRepository.findByVenueId(venueId)
         venue.averageRating = venueRating.map { it.rating }.average()
+            .takeIf { it.isFinite() } ?: 0.0
 
         val currentTimestamp: LocalDateTime = LocalDateTime.now()
         val (lowerBound, upperBound) = getSurroundingHalfHours(currentTimestamp)
@@ -59,89 +59,82 @@ class VenueService(
     }
 
     @Transactional(readOnly = true)
-    fun getAll(): List<VenueEntity> {
-        val venues = venueRepository.findAll()
-        if (venues.isEmpty()) return emptyList()
-
-        venues.sortBy { it.name }
-        val venueIds = venues.map { it.id }
-        val currentTimestamp: LocalDateTime = LocalDateTime.now()
-        val (lowerBound, upperBound) = getSurroundingHalfHours(currentTimestamp)
-
-        return buildVenueStats(venueIds, lowerBound, upperBound, venues)
+    fun getAll(pageable: Pageable, searchQuery: String?, typeIds: List<Int>?): PagedResponse<VenueEntity> {
+        val (lowerBound, upperBound) = getSurroundingHalfHours(LocalDateTime.now())
+        val venues = venueRepository.findFilteredVenues(
+            pageable = pageable,
+            searchQuery = searchQuery,
+            typeIds = typeIds,
+        )
+        return venuesToPagedResponse(venues, lowerBound, upperBound)
     }
 
     @Transactional(readOnly = true)
-    fun getNearbyVenues(latitude: Double?, longitude: Double?): List<VenueEntity> {
+    fun getNearbyVenues(pageable: Pageable, latitude: Double?, longitude: Double?): PagedResponse<VenueEntity> {
         val currentTimestamp: LocalDateTime = LocalDateTime.now()
+        val defaultLocation = "Zagreb"
         val (lowerBound, upperBound) = getSurroundingHalfHours(currentTimestamp)
+
         if (latitude == null || longitude == null) {
-            val venues = venueRepository.findByLocation("Zagreb")
-            val venueIds = venues.map { it.id }
-            return buildVenueStats(
-                venueIds,
-                lowerBound,
-                upperBound,
-                venues
-            )
+            val venues = venueRepository.findByLocation(defaultLocation, pageable)
+            return venuesToPagedResponse(venues, lowerBound, upperBound)
         }
 
         val currentCity = geolocationService.getGeolocation(latitude, longitude)
         val nearbyCities = geolocationService.getNearbyCities(latitude, longitude)
 
         if (nearbyCities.isNullOrEmpty()) {
-            val venues = venueRepository.findByLocation(currentCity)
-            val venueIds = venues.map { it.id }
-            return buildVenueStats(
-                venueIds,
-                lowerBound,
-                upperBound,
-                venues
-            )
+            val venues = venueRepository.findByLocation(currentCity, pageable)
+            return venuesToPagedResponse(venues, lowerBound, upperBound)
         }
 
         nearbyCities.add(currentCity)
 
-        val venues = venueRepository.findByLocationIn(nearbyCities)
-        val venueIds = venues.map { it.id }
+        val venues = venueRepository.findByLocationIn(nearbyCities, pageable)
 
-        return buildVenueStats(venueIds, lowerBound, upperBound, venues)
+        return venuesToPagedResponse(venues, lowerBound, upperBound)
     }
 
     @Transactional(readOnly = true)
-    fun getNewVenues(): List<VenueEntity> {
+    fun getNewVenues(pageable: Pageable): PagedResponse<VenueEntity> {
+        val sortedPageable = PageRequest.of(
+            pageable.pageNumber,
+            pageable.pageSize,
+            Sort.by(Sort.Order.desc("id"))
+        )
         val currentTimestamp: LocalDateTime = LocalDateTime.now()
         val (lowerBound, upperBound) = getSurroundingHalfHours(currentTimestamp)
 
-        val venues = venueRepository.findAll(PageRequest.of(0, 20, Sort.by(Sort.Order.desc("id")))).content
-        if (venues.isEmpty()) return emptyList()
-        val venueIds = venues.map { it.id }
+        val venues = venueRepository.findAll(sortedPageable)
 
-        return buildVenueStats(venueIds, lowerBound, upperBound, venues)
+        return venuesToPagedResponse(venues, lowerBound, upperBound)
     }
 
     @Transactional(readOnly = true)
-    fun getTrendingVenues(): List<VenueEntity> {
+    fun getTrendingVenues(pageable: Pageable): PagedResponse<VenueEntity> {
         val currentTimestamp: LocalDateTime = LocalDateTime.now()
         val (lowerBound, upperBound) = getSurroundingHalfHours(currentTimestamp)
 
-        val venues = venueRepository.findAll(PageRequest.of(0, 20, Sort.by(Sort.Order.desc("averageRating")))).content
-        if (venues.isEmpty()) return emptyList()
-        val venueIds = venues.map { it.id }
+        val topVenueStats = reservationRepository.findTopVenuesByReservationCount(pageable)
 
-        return buildVenueStats(venueIds, lowerBound, upperBound, venues)
+        val venueIds = topVenueStats.map { it.getVenueId() }.content
+        val venues = venueRepository.findAllById(venueIds)
+
+        val orderedVenues = venueIds.mapNotNull { venueId -> venues.find { it.id == venueId } }
+
+        val paged = PageImpl(orderedVenues, pageable, topVenueStats.totalElements)
+
+        return venuesToPagedResponse(paged, lowerBound, upperBound)
     }
 
     @Transactional(readOnly = true)
-    fun getSuggestedVenues(): List<VenueEntity> {
+    fun getSuggestedVenues(pageable: Pageable): PagedResponse<VenueEntity> {
         val currentTimestamp: LocalDateTime = LocalDateTime.now()
         val (lowerBound, upperBound) = getSurroundingHalfHours(currentTimestamp)
 
-        val venues = venueRepository.findSuggestedVenues()
-        if (venues.isEmpty()) return emptyList()
-        val venueIds = venues.map { it.id }
+        val venues = venueRepository.findSuggestedVenues(pageable)
 
-        return buildVenueStats(venueIds, lowerBound, upperBound, venues)
+        return venuesToPagedResponse(venues, lowerBound, upperBound)
     }
 
     @Transactional(readOnly = true)
@@ -285,6 +278,34 @@ class VenueService(
         }
 
         return BasicResponse(true, "Venue successfully deleted.")
+    }
+
+    private fun venuesToPagedResponse(
+        page: Page<VenueEntity>,
+        lowerBound: LocalDateTime,
+        upperBound: LocalDateTime
+    ): PagedResponse<VenueEntity> {
+        if (page.isEmpty) return PagedResponse(
+            content = emptyList(),
+            page = page.number,
+            size = page.size,
+            totalElements = 0,
+            totalPages = 0
+        )
+        val venueIds = page.content.map { it.id }
+        val enrichedVenues = buildVenueStats(
+            venueIds,
+            lowerBound,
+            upperBound,
+            page.content
+        )
+        return PagedResponse(
+            content = enrichedVenues,
+            page = page.number,
+            size = page.size,
+            totalElements = page.totalElements,
+            totalPages = page.totalPages
+        )
     }
 
     private fun isRequestValid(request: UpdateVenueRequest?): Boolean = request?.let {
