@@ -16,6 +16,7 @@ import org.mockito.Mock
 import org.mockito.Mockito.reset
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.test.context.ActiveProfiles
+import java.time.LocalDateTime
 
 @ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
@@ -77,14 +78,17 @@ abstract class BaseVenueServiceTest {
     protected fun createVenue(
         id: Int = 1,
         name: String = "Test Venue",
-        venueTypeId: Int = 1
+        venueTypeId: Int = 1,
+        location: String = "Test Location",
+        workingHours: String = "9AM-5PM",
+        maximumCapacity: Int = 100
     ): VenueEntity = VenueEntity().apply {
         this.id = id
         this.name = name
         this.venueTypeId = venueTypeId
-        this.location = "Test Location"
-        this.workingHours = "9AM-5PM"
-        this.maximumCapacity = 100
+        this.location = location
+        this.workingHours = workingHours
+        this.maximumCapacity = maximumCapacity
     }
 
     protected val mockedVenue = VenueEntity().apply {
@@ -113,6 +117,25 @@ abstract class BaseVenueServiceTest {
         lastKnownLatitude = 0.0
         lastKnownLongitude = 0.0
         roleId = Role.USER.ordinal
+    }
+
+    protected fun getSurroundingHalfHours(time: LocalDateTime): Pair<LocalDateTime, LocalDateTime> {
+        val minute = time.minute
+        val second = time.second
+        val nano = time.nano
+        val truncated = time.minusSeconds(second.toLong()).minusNanos(nano.toLong())
+
+        val previous = when {
+            minute < 30 -> truncated.withMinute(0)
+            else -> truncated.withMinute(30)
+        }
+
+        val next = when {
+            minute < 30 -> truncated.withMinute(30)
+            else -> truncated.plusHours(1).withMinute(0)
+        }
+
+        return previous to next
     }
 
 }

@@ -34,6 +34,7 @@ class GeolocationService(
     }
 
     fun getGeolocation(latitude: Double, longitude: Double): String {
+        val defaultLocation = "Zagreb"
         val baseUrl = "https://api-bdc.net/data/reverse-geocode-client"
         val uri = UriComponentsBuilder.fromHttpUrl(baseUrl)
             .queryParam("latitude", latitude)
@@ -42,11 +43,16 @@ class GeolocationService(
             .build()
             .toUriString()
 
-        restTemplate.getForObject(uri, Map::class.java)?.let {
-            return it["city"] as String
+        try {
+            restTemplate.getForObject(uri, Map::class.java)?.let {
+                return it["city"] as String
+            }
+        } catch (e: RuntimeException) {
+            logger.error(e) { "Failed to fetch geolocation. Error: ${e.message}" }
+            return defaultLocation
         }
 
-        return "Latitude: $latitude, Longitude: $longitude"
+        return defaultLocation
     }
 
     fun getNearbyCities(latitude: Double, longitude: Double): MutableList<String>? {

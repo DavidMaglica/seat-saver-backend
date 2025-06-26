@@ -71,11 +71,12 @@ class VenueService(
 
     @Transactional(readOnly = true)
     fun getNearbyVenues(pageable: Pageable, latitude: Double?, longitude: Double?): PagedResponse<VenueEntity> {
-        // TODO cover with tests
         val currentTimestamp: LocalDateTime = LocalDateTime.now()
+        val defaultLocation = "Zagreb"
         val (lowerBound, upperBound) = getSurroundingHalfHours(currentTimestamp)
+
         if (latitude == null || longitude == null) {
-            val venues = venueRepository.findByLocation("Zagreb", pageable)
+            val venues = venueRepository.findByLocation(defaultLocation, pageable)
             return venuesToPagedResponse(venues, lowerBound, upperBound)
         }
 

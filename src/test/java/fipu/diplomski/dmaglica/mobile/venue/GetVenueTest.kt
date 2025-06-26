@@ -94,23 +94,4 @@ class GetVenueTest : BaseVenueServiceTest() {
 
         result.averageRating `should be equal to` 0.0
     }
-
-    private fun getSurroundingHalfHours(time: LocalDateTime): Pair<LocalDateTime, LocalDateTime> {
-        val minute = time.minute
-        val second = time.second
-        val nano = time.nano
-        val truncated = time.minusSeconds(second.toLong()).minusNanos(nano.toLong())
-
-        val previous = when {
-            minute < 30 -> truncated.withMinute(0)
-            else -> truncated.withMinute(30)
-        }
-
-        val next = when {
-            minute < 30 -> truncated.withMinute(30)
-            else -> truncated.plusHours(1).withMinute(0)
-        }
-
-        return previous to next
-    }
 }
