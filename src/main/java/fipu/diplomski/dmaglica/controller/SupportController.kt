@@ -29,23 +29,16 @@ class SupportController(
      * - Subject: "Support Ticket from [userEmail] - [subject]"
      * - Body: The user's original message content
      *
-     * @param userEmail The email address of the requester (used for reply-to)
+     * @param userEmail The email address of the requester
      * @param subject Brief description of the support issue
      * @param body Detailed description of the support request
      * @return BasicResponse with:
      *   - success: true if email was queued successfully
      *   - message: Delivery status notification
      *
-     * @implNote All email sending errors are caught and returned as error responses
-     *           rather than thrown exceptions
-     *
-     * @sample
-     * Request:
+     * Example:
      * POST /api/support/email?userEmail=user@example.com&subject=Help&body=Problem
      *
-     * Response Examples:
-     * Success: {"success": true, "message": "Email sent successfully."}
-     * Failure: {"success": false, "message": "Error sending email. Please try again later."}
      */
     @PostMapping(Paths.SEND_EMAIL)
     fun sendEmail(

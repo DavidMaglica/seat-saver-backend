@@ -31,16 +31,15 @@ class ReservationController(private val reservationService: ReservationService) 
      *
      * Uses SERIALIZABLE transaction isolation to prevent concurrent booking conflicts.
      *
-     * @param request Required reservation details:
-     *   - userId: Valid existing user ID
-     *   - venueId: Valid existing venue ID
+     * @param request [CreateReservationRequest] Required reservation details:
+     *   - userId: Valid existing user id
+     *   - venueId: Valid existing venue id
      *   - reservationDate: Booking datetime (used for time window calculation)
      *   - numberOfPeople: Guest count (must not exceed remaining capacity)
-     * @return BasicResponse with:
+     * @return [BasicResponse] with:
      *   - success: true if booked successfully
      *   - message: Detailed status message
-     * @throws VenueNotFoundException if venue doesn't exist
-     * @throws DataAccessException if database operation fails
+     * @throws fipu.diplomski.dmaglica.exception.VenueNotFoundException if venue doesn't exist
      */
     @PostMapping(Paths.CREATE_RESERVATION)
     fun createReservation(
@@ -54,10 +53,9 @@ class ReservationController(private val reservationService: ReservationService) 
      * - The user doesn't exist
      * - The user has no reservations
      *
-     * @param userId ID of the user to query
+     * @param userId id of the user to query
      * @return List of [Reservation] objects (empty if none found)
      *
-     * @implNote This is a read-only operation with no side effects
      */
     @GetMapping(Paths.GET_RESERVATIONS)
     fun getReservations(
@@ -74,9 +72,9 @@ class ReservationController(private val reservationService: ReservationService) 
      * 4. Confirms venue exists
      *
      * @param request Update details containing:
-     *   - userId: ID of user making the request (must own reservation)
-     *   - reservationId: ID of reservation to update
-     *   - venueId: ID of venue (for validation)
+     *   - userId: id of user making the request (must own reservation)
+     *   - reservationId: id of reservation to update
+     *   - venueId: id of venue (for validation)
      *   - reservationDate: New datetime (optional)
      *   - numberOfPeople: New guest count (optional)
      * @return BasicResponse with:
@@ -84,10 +82,10 @@ class ReservationController(private val reservationService: ReservationService) 
      *   - message: Detailed status including:
      *     - Error reasons for failure
      *     - Success confirmation
-     * @throws ReservationNotFoundException if reservation doesn't exist
-     * @throws VenueNotFoundException if venue doesn't exist
+     * @throws fipu.diplomski.dmaglica.exception.UserNotFoundException if user doesn't exist
+     * @throws fipu.diplomski.dmaglica.exception.ReservationNotFoundException if reservation doesn't exist
+     * @throws fipu.diplomski.dmaglica.exception.VenueNotFoundException if venue doesn't exist
      */
-
     @PatchMapping(Paths.UPDATE_RESERVATION)
     fun updateReservation(
         @RequestBody request: UpdateReservationRequest
@@ -101,18 +99,19 @@ class ReservationController(private val reservationService: ReservationService) 
      * 2. Confirms the reservation exists
      * 3. Validates the venue exists
      *
-     * Note: The reservation must belong to the user making the request.
+     * @note: The reservation must belong to the user making the request.
      *
-     * @param userId ID of the user making the cancellation request
-     * @param reservationId ID of the reservation to cancel
-     * @param venueId ID of the related venue (for validation)
+     * @param userId id of the user making the cancellation request
+     * @param reservationId id of the reservation to cancel
+     * @param venueId id of the related venue (for validation)
      * @return BasicResponse with:
      *   - success: true if deletion succeeded
      *   - message: Detailed status including:
      *     - Error reasons for failure
      *     - Success confirmation
-     * @throws ReservationNotFoundException if reservation doesn't exist
-     * @throws VenueNotFoundException if venue doesn't exist
+     * @throws fipu.diplomski.dmaglica.exception.UserNotFoundException if user doesn't exist
+     * @throws fipu.diplomski.dmaglica.exception.ReservationNotFoundException if reservation doesn't exist
+     * @throws fipu.diplomski.dmaglica.exception.VenueNotFoundException if venue doesn't exist
      */
     @DeleteMapping(Paths.DELETE_RESERVATION)
     fun deleteReservation(

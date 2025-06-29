@@ -24,14 +24,6 @@ class GeolocationService(
         private val logger = KotlinLogging.logger(GeolocationService::class.java.name)
     }
 
-    fun fetchGeolocation(): String {
-        val url = "https://api-bdc.net/data/reverse-geocode-client"
-
-        restTemplate.getForObject(url, Map::class.java)?.let {
-            return it["city"] as String
-        }
-        return "No city found"
-    }
 
     fun getGeolocation(latitude: Double, longitude: Double): String {
         val defaultLocation = "Zagreb"

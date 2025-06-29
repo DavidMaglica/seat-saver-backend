@@ -39,8 +39,6 @@ class Paths {
         const val DELETE_RESERVATION = "/delete"
 
         const val GEOLOCATION = "/geolocation"
-        const val FETCH_GEOLOCATION = "/fetch-geolocation"
-        const val GET_GEOLOCATION = "/get-geolocation"
         const val GET_NEARBY_CITIES = "/get-nearby-cities"
 
         const val SUPPORT = "/support"

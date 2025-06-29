@@ -55,7 +55,7 @@ class LoginTest : BaseUserServiceTest() {
         response.data?.id `should be equal to` mockedUser.id
         response.data?.email `should be equal to` mockedUser.email
         response.data?.username `should be equal to` mockedUser.username
-        passwordEncoder.matches(mockedUser.password, response.data?.password) `should be` true
+        response.data?.password `should be equal to` ""
         response.data?.roleId `should be equal to` mockedUser.roleId
 
         verify(userRepository, times(1)).findByEmail(anyString())

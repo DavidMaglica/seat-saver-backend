@@ -1,6 +1,7 @@
 package fipu.diplomski.dmaglica.mobile.reservation
 
 import fipu.diplomski.dmaglica.exception.ReservationNotFoundException
+import fipu.diplomski.dmaglica.exception.UserNotFoundException
 import fipu.diplomski.dmaglica.exception.VenueNotFoundException
 import fipu.diplomski.dmaglica.model.request.UpdateReservationRequest
 import org.amshove.kluent.`should be`
@@ -44,13 +45,14 @@ class UpdateReservationTest : BaseReservationServiceTest() {
     }
 
     @Test
-    fun `should return failure response if user does not exist`() {
+    fun `should throw if user does not exist`() {
         `when`(userRepository.findById(anyInt())).thenReturn(Optional.empty())
 
-        val response = reservationService.update(mockedRequest)
+        val response = assertThrows<UserNotFoundException> {
+            reservationService.update(mockedRequest)
+        }
 
-        response.success `should be` false
-        response.message `should be equal to` "User not found."
+        response.message `should be equal to` "User with id ${mockedRequest.userId} not found."
 
         verify(userRepository, times(1)).findById(mockedUser.id)
         verifyNoInteractions(reservationRepository)

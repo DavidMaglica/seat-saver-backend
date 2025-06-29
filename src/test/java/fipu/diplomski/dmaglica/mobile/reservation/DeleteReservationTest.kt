@@ -1,6 +1,7 @@
 package fipu.diplomski.dmaglica.mobile.reservation
 
 import fipu.diplomski.dmaglica.exception.ReservationNotFoundException
+import fipu.diplomski.dmaglica.exception.UserNotFoundException
 import fipu.diplomski.dmaglica.exception.VenueNotFoundException
 import org.amshove.kluent.`should be equal to`
 import org.junit.jupiter.api.Test
@@ -16,13 +17,14 @@ import java.util.*
 class DeleteReservationTest : BaseReservationServiceTest() {
 
     @Test
-    fun `should return failure response if user does not exist`() {
+    fun `should throw if user does not exist`() {
         `when`(userRepository.findById(anyInt())).thenReturn(Optional.empty())
 
-        val response = reservationService.delete(mockedUser.id, mockedReservation.id, mockedReservation.venueId)
+        val response = assertThrows<UserNotFoundException> {
+            reservationService.delete(mockedUser.id, mockedReservation.id, mockedReservation.venueId)
+        }
 
-        response.success `should be equal to` false
-        response.message `should be equal to` "User not found."
+        response.message `should be equal to` "User with id ${mockedUser.id} not found."
 
         verify(userRepository, times(1)).findById(mockedUser.id)
         verifyNoMoreInteractions(userRepository)

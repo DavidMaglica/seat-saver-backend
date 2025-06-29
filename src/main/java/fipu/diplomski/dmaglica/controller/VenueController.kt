@@ -1,5 +1,6 @@
 package fipu.diplomski.dmaglica.controller
 
+import fipu.diplomski.dmaglica.exception.ImageDataException
 import fipu.diplomski.dmaglica.model.request.CreateVenueRequest
 import fipu.diplomski.dmaglica.model.request.UpdateVenueRequest
 import fipu.diplomski.dmaglica.model.response.BasicResponse
@@ -26,7 +27,6 @@ import org.springframework.web.multipart.MultipartFile
  * Key features:
  * - Comprehensive pagination support for all listing endpoints
  * - Real-time availability calculations for venues
- * - Secure image upload and retrieval
  * - Transactional operations with proper error handling
  *
  * Response types:
@@ -40,8 +40,8 @@ import org.springframework.web.multipart.MultipartFile
  * - Sensitive operations use transactional boundaries
  *
  * @see VenueService for business logic implementation
- * @see VenueEntity for core data model
- * @see VenueRatingEntity for rating structure
+ * @see VenueEntity for venue data model details
+ * @see VenueRatingEntity for venue rating data model details
  * @see PagedResponse for pagination details
  */
 @RestController
@@ -55,14 +55,13 @@ class VenueController(
      * - Basic venue information
      * - Calculated average rating
      * - Current available capacity
-     * - Real-time availability for the next time slot
      *
-     * @param venueId ID of the venue to retrieve
+     * @param venueId id of the venue to retrieve
      * @return [VenueEntity] containing:
      *   - Core venue details
      *   - averageRating: Calculated from all ratings (0.0 if no ratings)
      *   - availableCapacity: Current available slots (updated in real-time)
-     * @throws EntityNotFoundException if venue doesn't exist
+     * @throws jakarta.persistence.EntityNotFoundException if venue doesn't exist
      *
      * @apiNote This performs multiple real-time calculations:
      * 1. Rating average (ignores NaN/Infinite values)
@@ -72,15 +71,6 @@ class VenueController(
      * @example
      * GET /api/venues/get?venueId=123
      *
-     * Response:
-     * {
-     *   "id": 123,
-     *   "name": "Example Venue",
-     *   "averageRating": 4.5,
-     *   "availableCapacity": 15,
-     *   "maximumCapacity": 50,
-     *   ...other venue fields...
-     * }
      */
     @GetMapping(Paths.GET_VENUE)
     fun getVenue(
@@ -93,26 +83,26 @@ class VenueController(
      * Supports:
      * - Pagination control (page/size parameters)
      * - Text search across venue names
-     * - Filtering by venue type IDs
+     * - Filtering by venue type ids
      * - Real-time availability calculation for the current time window
      *
      * @param page Page number (0-indexed, defaults to 0)
      * @param size Number of items per page (defaults to 20)
      * @param searchQuery Optional search string for venue name matching (case-insensitive)
-     * @param typeIds Optional list of venue type IDs to filter by
-     * @return PagedResponse containing:
+     * @param typeIds Optional list of venue type ids to filter by
+     * @return [PagedResponse] containing:
      *   - content: List of matching venues with calculated:
      *     - averageRating
      *     - current availableCapacity
      *   - page: Current page number
      *   - size: Page size
      *   - totalElements: Total matching venues
-     *   - lowerBound/upperBound: Current availability time window
      *
      * @apiNote The availability window is calculated as 30 minutes before/after current time
      *
      * @example
      * GET /api/venues?page=0&size=10&searchQuery=cafe&typeIds=1,2
+     *
      */
     @GetMapping(Paths.GET_ALL_VENUES)
     fun getAllVenues(
@@ -123,11 +113,11 @@ class VenueController(
     ): PagedResponse<VenueEntity> = venueService.getAll(PageRequest.of(page, size), searchQuery, typeIds)
 
     /**
-     * Retrieves venues by category with optional location-based filtering.
+     * Retrieves venues by category with filtering.
      *
      * Supported categories:
      * - "nearby": Returns venues near specified coordinates (requires latitude/longitude)
-     * - "new": Returns recently added venues (sorted by ID descending)
+     * - "new": Returns recently added venues (sorted by id descending)
      * - "trending": Returns venues with most reservations
      * - "suggested": Returns highly-rated venues with available capacity
      *
@@ -136,18 +126,26 @@ class VenueController(
      * @param size Number of items per page (defaults to 20)
      * @param latitude Optional latitude for nearby search
      * @param longitude Optional longitude for nearby search
-     * @return PagedResponse containing:
-     *   - Venue list with real-time availability data
-     *   - Pagination metadata
-     *   - Current time window bounds
+     * @return [PagedResponse] containing:
+     *   - content: List of matching venues with calculated:
+     *     - averageRating
+     *     - current availableCapacity
+     *   - page: Current page number
+     *   - size: Page size
+     *   - totalElements: Total matching venues
      * @throws IllegalArgumentException if invalid category is provided
      *
      * @apiNote For 'nearby' category:
      * - Falls back to default location (Zagreb) if coordinates not provided
-     * - Uses 30-minute availability window for capacity calculations
+     *
+     * @see [VenueService.getNearbyVenues]
+     * @see [VenueService.getNewVenues]
+     * @see [VenueService.getTrendingVenues]
+     * @see [VenueService.getSuggestedVenues]
      *
      * @example
      * GET /api/venues/category?category=nearby&latitude=45.8&longitude=16.0&page=0&size=10
+     *
      */
     @GetMapping(Paths.GET_VENUES_BY_CATEGORY)
     fun getVenuesByCategory(
@@ -165,11 +163,15 @@ class VenueController(
     }
 
     /**
-     * Retrieves a venue type by its ID.
+     * Retrieves a venue type by its id.
      *
      * @param typeId the unique identifier of the venue type to retrieve
      * @return the name/type of the venue as a String
-     * @throws EntityNotFoundException if no venue type is found with the given ID
+     * @throws jakarta.persistence.EntityNotFoundException if no venue type is found with the given id
+     *
+     * @example
+     * GET /api/venues/type?typeId=1
+     *
      */
     @GetMapping(Paths.GET_VENUE_TYPE)
     fun getVenueType(
@@ -181,10 +183,12 @@ class VenueController(
      *
      * @param venueId the unique identifier of the venue whose rating is being requested
      * @return the average rating of the venue as a Double value
-     * @throws EntityNotFoundException if no venue exists with the specified ID
+     * @throws jakarta.persistence.EntityNotFoundException if no venue exists with the specified id
      * @apiNote Example usage: GET /api/venues/rating?venueId=123
      *
-     * @see VenueService#getVenueRating(Integer)
+     * @example
+     * GET /api/venues/rating?venueId=123
+     *
      */
     @GetMapping(Paths.GET_VENUE_RATING)
     fun getVenueRating(
@@ -195,10 +199,12 @@ class VenueController(
      * Retrieves all ratings for a specific venue.
      *
      * @param venueId the unique identifier of the venue whose ratings are being requested
-     * @return a list of VenueRatingEntity objects sorted by most recent first (descending by ID)
-     * @throws EntityNotFoundException if no venue exists with the specified ID
-     * @apiNote Returns an empty list if no ratings exist for the venue
-     *          Example: GET /api/venues/ratings?venueId=123
+     * @return a list of [VenueRatingEntity] objects sorted by most recent first (descending by id)
+     * @throws jakarta.persistence.EntityNotFoundException if no venue exists with the specified id
+     *
+     * @example
+     * GET /api/venues/ratings?venueId=123
+     *
      */
     @GetMapping(Paths.GET_ALL_VENUE_RATINGS)
     fun getAllVenueRatings(
@@ -210,7 +216,10 @@ class VenueController(
      *
      * @return a list of all VenueTypeEntity objects in the system
      * @apiNote Returns an empty list if no venue types are configured
-     *          Example: GET /api/venues/types
+     *
+     * @example
+     * GET /api/venues/types
+     *
      */
     @GetMapping(Paths.GET_ALL_VENUE_TYPES)
     fun getAllVenueTypes(): List<VenueTypeEntity> = venueService.getAllTypes()
@@ -220,13 +229,16 @@ class VenueController(
      *
      * @param venueId the unique identifier of the venue whose images are being requested
      * @return a list of Base64 encoded image strings, or empty list if no images exist
-     * @throws EntityNotFoundException if no venue exists with the specified ID
+     * @throws jakarta.persistence.EntityNotFoundException if no venue exists with the specified id
      * @apiNote The images are:
      *          - Retrieved from the venue image repository
      *          - Decompressed from stored binary format
      *          - Encoded as Base64 strings
      *          - Returns empty list (with warning log) if no images found
-     *          Example: GET /api/venues/images?venueId=123
+     *
+     * @example
+     * GET /api/venues/images?venueId=123
+     *
      */
     @GetMapping(Paths.GET_VENUE_IMAGES)
     fun getVenueImages(
@@ -238,13 +250,16 @@ class VenueController(
      *
      * @param venueId the unique identifier of the venue whose menu images are being requested
      * @return a list of Base64 encoded menu image strings, or empty list if no images exist
-     * @throws EntityNotFoundException if no venue exists with the specified ID
+     * @throws jakarta.persistence.EntityNotFoundException if no venue exists with the specified id
      * @apiNote The menu images are:
      *          - Retrieved from the menu image repository
      *          - Decompressed from stored binary format
      *          - Encoded as Base64 strings
      *          - Returns empty list (with warning log) if no images found
-     *          Example: GET /api/venues/menu?venueId=123
+     *
+     * @example:
+     * GET /api/venues/menu?venueId=123
+     *
      */
     @GetMapping(Paths.GET_VENUE_MENU)
     fun getMenuImages(
@@ -259,8 +274,7 @@ class VenueController(
      *         - success: true if creation was successful
      *         - message: Descriptive message including venue name if successful
      *
-     * @throws DataAccessException if there's an issue persisting the venue
-     * @throws ConstraintViolationException if any request validations fail
+     * @throws org.springframework.dao.DataAccessException if there's an issue persisting the venue
      *
      * The creation process:
      * 1. Validates the request parameters
@@ -269,6 +283,19 @@ class VenueController(
      *
      * @note Available capacity cannot exceed maximum capacity
      * @warning This operation is transactional - failure will roll back all changes
+     *
+     * @example
+     * POST /api/venues/create
+     * Request Body:
+     * {
+     *   "name": "Venue Name",
+     *   "location": "Venue Address",
+     *   "description": "Venue Description",
+     *   "workingHours": "Venue Working Hours",
+     *   "maximumCapacity": 100,
+     *   "venueTypeId": 1,
+     * }
+     *
      */
     @PostMapping(Paths.CREATE_VENUE)
     fun createVenue(
@@ -278,14 +305,13 @@ class VenueController(
     /**
      * Uploads and stores a venue image for the specified venue.
      *
-     * @param venueId The ID of the venue to associate with the image
-     * @param image The image file to upload (supported formats: JPEG, PNG)
+     * @param venueId The id of the venue to associate with the image
+     * @param image The image file to upload
      * @return [BasicResponse] with:
      *         - success: true if upload was successful
      *         - message: Status message including filename if successful
      *
-     * @throws IllegalArgumentException if the image fails validation (invalid format/size)
-     * @throws DataAccessException if there's an issue storing the image
+     * @throws ImageDataException if the image fails validation (invalid format/size)
      *
      * The upload process:
      * 1. Validates image format and size
@@ -294,6 +320,15 @@ class VenueController(
      *
      * @note Maximum file size is 5MB (configurable)
      * @warning Image data will be compressed before storage
+     *
+     * @example
+     * POST /api/venues/upload-image?venueId=123
+     * Headers:
+     * - Content-Type: multipart/form-data
+     *
+     * Form Data:
+     * - venueId: 123 (number)
+     * - image: (binary file) venue.jpg
      */
     @PostMapping(Paths.UPLOAD_VENUE_IMAGE)
     fun uploadVenueImage(
@@ -304,14 +339,13 @@ class VenueController(
     /**
      * Uploads and stores a menu image for the specified venue.
      *
-     * @param venueId The ID of the venue to associate with the menu image
+     * @param venueId The id of the venue to associate with the menu image
      * @param image The menu image file to upload (supported formats: JPEG, PNG)
      * @return [BasicResponse] with:
      *         - success: true if upload was successful
      *         - message: Status message including filename if successful
      *
-     * @throws IllegalArgumentException if the image fails validation (invalid format/size)
-     * @throws DataAccessException if there's an issue storing the image
+     * @throws ImageDataException if the image fails validation
      *
      * The upload process:
      * 1. Validates image format and size
@@ -320,6 +354,16 @@ class VenueController(
      *
      * @note Maximum file size is 5MB (configurable)
      * @warning Image data will be compressed before storage
+     *
+     * @example
+     * POST /api/venues/upload-menu-image?venueId=123
+     * Headers:
+     * - Content-Type: multipart/form-data
+     *
+     * Form Data:
+     * - venueId: 123 (number)
+     * - image: (binary file) menu.jpg
+     *
      */
     @PostMapping(Paths.UPLOAD_MENU_IMAGE)
     fun uploadMenuImage(
@@ -333,20 +377,30 @@ class VenueController(
      * This endpoint performs a partial update of the venue's properties. Only non-null fields
      * in the request will be updated, while null fields will preserve their current values.
      *
-     * @param venueId The ID of the venue to update (from path variable)
+     * @param venueId The id of the venue to update (from path variable)
      * @param request The update request containing new values (optional - if null or empty, no changes will be made)
      * @return [BasicResponse] indicating operation status with:
      *         - success: true if update was successful
      *         - message: Detailed status message
      *
-     * @throws EntityNotFoundException if no venue exists with the specified ID
-     * @throws DataAccessException if there's an issue persisting the changes
+     * @throws jakarta.persistence.EntityNotFoundException if no venue exists with the specified id
      *
      * The update process:
      * 1. Validates the request contains at least one change
      * 2. Applies non-null fields from request to venue entity
      * 3. Persists the updated venue
      *
+     * @example
+     * PATCH /api/venues/update/{venueId}
+     * Request Body:
+     * {
+     *   "name": "Updated Venue Name",
+     *   "location": "Updated Address",
+     *   "description": "Updated description",
+     *   "venueTypeId": 2,
+     *   "workingHours": "Updated Working Hours",
+     *   "maximumCapacity": 150,
+     * }
      */
     @PatchMapping("${Paths.UPDATE_VENUE}/{venueId}")
     fun updateVenue(
@@ -362,10 +416,12 @@ class VenueController(
      * @param venueId The unique identifier of the venue to be rated
      * @param rating The rating value between 0.5 and 5.0 (inclusive)
      * @param userId The unique identifier of the user submitting the rating
-     * @param comment Optional text comment accompanying the rating (max 500 characters)
+     * @param comment Optional text comment accompanying the rating
      * @return [BasicResponse] indicating operation status with success flag and message
-     * @throws EntityNotFoundException if either the venue or user is not found
-     * @throws DataAccessException if there's an issue persisting the rating
+     * @throws jakarta.persistence.EntityNotFoundException if either the venue or user is not found
+     *
+     * @example
+     * POST /api/venues/rate?venueId=123&rating=4.5&userId=456&comment=Great%20place!
      *
      */
     @PostMapping(Paths.RATE_VENUE)
@@ -377,14 +433,16 @@ class VenueController(
     ): BasicResponse = venueService.rate(venueId, rating, userId, comment)
 
     /**
-     * Deletes a venue by its ID.
+     * Deletes a venue by its id.
      *
      * This operation permanently removes the venue and all its associated data from the system.
      * The operation is transactional and will be rolled back if any errors occur during deletion.
      *
      * @param venueId the unique identifier of the venue to be deleted
      * @return BasicResponse indicating operation status with success flag and message
-     * @apiNote Example usage: DELETE /api/venues?id=123
+     * @example
+     * DELETE /api/venues?id=123
+     *
      */
     @DeleteMapping(Paths.DELETE_VENUE)
     fun deleteVenue(
