@@ -36,8 +36,9 @@ class VenueService(
 
     @Transactional(readOnly = true)
     fun get(venueId: Int): VenueEntity {
-        val venue: VenueEntity = venueRepository.findById(venueId)
-            .orElseThrow { EntityNotFoundException("Venue with id: $venueId not found.") }
+        val venue: VenueEntity = venueRepository.findById(venueId).orElseThrow {
+            EntityNotFoundException("Venue with id: $venueId not found.")
+        }
         val venueRating: List<VenueRatingEntity> = venueRatingRepository.findByVenueId(venueId)
         venue.averageRating = venueRating.map { it.rating }.average()
             .takeIf { it.isFinite() } ?: 0.0
@@ -69,6 +70,27 @@ class VenueService(
         return venuesToPagedResponse(venues, lowerBound, upperBound)
     }
 
+    /**
+     * Retrieves venues near specified coordinates with real-time availability.
+     *
+     * Behavior:
+     * 1. Without coordinates: Returns venues in default location (Zagreb)
+     * 2. With coordinates: Finds venues in current city + nearby cities (within radius 100km)
+     *
+     * @param pageable Pagination configuration
+     * @param latitude Optional user latitude
+     * @param longitude Optional user longitude
+     * @return [PagedResponse] with:
+     *   - content: List of venues nearby user with calculated:
+     *     - averageRating
+     *     - current availableCapacity
+     *   - page: Current page number
+     *   - size: Page size
+     *   - totalElements: Total matching venues
+     *
+     * @implNote Uses geolocation service to determine nearby cities
+     *
+     */
     @Transactional(readOnly = true)
     fun getNearbyVenues(pageable: Pageable, latitude: Double?, longitude: Double?): PagedResponse<VenueEntity> {
         val currentTimestamp: LocalDateTime = LocalDateTime.now()
@@ -95,6 +117,23 @@ class VenueService(
         return venuesToPagedResponse(venues, lowerBound, upperBound)
     }
 
+    /**
+     * Retrieves recently added venues sorted by creation date (id descending).
+     *
+     * Includes:
+     * - Real-time available capacity
+     * - Current average ratings
+     *
+     * @param pageable Pagination configuration
+     * @return [PagedResponse] with:
+     *   - content: List of newest venues with calculated:
+     *     - averageRating
+     *     - current availableCapacity
+     *   - page: Current page number
+     *   - size: Page size
+     *   - totalElements: Total matching venues
+     *
+     */
     @Transactional(readOnly = true)
     fun getNewVenues(pageable: Pageable): PagedResponse<VenueEntity> {
         val sortedPageable = PageRequest.of(
@@ -110,6 +149,24 @@ class VenueService(
         return venuesToPagedResponse(venues, lowerBound, upperBound)
     }
 
+    /**
+     * Retrieves venues with highest reservation volume.
+     *
+     * Calculation:
+     * 1. Gets top venues by reservation count
+     * 2. Enriches with venue details
+     * 3. Calculates current availability
+     *
+     * @param pageable Pagination configuration
+     * @return [PagedResponse] with:
+     *   - content: List of matching venues ordered by popularity with calculated:
+     *     - averageRating
+     *     - current availableCapacity
+     *   - page: Current page number
+     *   - size: Page size
+     *   - totalElements: Total matching venues
+     *
+     */
     @Transactional(readOnly = true)
     fun getTrendingVenues(pageable: Pageable): PagedResponse<VenueEntity> {
         val currentTimestamp: LocalDateTime = LocalDateTime.now()
@@ -127,6 +184,26 @@ class VenueService(
         return venuesToPagedResponse(paged, lowerBound, upperBound)
     }
 
+    /**
+     * Retrieves recommended venues based on quality and availability.
+     *
+     * Selection criteria:
+     * - Average rating > 4.0
+     * - Currently available capacity
+     * - Sorted by rating then capacity
+     *
+     * @param pageable Pagination configuration
+     * @return [PagedResponse] with:
+     *   - content: List of highly-rated available venue with calculated:
+     *     - averageRating
+     *     - current availableCapacity
+     *   - page: Current page number
+     *   - size: Page size
+     *   - totalElements: Total matching venues
+     *
+     * @implNote Excludes fully-booked venues regardless of rating
+     *
+     */
     @Transactional(readOnly = true)
     fun getSuggestedVenues(pageable: Pageable): PagedResponse<VenueEntity> {
         val currentTimestamp: LocalDateTime = LocalDateTime.now()
@@ -138,8 +215,7 @@ class VenueService(
     }
 
     @Transactional(readOnly = true)
-    fun getType(typeId: Int): String =
-        venueTypeRepository.getReferenceById(typeId).type
+    fun getType(typeId: Int): String = venueTypeRepository.getReferenceById(typeId).type
 
     @Transactional(readOnly = true)
     fun getVenueRating(venueId: Int): Double = venueRepository.findById(venueId)
@@ -152,20 +228,21 @@ class VenueService(
     @Transactional(readOnly = true)
     fun getAllTypes(): List<VenueTypeEntity> = venueTypeRepository.findAll()
 
-    fun getVenueImages(venueId: Int): List<String> =
-        imageService.getVenueImages(venueId)
+    fun getVenueImages(venueId: Int): List<String> = imageService.getVenueImages(venueId)
 
     fun getMenuImages(venueId: Int): List<String> = imageService.getMenuImages(venueId)
 
     @Transactional
     fun create(request: CreateVenueRequest): BasicResponse {
+        validateCreateRequest(request)?.let { return it }
+
         val venue = VenueEntity().apply {
             name = request.name
             location = request.location
             description = request.description
             workingHours = request.workingHours
             maximumCapacity = request.maximumCapacity
-            availableCapacity = request.availableCapacity
+            availableCapacity = request.maximumCapacity
             venueTypeId = request.typeId
             averageRating = 0.0
         }
@@ -188,22 +265,35 @@ class VenueService(
 
     @Transactional
     fun update(venueId: Int, request: UpdateVenueRequest?): BasicResponse {
-        val venue = venueRepository.findById(venueId)
-            .orElseThrow { EntityNotFoundException("Venue with id $venueId not found") }
+        val venue = venueRepository.findById(venueId).orElseThrow {
+            EntityNotFoundException("Venue with id $venueId not found")
+        }
 
-        if (!isRequestValid(request)) return BasicResponse(false, "Request is not valid.")
+        validateUpdateRequest(request)?.let { return it }
 
         if (!containsVenueChanges(request, venue)) return BasicResponse(
             false,
             "No modifications found. Please change at least one field."
         )
 
+        val updatedAvailability: Int? = request?.maximumCapacity?.let { newMaxCapacity ->
+            val currentReservations = venue.maximumCapacity - venue.availableCapacity
+            when {
+                newMaxCapacity < currentReservations -> return BasicResponse(
+                    false,
+                    "New maximum capacity cannot exceed current available capacity."
+                )
+
+                else -> newMaxCapacity - currentReservations
+            }
+        }
+
         venue.apply {
             name = request?.name ?: venue.name
             location = request?.location ?: venue.location
             workingHours = request?.workingHours ?: venue.workingHours
             maximumCapacity = request?.maximumCapacity ?: venue.maximumCapacity
-            availableCapacity = request?.availableCapacity ?: venue.availableCapacity
+            availableCapacity = updatedAvailability ?: venue.availableCapacity
             venueTypeId = request?.typeId ?: venue.venueTypeId
             description = request?.description ?: venue.description
         }
@@ -227,8 +317,9 @@ class VenueService(
             return BasicResponse(false, "User with id $userId not found.")
         }.username
 
-        val venue = venueRepository.findById(venueId)
-            .orElseThrow { EntityNotFoundException("Venue with id $venueId not found") }
+        val venue = venueRepository.findById(venueId).orElseThrow {
+            EntityNotFoundException("Venue with id $venueId not found")
+        }
         val venueRating = venueRatingRepository.findByVenueId(venueId)
 
         val newRatingEntity = VenueRatingEntity().apply {
@@ -308,10 +399,40 @@ class VenueService(
         )
     }
 
-    private fun isRequestValid(request: UpdateVenueRequest?): Boolean = request?.let {
-        it.name != null || it.location != null || it.workingHours != null ||
-                it.typeId != null || it.description != null
-    } ?: false
+    private fun validateCreateRequest(request: CreateVenueRequest): BasicResponse? = when {
+        request.name.isBlank() -> BasicResponse(false, "Name cannot be empty.")
+        request.location.isBlank() -> BasicResponse(false, "Location cannot be empty.")
+        request.description.isBlank() -> BasicResponse(false, "Description cannot be empty.")
+        request.workingHours.isBlank() -> BasicResponse(false, "Working hours cannot be empty.")
+        request.maximumCapacity <= 0 -> BasicResponse(false, "Maximum capacity must be positive.")
+        request.typeId <= 0 -> BasicResponse(false, "Invalid venue type id.")
+        else -> null
+    }
+
+    private fun validateUpdateRequest(request: UpdateVenueRequest?): BasicResponse? = when {
+        request == null ->
+            BasicResponse(false, "Update request cannot be null. Provide at least one field to update.")
+
+        request.name?.isBlank() == true ->
+            BasicResponse(false, "Name is not valid.")
+
+        request.location?.isBlank() == true ->
+            BasicResponse(false, "Location is not valid.")
+
+        request.description?.isBlank() == true ->
+            BasicResponse(false, "Description is not valid.")
+
+        request.typeId?.let { it <= 0 } == true ->
+            BasicResponse(false, "Invalid venue type id.")
+
+        request.workingHours?.isBlank() == true ->
+            BasicResponse(false, "Working hours are not valid.")
+
+        request.maximumCapacity?.let { it <= 0 } == true ->
+            BasicResponse(false, "Maximum capacity is not valid.")
+
+        else -> null
+    }
 
     private fun containsVenueChanges(request: UpdateVenueRequest?, venue: VenueEntity): Boolean {
         if (request == null) return false
@@ -321,7 +442,6 @@ class VenueService(
             request.location?.takeIf { it != venue.location },
             request.workingHours?.takeIf { it != venue.workingHours },
             request.maximumCapacity?.takeIf { it != venue.maximumCapacity },
-            request.availableCapacity?.takeIf { it != venue.availableCapacity },
             request.typeId?.takeIf { it != venue.venueTypeId },
             request.description?.takeIf { it != venue.description }
         ).any { it != null }
@@ -333,6 +453,29 @@ class VenueService(
         venue.availableCapacity = venue.maximumCapacity - totalGuests
     }
 
+    /**
+     * Builds enriched venue statistics by aggregating ratings and reservations data.
+     *
+     * For each venue, calculates:
+     * 1. Average rating from all user ratings (defaults to 0.0 if no ratings exist)
+     * 2. Current available capacity based on active reservations within the specified time window
+     *
+     * @param venueIds List of venue ids to process
+     * @param lowerBound Start of time window for reservation checks (inclusive)
+     * @param upperBound End of time window for reservation checks (exclusive)
+     * @param venues Base list of venue entities to enrich
+     * @return List of enriched [VenueEntity] objects with:
+     *   - averageRating: Calculated mean of all ratings (finite value)
+     *   - availableCapacity: Updated based on active reservations
+     *
+     * @implNote This method:
+     *   - Performs batch database lookups for efficiency
+     *   - Modifies the input venue entities directly
+     *   - Handles null/empty cases gracefully (default ratings and capacities)
+     *   - Uses a single pass for all calculations after data aggregation
+     *
+     * @see calculateCurrentAvailableCapacity for capacity calculation details
+     */
     private fun buildVenueStats(
         venueIds: List<Int>,
         lowerBound: LocalDateTime,
@@ -358,5 +501,4 @@ class VenueService(
 
         return venues
     }
-
 }

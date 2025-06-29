@@ -7,5 +7,4 @@ data class UpdateVenueRequest(
     val typeId: Int? = null,
     val workingHours: String? = null,
     val maximumCapacity: Int? = null,
-    val availableCapacity: Int? = null,
 )

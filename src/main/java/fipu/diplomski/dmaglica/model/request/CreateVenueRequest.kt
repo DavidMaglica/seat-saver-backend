@@ -7,5 +7,4 @@ data class CreateVenueRequest(
     val typeId: Int,
     val workingHours: String,
     val maximumCapacity: Int,
-    val availableCapacity: Int,
 )

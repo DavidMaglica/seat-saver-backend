@@ -1,6 +1,7 @@
 package fipu.diplomski.dmaglica.service
 
 import fipu.diplomski.dmaglica.exception.ReservationNotFoundException
+import fipu.diplomski.dmaglica.exception.UserNotFoundException
 import fipu.diplomski.dmaglica.exception.VenueNotFoundException
 import fipu.diplomski.dmaglica.model.data.Reservation
 import fipu.diplomski.dmaglica.model.request.CreateReservationRequest
@@ -48,8 +49,8 @@ class ReservationService(
         )
 
         if (reservations.isNotEmpty()) {
-            val totalGuests = reservations.sumOf { it.numberOfGuests }
-            if (totalGuests + request.numberOfPeople > venue.maximumCapacity) {
+            val currentNumberOfGuests = reservations.sumOf { it.numberOfGuests }
+            if (currentNumberOfGuests + request.numberOfPeople > venue.maximumCapacity) {
                 return BasicResponse(
                     false,
                     "The venue is fully booked for the selected time. Please choose a different time."
@@ -83,12 +84,13 @@ class ReservationService(
 
     @Transactional
     fun update(request: UpdateReservationRequest): BasicResponse {
-        userRepository.findById(request.userId).getOrElse {
-            return BasicResponse(false, "User not found.")
+        userRepository.findById(request.userId).orElseThrow {
+            throw UserNotFoundException("User with id ${request.userId} not found.")
         }
 
-        val reservation = reservationRepository.findById(request.reservationId)
-            .orElseThrow { ReservationNotFoundException("Reservation not found") }
+        val reservation = reservationRepository.findById(request.reservationId).orElseThrow {
+            ReservationNotFoundException("Reservation not found")
+        }
 
         if (!isRequestValid(request)) return BasicResponse(false, "Request is not valid.")
         if (!containsReservationChanges(request, reservation)) return BasicResponse(
@@ -96,8 +98,9 @@ class ReservationService(
             "No modifications found. Please change at least one field."
         )
 
-        venueRepository.findById(request.venueId)
-            .orElseThrow { VenueNotFoundException("Venue with id ${request.venueId} not found") }
+        venueRepository.findById(request.venueId).orElseThrow {
+            VenueNotFoundException("Venue with id ${request.venueId} not found")
+        }
 
         reservation.apply {
             numberOfGuests = request.numberOfPeople ?: reservation.numberOfGuests
@@ -116,8 +119,8 @@ class ReservationService(
 
     @Transactional
     fun delete(userId: Int, reservationId: Int, venueId: Int): BasicResponse {
-        userRepository.findById(userId).getOrElse {
-            return BasicResponse(false, "User not found.")
+        userRepository.findById(userId).orElseThrow {
+            throw UserNotFoundException("User with id $userId not found.")
         }
 
         reservationRepository.findById(reservationId).orElseThrow {

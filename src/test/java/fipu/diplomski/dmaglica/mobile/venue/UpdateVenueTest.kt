@@ -39,9 +39,90 @@ class UpdateVenueTest : BaseVenueServiceTest() {
         val response = venueService.update(venue.id, null)
 
         response.success `should be` false
-        response.message `should be` "Request is not valid."
+        response.message `should be equal to` "Update request cannot be null. Provide at least one field to update."
 
         verify(venueRepository, times(1)).findById(venue.id)
+    }
+
+    @Test
+    fun `should return early if name in request is not valid`() {
+        `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(venue))
+
+        val response = venueService.update(venue.id, UpdateVenueRequest(name = ""))
+
+        response.success `should be` false
+        response.message `should be equal to` "Name is not valid."
+
+        verify(venueRepository, times(1)).findById(venue.id)
+        verifyNoMoreInteractions(venueRepository)
+    }
+
+    @Test
+    fun `should return early if location in request is not valid`() {
+        `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(venue))
+
+        val response = venueService.update(venue.id, UpdateVenueRequest(location = ""))
+
+        response.success `should be` false
+        response.message `should be equal to` "Location is not valid."
+
+        verify(venueRepository, times(1)).findById(venue.id)
+        verifyNoMoreInteractions(venueRepository)
+    }
+
+    @Test
+    fun `should return early if description in request is not valid`() {
+        `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(venue))
+
+        val response = venueService.update(venue.id, UpdateVenueRequest(description = ""))
+
+        response.success `should be` false
+        response.message `should be equal to` "Description is not valid."
+
+        verify(venueRepository, times(1)).findById(venue.id)
+        verifyNoMoreInteractions(venueRepository)
+    }
+
+    @Test
+    fun `should return early if type id in request is not valid`() {
+        `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(venue))
+
+        val response = venueService.update(venue.id, UpdateVenueRequest(typeId = -1))
+
+        response.success `should be` false
+        response.message `should be equal to` "Invalid venue type id."
+
+        verify(venueRepository, times(1)).findById(venue.id)
+        verifyNoMoreInteractions(venueRepository)
+    }
+
+    @Test
+    fun `should return early if working hours in request are not valid`() {
+        `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(venue))
+
+        val response = venueService.update(venue.id, UpdateVenueRequest(workingHours = ""))
+
+        response.success `should be` false
+        response.message `should be equal to` "Working hours are not valid."
+
+        verify(venueRepository, times(1)).findById(venue.id)
+        verifyNoMoreInteractions(venueRepository)
+    }
+
+    @Test
+    fun `should return early if maximum capacity in request is not valid`() {
+        `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(venue))
+
+        val response = venueService.update(
+            venue.id,
+            UpdateVenueRequest(maximumCapacity = -1)
+        )
+
+        response.success `should be` false
+        response.message `should be equal to` "Maximum capacity is not valid."
+
+        verify(venueRepository, times(1)).findById(venue.id)
+        verifyNoMoreInteractions(venueRepository)
     }
 
     @Test
@@ -63,6 +144,22 @@ class UpdateVenueTest : BaseVenueServiceTest() {
         response.message `should be` "No modifications found. Please change at least one field."
 
         verify(venueRepository, times(1)).findById(venue.id)
+    }
+
+    @Test
+    fun `should not update if new maximum availability exceed current availability`() {
+        `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(venue))
+
+        val response = venueService.update(
+            venue.id,
+            UpdateVenueRequest(maximumCapacity = 40)
+        )
+
+        response.success `should be` false
+        response.message `should be equal to` "New maximum capacity cannot exceed current available capacity."
+
+        verify(venueRepository, times(1)).findById(venue.id)
+        verifyNoMoreInteractions(venueRepository)
     }
 
     @Test
@@ -119,13 +216,14 @@ class UpdateVenueTest : BaseVenueServiceTest() {
             location = "New location"
             description = "New description"
             workingHours = "New working hours"
-            maximumCapacity = 50
-            availableCapacity = 25
+            maximumCapacity = 80
+            availableCapacity = 80
             averageRating = venue.averageRating
             venueTypeId = 2
         }
         `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(venue))
         `when`(venueRepository.save(any())).thenReturn(newVenue)
+        val newAvailability = newVenue.maximumCapacity - venue.availableCapacity
 
         val response = venueService.update(
             venue.id,
@@ -136,7 +234,6 @@ class UpdateVenueTest : BaseVenueServiceTest() {
                 typeId = newVenue.venueTypeId,
                 workingHours = newVenue.workingHours,
                 maximumCapacity = newVenue.maximumCapacity,
-                availableCapacity = newVenue.availableCapacity
             )
         )
 
@@ -152,6 +249,6 @@ class UpdateVenueTest : BaseVenueServiceTest() {
         savedVenue.workingHours `should be equal to` newVenue.workingHours
         savedVenue.venueTypeId `should be equal to` newVenue.venueTypeId
         savedVenue.maximumCapacity `should be equal to` newVenue.maximumCapacity
-        savedVenue.availableCapacity `should be equal to` newVenue.availableCapacity
+        savedVenue.availableCapacity `should be equal to` newAvailability
     }
 }

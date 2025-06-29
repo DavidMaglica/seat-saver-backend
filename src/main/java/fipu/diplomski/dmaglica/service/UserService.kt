@@ -78,6 +78,8 @@ class UserService(
             return DataResponse(false, "Incorrect password.", null)
         }
 
+        user.apply { this.password = "" }
+
         return DataResponse(true, "User with email $email successfully logged in", user)
     }
 
@@ -257,7 +259,6 @@ class UserService(
         return User(
             id = user.id,
             username = user.username,
-            password = "", // Password should not be returned for security reasons
             email = user.email,
             notificationOptions = notificationOptions,
             role = Role.entries[user.roleId],
