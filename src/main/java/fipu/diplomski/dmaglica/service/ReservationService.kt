@@ -49,8 +49,8 @@ class ReservationService(
         )
 
         if (reservations.isNotEmpty()) {
-            val totalGuests = reservations.sumOf { it.numberOfGuests } + request.numberOfPeople
-            if (totalGuests > venue.maximumCapacity) {
+            val currentNumberOfGuests = reservations.sumOf { it.numberOfGuests }
+            if (currentNumberOfGuests + request.numberOfPeople > venue.maximumCapacity) {
                 return BasicResponse(
                     false,
                     "The venue is fully booked for the selected time. Please choose a different time."

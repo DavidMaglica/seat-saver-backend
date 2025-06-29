@@ -147,6 +147,22 @@ class UpdateVenueTest : BaseVenueServiceTest() {
     }
 
     @Test
+    fun `should not update if new maximum availability exceed current availability`() {
+        `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(venue))
+
+        val response = venueService.update(
+            venue.id,
+            UpdateVenueRequest(maximumCapacity = 40)
+        )
+
+        response.success `should be` false
+        response.message `should be equal to` "New maximum capacity cannot exceed current available capacity."
+
+        verify(venueRepository, times(1)).findById(venue.id)
+        verifyNoMoreInteractions(venueRepository)
+    }
+
+    @Test
     fun `should return failure response if save fails`() {
         `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(venue))
         `when`(venueRepository.save(any())).thenThrow(RuntimeException("Save failed"))
@@ -200,13 +216,14 @@ class UpdateVenueTest : BaseVenueServiceTest() {
             location = "New location"
             description = "New description"
             workingHours = "New working hours"
-            maximumCapacity = 50
-            availableCapacity = 25
+            maximumCapacity = 80
+            availableCapacity = 80
             averageRating = venue.averageRating
             venueTypeId = 2
         }
         `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(venue))
         `when`(venueRepository.save(any())).thenReturn(newVenue)
+        val newAvailability = newVenue.maximumCapacity - venue.availableCapacity
 
         val response = venueService.update(
             venue.id,
@@ -232,6 +249,6 @@ class UpdateVenueTest : BaseVenueServiceTest() {
         savedVenue.workingHours `should be equal to` newVenue.workingHours
         savedVenue.venueTypeId `should be equal to` newVenue.venueTypeId
         savedVenue.maximumCapacity `should be equal to` newVenue.maximumCapacity
-        savedVenue.availableCapacity `should be equal to` newVenue.maximumCapacity
+        savedVenue.availableCapacity `should be equal to` newAvailability
     }
 }

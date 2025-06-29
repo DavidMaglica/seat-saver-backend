@@ -276,12 +276,24 @@ class VenueService(
             "No modifications found. Please change at least one field."
         )
 
+        val updatedAvailability: Int? = request?.maximumCapacity?.let { newMaxCapacity ->
+            val currentReservations = venue.maximumCapacity - venue.availableCapacity
+            when {
+                newMaxCapacity < currentReservations -> return BasicResponse(
+                    false,
+                    "New maximum capacity cannot exceed current available capacity."
+                )
+
+                else -> newMaxCapacity - currentReservations
+            }
+        }
+
         venue.apply {
             name = request?.name ?: venue.name
             location = request?.location ?: venue.location
             workingHours = request?.workingHours ?: venue.workingHours
             maximumCapacity = request?.maximumCapacity ?: venue.maximumCapacity
-            availableCapacity = request?.maximumCapacity ?: venue.availableCapacity
+            availableCapacity = updatedAvailability ?: venue.availableCapacity
             venueTypeId = request?.typeId ?: venue.venueTypeId
             description = request?.description ?: venue.description
         }
