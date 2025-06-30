@@ -47,7 +47,7 @@ class UserController(private val userService: UserService) {
      * @return [DataResponse] containing:
      *         - success: Boolean indicating operation status
      *         - message: Descriptive status message
-     *         - data: The created [UserEntity] if successful, null otherwise
+     *         - data: The created userId if successful, null otherwise
      *
      * Registration process:
      * 1. Validates if email isn't already registered
@@ -61,14 +61,14 @@ class UserController(private val userService: UserService) {
      *
      * @note Passwords are hashed using BCrypt before storage
      * @note Notification options are initialized with all services disabled
-     * @note Does not return the hashed password in the response
+     *
      */
     @PostMapping(Paths.SIGNUP)
     fun signup(
         @RequestParam("email") email: String,
         @RequestParam("username") username: String,
         @RequestParam("password") password: String
-    ): DataResponse<UserEntity> = userService.signup(email, username, password)
+    ): DataResponse<Int> = userService.signup(email, username, password)
 
     /**
      * Authenticates a user and initiates a login session.
@@ -78,7 +78,7 @@ class UserController(private val userService: UserService) {
      * @return [DataResponse] containing:
      *         - success: Boolean indicating authentication status
      *         - message: Descriptive status message
-     *         - data: The authenticated [UserEntity] if successful, null otherwise
+     *         - data: The authenticated userId if successful, null otherwise
      *
      * Authentication process:
      * 1. Verifies email exists in system
@@ -95,7 +95,7 @@ class UserController(private val userService: UserService) {
     fun login(
         @RequestParam("email") email: String,
         @RequestParam("password") password: String
-    ): DataResponse<UserEntity> = userService.login(email, password)
+    ): DataResponse<Int> = userService.login(email, password)
 
     /**
      * Retrieves a user's notification preferences and settings.

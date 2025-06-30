@@ -28,7 +28,7 @@ class UserService(
     }
 
     @Transactional
-    fun signup(email: String, username: String, password: String): DataResponse<UserEntity> {
+    fun signup(email: String, username: String, password: String): DataResponse<Int> {
         userRepository.findByEmail(email)?.let {
             return DataResponse(false, "User with email $email already exists")
         }
@@ -66,11 +66,11 @@ class UserService(
             )
         }
 
-        return DataResponse(true, "User with email $email successfully created", user)
+        return DataResponse(true, "User with email $email successfully created", user.id)
     }
 
     @Transactional(readOnly = true)
-    fun login(email: String, password: String): DataResponse<UserEntity> {
+    fun login(email: String, password: String): DataResponse<Int> {
         val user = userRepository.findByEmail(email)
             ?: return DataResponse(false, "User with email $email does not exist.", null)
 
@@ -78,9 +78,7 @@ class UserService(
             return DataResponse(false, "Incorrect password.", null)
         }
 
-        user.apply { this.password = "" }
-
-        return DataResponse(true, "User with email $email successfully logged in", user)
+        return DataResponse(true, "User with email $email successfully logged in", user.id)
     }
 
     @Transactional(readOnly = true)
