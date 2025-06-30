@@ -2,7 +2,7 @@ package fipu.diplomski.dmaglica.mobile.user
 
 import org.amshove.kluent.`should be`
 import org.amshove.kluent.`should be equal to`
-import org.amshove.kluent.`should not be equal to`
+import org.amshove.kluent.`should not be`
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentMatchers.anyString
@@ -44,19 +44,15 @@ class LoginTest : BaseUserServiceTest() {
     }
 
     @Test
-    fun `when user is found and password is correct user should be returned`() {
+    fun `when user is found and password is correct user id should be returned`() {
         `when`(userRepository.findByEmail(anyString())).thenReturn(mockedUserWithEncryptedPassword)
 
         val response = userService.login(mockedUser.email, mockedUser.password)
 
         response.success `should be` true
         response.message `should be equal to` "User with email ${mockedUser.email} successfully logged in"
-        response.data `should not be equal to` null
-        response.data?.id `should be equal to` mockedUser.id
-        response.data?.email `should be equal to` mockedUser.email
-        response.data?.username `should be equal to` mockedUser.username
-        response.data?.password `should be equal to` ""
-        response.data?.roleId `should be equal to` mockedUser.roleId
+        response.data `should not be` null
+        response.data `should be equal to` mockedUser.id
 
         verify(userRepository, times(1)).findByEmail(anyString())
     }

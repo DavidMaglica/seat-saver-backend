@@ -72,11 +72,7 @@ class SignupTest : BaseUserServiceTest() {
         response.success `should be equal to` true
         response.message `should be equal to` "User with email ${mockedUser.email} successfully created"
         response.data `should not be` null
-        response.data?.id `should be equal to` mockedUser.id
-        response.data?.email `should be equal to` mockedUser.email
-        response.data?.username `should be equal to` mockedUser.username
-        passwordEncoder.matches(mockedUser.password, response.data?.password) `should be` true
-        response.data?.roleId `should be equal to` mockedUser.roleId
+        response.data `should be equal to` mockedUser.id
 
 
         verify(userRepository).save(userEntityArgumentCaptor.capture())

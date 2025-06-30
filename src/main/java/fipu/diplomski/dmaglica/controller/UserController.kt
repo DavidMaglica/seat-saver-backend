@@ -47,7 +47,7 @@ class UserController(private val userService: UserService) {
      * @return [DataResponse] containing:
      *         - success: Boolean indicating operation status
      *         - message: Descriptive status message
-     *         - data: The created [UserEntity] if successful, null otherwise
+     *         - data: The created userId if successful, null otherwise
      *
      * Registration process:
      * 1. Validates if email isn't already registered
@@ -57,18 +57,18 @@ class UserController(private val userService: UserService) {
      * 5. Persists both user and notification settings
      *
      * Example request:
-     * POST /api/auth/signup?email=user@example.com&username=newuser&password=secure123
+     * POST /api/user/signup?email=user@example.com&username=newuser&password=secure123
      *
      * @note Passwords are hashed using BCrypt before storage
      * @note Notification options are initialized with all services disabled
-     * @note Does not return the hashed password in the response
+     *
      */
     @PostMapping(Paths.SIGNUP)
     fun signup(
         @RequestParam("email") email: String,
         @RequestParam("username") username: String,
         @RequestParam("password") password: String
-    ): DataResponse<UserEntity> = userService.signup(email, username, password)
+    ): DataResponse<Int> = userService.signup(email, username, password)
 
     /**
      * Authenticates a user and initiates a login session.
@@ -78,7 +78,7 @@ class UserController(private val userService: UserService) {
      * @return [DataResponse] containing:
      *         - success: Boolean indicating authentication status
      *         - message: Descriptive status message
-     *         - data: The authenticated [UserEntity] if successful, null otherwise
+     *         - data: The authenticated userId if successful, null otherwise
      *
      * Authentication process:
      * 1. Verifies email exists in system
@@ -86,7 +86,7 @@ class UserController(private val userService: UserService) {
      * 3. Returns user data if credentials are valid
      *
      * Example request:
-     * GET /api/auth/login?email=user@example.com&password=secure123
+     * GET /api/user/login?email=user@example.com&password=secure123
      *
      * @note Uses secure password hash comparison
      * @note Does not return the hashed password in the response
@@ -95,7 +95,7 @@ class UserController(private val userService: UserService) {
     fun login(
         @RequestParam("email") email: String,
         @RequestParam("password") password: String
-    ): DataResponse<UserEntity> = userService.login(email, password)
+    ): DataResponse<Int> = userService.login(email, password)
 
     /**
      * Retrieves a user's notification preferences and settings.
@@ -111,7 +111,7 @@ class UserController(private val userService: UserService) {
      * - Location services enabled state
      *
      * Example request:
-     * GET /api/users/notification-options?userId=123
+     * GET /api/user/notification-options?userId=123
      *
      * @note Notification options are automatically created with all services disabled during user registration
      */
@@ -128,7 +128,7 @@ class UserController(private val userService: UserService) {
      *         - Either latitude or longitude is not set
      *
      * Example request:
-     * GET /api/users/location?userId=123
+     * GET /api/user/location?userId=123
      *
      * @note Coordinates are in WGS84 decimal degree format
      * @warning Location data may be outdated if user hasn't recently updated their position
@@ -149,7 +149,7 @@ class UserController(private val userService: UserService) {
      * 3. Updates user record if user is found
      *
      * Example request:
-     * PATCH /api/users/email?userId=123&newEmail=new@example.com
+     * PATCH /api/user/email?userId=123&newEmail=new@example.com
      *
      * @note Will affect all future authentication attempts
      */
@@ -171,7 +171,7 @@ class UserController(private val userService: UserService) {
      * 3. Updates user record if user is found
      *
      * Example request:
-     * PATCH /api/users/username?userId=123&newUsername=newhandle
+     * PATCH /api/user/username?userId=123&newUsername=newhandle
      *
      */
     @PatchMapping(Paths.UPDATE_USERNAME)
@@ -193,7 +193,7 @@ class UserController(private val userService: UserService) {
      * 3. Updates user record with new hash
      *
      * Example request:
-     * PATCH /api/users/password?userId=123&newPassword=NewSecurePassword123
+     * PATCH /api/user/password?userId=123&newPassword=NewSecurePassword123
      *
      * @note Password is immediately hashed and never stored in plaintext
      */
@@ -218,7 +218,7 @@ class UserController(private val userService: UserService) {
      * 3. Persists changes to database
      *
      * Example request:
-     * PATCH /api/users/notification-options?
+     * PATCH /api/user/notification-options?
      *   userId=123&
      *   pushNotificationsTurnedOn=true&
      *   emailNotificationsTurnedOn=false&
@@ -255,7 +255,7 @@ class UserController(private val userService: UserService) {
      * 3. Persists changes to database
      *
      * Example request:
-     * PATCH /api/users/location?userId=123&latitude=40.7128&longitude=-74.0060
+     * PATCH /api/user/location?userId=123&latitude=40.7128&longitude=-74.0060
      *
      * @note Coordinates are stored in WGS84 decimal degree format
      */
@@ -280,7 +280,7 @@ class UserController(private val userService: UserService) {
      * 3. Returns appropriate status message
      *
      * Example request:
-     * DELETE /api/users?userId=123
+     * DELETE /api/user/delete?userId=123
      *
      * @warning This operation is permanent and cannot be undone
      */
@@ -300,7 +300,7 @@ class UserController(private val userService: UserService) {
      * - Last known location (if available)
      *
      * Example request:
-     * GET /api/users?userId=123
+     * GET /api/user/get?userId=123
      *
      */
     @GetMapping(Paths.GET_USER)
