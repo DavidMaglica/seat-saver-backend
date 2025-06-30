@@ -2,7 +2,7 @@ package fipu.diplomski.dmaglica.mobile.user
 
 import org.amshove.kluent.`should be`
 import org.amshove.kluent.`should be equal to`
-import org.amshove.kluent.`should not be equal to`
+import org.amshove.kluent.`should not be`
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentMatchers.anyString
@@ -51,7 +51,7 @@ class LoginTest : BaseUserServiceTest() {
 
         response.success `should be` true
         response.message `should be equal to` "User with email ${mockedUser.email} successfully logged in"
-        response.data `should not be equal to` null
+        response.data `should not be` null
         response.data `should be equal to` mockedUser.id
 
         verify(userRepository, times(1)).findByEmail(anyString())
