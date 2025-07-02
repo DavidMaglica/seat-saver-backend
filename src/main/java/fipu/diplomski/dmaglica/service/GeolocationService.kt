@@ -50,9 +50,10 @@ class GeolocationService(
     fun getNearbyCities(latitude: Double, longitude: Double): MutableList<String>? {
         val limit = 10
         val radius = 100
+        val minPopulation = 1000
 
         val request: HttpRequest? = HttpRequest.newBuilder()
-            .uri(URI.create("https://wft-geo-db.p.rapidapi.com/v1/geo/locations/$latitude%2B$longitude/nearbyCities?radius=$radius&limit=$limit"))
+            .uri(URI.create("https://wft-geo-db.p.rapidapi.com/v1/geo/locations/$latitude%2B$longitude/nearbyCities?radius=$radius&limit=$limit&minPopulation=$minPopulation"))
             .header("x-rapidapi-key", apiKey)
             .header("x-rapidapi-host", "wft-geo-db.p.rapidapi.com")
             .method("GET", HttpRequest.BodyPublishers.noBody())
@@ -61,7 +62,7 @@ class GeolocationService(
             HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString())
         } catch (e: Exception) {
             logger.error { "Failed to fetch geolocation. Error: ${e.message}" }
-            return null
+            return mutableListOf()
         }
 
         val responseBody = objectMapper.readTree(response.body())
