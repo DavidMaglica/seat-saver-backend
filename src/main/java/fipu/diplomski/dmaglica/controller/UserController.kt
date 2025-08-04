@@ -44,6 +44,7 @@ class UserController(private val userService: UserService) {
      * @param email The user's email address (must be unique)
      * @param username The desired username
      * @param password The user's password (will be hashed before storage)
+     * @param isOwner Indicates if the user is an owner (default false)
      * @return [DataResponse] containing:
      *         - success: Boolean indicating operation status
      *         - message: Descriptive status message
@@ -61,6 +62,7 @@ class UserController(private val userService: UserService) {
      *
      * @note Passwords are hashed using BCrypt before storage
      * @note Notification options are initialized with all services disabled
+     * @note The `isOwner` flag allows distinguishing between regular users and venue owners, also owners can only be created on the web application, all mobile users are registered as regular users
      *
      */
     @PostMapping(Paths.SIGNUP)
