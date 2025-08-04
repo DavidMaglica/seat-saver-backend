@@ -1,5 +1,6 @@
 package fipu.diplomski.dmaglica.mobile.user
 
+import fipu.diplomski.dmaglica.model.data.Role
 import org.amshove.kluent.`should be`
 import org.amshove.kluent.`should be equal to`
 import org.amshove.kluent.`should not be`
@@ -17,7 +18,7 @@ class SignupTest : BaseUserServiceTest() {
     fun `should return early if user already exists`() {
         `when`(userRepository.findByEmail(anyString())).thenReturn(mockedUser)
 
-        val response = userService.signup(mockedUser.email, mockedUser.username, mockedUser.password)
+        val response = userService.signup(mockedUser.email, mockedUser.username, mockedUser.password, false)
 
         response.success `should be equal to` false
         response.message `should be equal to` "User with email ${mockedUser.email} already exists"
@@ -31,7 +32,7 @@ class SignupTest : BaseUserServiceTest() {
         `when`(userRepository.findByEmail(anyString())).thenReturn(null)
         `when`(userRepository.save(any())).thenThrow(RuntimeException("Error while saving user"))
 
-        val response = userService.signup(mockedUser.email, mockedUser.username, mockedUser.password)
+        val response = userService.signup(mockedUser.email, mockedUser.username, mockedUser.password, false)
 
         response.success `should be equal to` false
         response.message `should be equal to` "Error while creating user. Please try again later."
@@ -49,7 +50,7 @@ class SignupTest : BaseUserServiceTest() {
         `when`(userRepository.save(any())).thenReturn(mockedUser)
         `when`(notificationOptionsRepository.save(any())).thenThrow(RuntimeException("Error while saving notification options"))
 
-        val response = userService.signup(mockedUser.email, mockedUser.username, mockedUser.password)
+        val response = userService.signup(mockedUser.email, mockedUser.username, mockedUser.password, false)
 
         response.success `should be equal to` false
         response.message `should be equal to` "Error while creating user notification options. Please try again later."
@@ -67,7 +68,7 @@ class SignupTest : BaseUserServiceTest() {
         `when`(userRepository.save(any())).thenReturn(mockedUser)
         `when`(notificationOptionsRepository.save(any())).thenReturn(mockedNotificationOptions)
 
-        val response = userService.signup(mockedUser.email, mockedUser.username, mockedUser.password)
+        val response = userService.signup(mockedUser.email, mockedUser.username, mockedUser.password, false)
 
         response.success `should be equal to` true
         response.message `should be equal to` "User with email ${mockedUser.email} successfully created"
@@ -83,7 +84,40 @@ class SignupTest : BaseUserServiceTest() {
         newUser.email `should be equal to` mockedUser.email
         newUser.username `should be equal to` mockedUser.username
         passwordEncoder.matches(mockedUser.password, newUser.password) `should be` true
-        newUser.roleId `should be equal to` mockedUser.roleId
+        newUser.roleId `should be equal to` Role.USER.ordinal
+        newNotificationOptions.userId `should be equal to` mockedUser.id
+        newNotificationOptions.emailNotificationsEnabled `should be equal to` mockedNotificationOptions.emailNotificationsEnabled
+        newNotificationOptions.pushNotificationsEnabled `should be equal to` mockedNotificationOptions.pushNotificationsEnabled
+        newNotificationOptions.locationServicesEnabled `should be equal to` mockedNotificationOptions.locationServicesEnabled
+
+        verify(userRepository, times(1)).findByEmail(mockedUser.email)
+        verify(userRepository, times(1)).save(any())
+        verify(notificationOptionsRepository, times(1)).save(any())
+        verifyNoMoreInteractions(userRepository, notificationOptionsRepository)
+    }
+
+    @Test
+    fun `should save user as owner if isOwner is true`() {
+        `when`(userRepository.findByEmail(anyString())).thenReturn(null)
+        `when`(userRepository.save(any())).thenReturn(mockedUser)
+        `when`(notificationOptionsRepository.save(any())).thenReturn(mockedNotificationOptions)
+
+        val response = userService.signup(mockedUser.email, mockedUser.username, mockedUser.password, true)
+
+        response.success `should be equal to` true
+        response.message `should be equal to` "User with email ${mockedUser.email} successfully created"
+        response.data `should not be` null
+        response.data `should be equal to` mockedUser.id
+
+        verify(userRepository).save(userEntityArgumentCaptor.capture())
+        verify(notificationOptionsRepository).save(notificationOptionsArgumentCaptor.capture())
+        val newUser = userEntityArgumentCaptor.value
+        val newNotificationOptions = notificationOptionsArgumentCaptor.value
+
+        newUser.email `should be equal to` mockedUser.email
+        newUser.username `should be equal to` mockedUser.username
+        passwordEncoder.matches(mockedUser.password, newUser.password) `should be` true
+        newUser.roleId `should be equal to` Role.OWNER.ordinal
         newNotificationOptions.userId `should be equal to` mockedUser.id
         newNotificationOptions.emailNotificationsEnabled `should be equal to` mockedNotificationOptions.emailNotificationsEnabled
         newNotificationOptions.pushNotificationsEnabled `should be equal to` mockedNotificationOptions.pushNotificationsEnabled

@@ -67,8 +67,9 @@ class UserController(private val userService: UserService) {
     fun signup(
         @RequestParam("email") email: String,
         @RequestParam("username") username: String,
-        @RequestParam("password") password: String
-    ): DataResponse<Int> = userService.signup(email, username, password)
+        @RequestParam("password") password: String,
+        @RequestParam("isOwner") isOwner: Boolean = false,
+    ): DataResponse<Int> = userService.signup(email, username, password, isOwner)
 
     /**
      * Authenticates a user and initiates a login session.

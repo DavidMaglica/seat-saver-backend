@@ -28,18 +28,20 @@ class UserService(
     }
 
     @Transactional
-    fun signup(email: String, username: String, password: String): DataResponse<Int> {
+    fun signup(email: String, username: String, password: String, isOwner: Boolean): DataResponse<Int> {
         userRepository.findByEmail(email)?.let {
             return DataResponse(false, "User with email $email already exists")
         }
 
         val hashedPassword = passwordEncoder.encode(password)
 
+        val role = if (isOwner) Role.OWNER else Role.USER
+
         val user = UserEntity().also {
             it.email = email
             it.username = username
             it.password = hashedPassword
-            it.roleId = Role.USER.ordinal
+            it.roleId = role.ordinal
         }
 
         try {
