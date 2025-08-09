@@ -82,6 +82,17 @@ class ReservationService(
         return reservationRepository.findByUserId(userId).map { it.toReservation() }
     }
 
+    @Transactional(readOnly = true)
+    fun getByOwner(ownerId: Int): List<ReservationEntity> {
+        val venues = venueRepository.findByOwnerId(ownerId)
+
+        if (venues.isEmpty()) return emptyList()
+
+        val venueIds = venues.map { it.id }
+
+        return reservationRepository.findByVenueIdIn(venueIds)
+    }
+
     @Transactional
     fun update(request: UpdateReservationRequest): BasicResponse {
         userRepository.findById(request.userId).orElseThrow {

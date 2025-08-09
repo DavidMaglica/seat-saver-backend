@@ -130,7 +130,7 @@ class UserService(
             return BasicResponse(false, "Error while updating email. Please try again later.")
         }
 
-        return BasicResponse(true, "Email updated to $newEmail successfully.")
+        return BasicResponse(true, "Email successfully updated to $newEmail.")
     }
 
     @Transactional
@@ -152,7 +152,7 @@ class UserService(
             return BasicResponse(false, "Error while updating username. Please try again later.")
         }
 
-        return BasicResponse(true, "Username successfully updated.")
+        return BasicResponse(true, "Username successfully updated to $newUsername.")
     }
 
     @Transactional

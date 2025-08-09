@@ -81,7 +81,7 @@ class UpdateEmailTest : BaseUserServiceTest() {
         val response = userService.updateEmail(mockedUser.id, NEW_EMAIL)
 
         response.success `should be` true
-        response.message `should be equal to` "Email updated to $NEW_EMAIL successfully."
+        response.message `should be equal to` "Email successfully updated to $NEW_EMAIL."
 
         verify(userRepository).save(userEntityArgumentCaptor.capture())
         val updatedUser = userEntityArgumentCaptor.value

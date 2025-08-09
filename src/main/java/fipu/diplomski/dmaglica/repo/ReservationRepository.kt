@@ -16,6 +16,7 @@ interface ReservationRepository : JpaRepository<ReservationEntity, Int> {
         first: LocalDateTime,
         second: LocalDateTime
     ): List<ReservationEntity>
+    fun findByVenueIdIn(venueIds: List<Int>): List<ReservationEntity>
 
     @Query(
         """

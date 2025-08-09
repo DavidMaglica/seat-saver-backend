@@ -4,6 +4,7 @@ import fipu.diplomski.dmaglica.model.data.Reservation
 import fipu.diplomski.dmaglica.model.request.CreateReservationRequest
 import fipu.diplomski.dmaglica.model.request.UpdateReservationRequest
 import fipu.diplomski.dmaglica.model.response.BasicResponse
+import fipu.diplomski.dmaglica.repo.entity.ReservationEntity
 import fipu.diplomski.dmaglica.service.ReservationService
 import fipu.diplomski.dmaglica.util.Paths
 import org.springframework.web.bind.annotation.*
@@ -61,6 +62,21 @@ class ReservationController(private val reservationService: ReservationService) 
     fun getReservations(
         @RequestParam("userId") userId: Int
     ): List<Reservation> = reservationService.getAll(userId)
+
+    /**
+     * Retrieves all reservations made by a specific owner.
+     *
+     * Returns an empty list if:
+     * - The owner doesn't exist
+     * - The owner has no reservations
+     *
+     * @param ownerId id of the owner to query
+     * @return List of [Reservation] objects (empty if none found)
+     */
+    @GetMapping(Paths.GET_RESERVATIONS_BY_OWNER)
+    fun getReservationsByOwner(
+        @RequestParam("ownerId") ownerId: Int
+    ): List<ReservationEntity> = reservationService.getByOwner(ownerId)
 
     /**
      * Updates an existing reservation after validating the request.
