@@ -13,12 +13,12 @@ import org.springframework.web.bind.annotation.*
  * REST controller for managing venue reservations.
  *
  * Provides endpoints for creating, retrieving, updating, and deleting reservations.
- * All endpoints are prefixed with `/api/reservations` (defined in [Paths.RESERVATION]).
+ * All endpoints are prefixed with `/api/reservations` (defined in [Paths.RESERVATIONS]).
  *
  * @property reservationService Service handling reservation business logic
  */
 @RestController
-@RequestMapping(Paths.RESERVATION)
+@RequestMapping(Paths.RESERVATIONS)
 class ReservationController(private val reservationService: ReservationService) {
 
     /**
@@ -41,8 +41,9 @@ class ReservationController(private val reservationService: ReservationService) 
      *   - success: true if booked successfully
      *   - message: Detailed status message
      * @throws fipu.diplomski.dmaglica.exception.VenueNotFoundException if venue doesn't exist
+     *
      */
-    @PostMapping(Paths.CREATE_RESERVATION)
+    @PostMapping
     fun createReservation(
         @RequestBody request: CreateReservationRequest
     ): BasicResponse = reservationService.create(request)
@@ -58,10 +59,10 @@ class ReservationController(private val reservationService: ReservationService) 
      * @return List of [Reservation] objects (empty if none found)
      *
      */
-    @GetMapping(Paths.GET_RESERVATIONS)
-    fun getReservations(
-        @RequestParam("userId") userId: Int
-    ): List<Reservation> = reservationService.getAll(userId)
+    @GetMapping(Paths.USER_RESERVATIONS)
+    fun getReservationsByUserId(
+        @PathVariable userId: Int
+    ): List<Reservation> = reservationService.getByUserId(userId)
 
     /**
      * Retrieves all reservations made by a specific owner.
@@ -71,12 +72,13 @@ class ReservationController(private val reservationService: ReservationService) 
      * - The owner has no reservations
      *
      * @param ownerId id of the owner to query
-     * @return List of [Reservation] objects (empty if none found)
+     * @return List of [ReservationEntity] DTO (empty if none found)
+     *
      */
-    @GetMapping(Paths.GET_RESERVATIONS_BY_OWNER)
+    @GetMapping(Paths.OWNER_RESERVATIONS)
     fun getReservationsByOwner(
-        @RequestParam("ownerId") ownerId: Int
-    ): List<ReservationEntity> = reservationService.getByOwner(ownerId)
+        @PathVariable ownerId: Int
+    ): List<Reservation> = reservationService.getByOwnerId(ownerId)
 
     /**
      * Updates an existing reservation after validating the request.
@@ -101,8 +103,9 @@ class ReservationController(private val reservationService: ReservationService) 
      * @throws fipu.diplomski.dmaglica.exception.UserNotFoundException if user doesn't exist
      * @throws fipu.diplomski.dmaglica.exception.ReservationNotFoundException if reservation doesn't exist
      * @throws fipu.diplomski.dmaglica.exception.VenueNotFoundException if venue doesn't exist
+     *
      */
-    @PatchMapping(Paths.UPDATE_RESERVATION)
+    @PatchMapping
     fun updateReservation(
         @RequestBody request: UpdateReservationRequest
     ): BasicResponse = reservationService.update(request)
@@ -128,8 +131,9 @@ class ReservationController(private val reservationService: ReservationService) 
      * @throws fipu.diplomski.dmaglica.exception.UserNotFoundException if user doesn't exist
      * @throws fipu.diplomski.dmaglica.exception.ReservationNotFoundException if reservation doesn't exist
      * @throws fipu.diplomski.dmaglica.exception.VenueNotFoundException if venue doesn't exist
+     *
      */
-    @DeleteMapping(Paths.DELETE_RESERVATION)
+    @DeleteMapping
     fun deleteReservation(
         @RequestParam("userId") userId: Int,
         @RequestParam("reservationId") reservationId: Int,

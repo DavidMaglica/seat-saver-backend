@@ -1,5 +1,8 @@
 package fipu.diplomski.dmaglica.service
 
+import fipu.diplomski.dmaglica.model.data.Venue
+import fipu.diplomski.dmaglica.model.data.VenueRating
+import fipu.diplomski.dmaglica.model.data.VenueType
 import fipu.diplomski.dmaglica.model.request.CreateVenueRequest
 import fipu.diplomski.dmaglica.model.request.UpdateVenueRequest
 import fipu.diplomski.dmaglica.model.response.BasicResponse
@@ -8,8 +11,8 @@ import fipu.diplomski.dmaglica.repo.*
 import fipu.diplomski.dmaglica.repo.entity.ReservationEntity
 import fipu.diplomski.dmaglica.repo.entity.VenueEntity
 import fipu.diplomski.dmaglica.repo.entity.VenueRatingEntity
-import fipu.diplomski.dmaglica.repo.entity.VenueTypeEntity
 import fipu.diplomski.dmaglica.util.getSurroundingHalfHours
+import fipu.diplomski.dmaglica.util.toDto
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.persistence.EntityNotFoundException
 import org.springframework.data.domain.*
@@ -35,7 +38,7 @@ class VenueService(
     }
 
     @Transactional(readOnly = true)
-    fun get(venueId: Int): VenueEntity {
+    fun get(venueId: Int): Venue {
         val venue: VenueEntity = venueRepository.findById(venueId).orElseThrow {
             EntityNotFoundException("Venue with id: $venueId not found.")
         }
@@ -56,11 +59,11 @@ class VenueService(
             venue.availableCapacity = venue.maximumCapacity
         }
 
-        return venue
+        return venue.toDto()
     }
 
     @Transactional(readOnly = true)
-    fun getAll(pageable: Pageable, searchQuery: String?, typeIds: List<Int>?): PagedResponse<VenueEntity> {
+    fun getAll(pageable: Pageable, searchQuery: String?, typeIds: List<Int>?): PagedResponse<Venue> {
         val (lowerBound, upperBound) = getSurroundingHalfHours(LocalDateTime.now())
         val venues = venueRepository.findFilteredVenues(
             pageable = pageable,
@@ -92,7 +95,7 @@ class VenueService(
      *
      */
     @Transactional(readOnly = true)
-    fun getNearbyVenues(pageable: Pageable, latitude: Double?, longitude: Double?): PagedResponse<VenueEntity> {
+    fun getNearbyVenues(pageable: Pageable, latitude: Double?, longitude: Double?): PagedResponse<Venue> {
         val currentTimestamp: LocalDateTime = LocalDateTime.now()
         val defaultLocation = "Zagreb"
         val (lowerBound, upperBound) = getSurroundingHalfHours(currentTimestamp)
@@ -135,7 +138,7 @@ class VenueService(
      *
      */
     @Transactional(readOnly = true)
-    fun getNewVenues(pageable: Pageable): PagedResponse<VenueEntity> {
+    fun getNewVenues(pageable: Pageable): PagedResponse<Venue> {
         val sortedPageable = PageRequest.of(
             pageable.pageNumber,
             pageable.pageSize,
@@ -168,7 +171,7 @@ class VenueService(
      *
      */
     @Transactional(readOnly = true)
-    fun getTrendingVenues(pageable: Pageable): PagedResponse<VenueEntity> {
+    fun getTrendingVenues(pageable: Pageable): PagedResponse<Venue> {
         val currentTimestamp: LocalDateTime = LocalDateTime.now()
         val (lowerBound, upperBound) = getSurroundingHalfHours(currentTimestamp)
 
@@ -205,7 +208,7 @@ class VenueService(
      *
      */
     @Transactional(readOnly = true)
-    fun getSuggestedVenues(pageable: Pageable): PagedResponse<VenueEntity> {
+    fun getSuggestedVenues(pageable: Pageable): PagedResponse<Venue> {
         val currentTimestamp: LocalDateTime = LocalDateTime.now()
         val (lowerBound, upperBound) = getSurroundingHalfHours(currentTimestamp)
 
@@ -218,15 +221,15 @@ class VenueService(
     fun getType(typeId: Int): String = venueTypeRepository.getReferenceById(typeId).type
 
     @Transactional(readOnly = true)
-    fun getVenueRating(venueId: Int): Double = venueRepository.findById(venueId)
+    fun getVenueAverageRating(venueId: Int): Double = venueRepository.findById(venueId)
         .orElseThrow { EntityNotFoundException("Venue with id: $venueId not found.") }.averageRating
 
     @Transactional(readOnly = true)
-    fun getAllRatings(venueId: Int): List<VenueRatingEntity> =
-        venueRatingRepository.findByVenueId(venueId).sortedByDescending { it.id }
+    fun getAllRatings(venueId: Int): List<VenueRating> =
+        venueRatingRepository.findByVenueId(venueId).sortedByDescending { it.id }.map { it.toDto() }
 
     @Transactional(readOnly = true)
-    fun getAllTypes(): List<VenueTypeEntity> = venueTypeRepository.findAll()
+    fun getAllTypes(): List<VenueType> = venueTypeRepository.findAll().map { it.toDto() }
 
     fun getVenueImages(venueId: Int): List<String> = imageService.getVenueImages(venueId)
 
@@ -375,7 +378,7 @@ class VenueService(
         page: Page<VenueEntity>,
         lowerBound: LocalDateTime,
         upperBound: LocalDateTime
-    ): PagedResponse<VenueEntity> {
+    ): PagedResponse<Venue> {
         if (page.isEmpty) return PagedResponse(
             content = emptyList(),
             page = page.number,
@@ -390,8 +393,9 @@ class VenueService(
             upperBound,
             page.content
         )
+        val mappedVenues = enrichedVenues.map { it.toDto() }
         return PagedResponse(
-            content = enrichedVenues,
+            content = mappedVenues,
             page = page.number,
             size = page.size,
             totalElements = page.totalElements,

@@ -36,9 +36,6 @@ class SupportController(
      *   - success: true if email was queued successfully
      *   - message: Delivery status notification
      *
-     * Example:
-     * POST /api/support/email?userEmail=user@example.com&subject=Help&body=Problem
-     *
      */
     @PostMapping(Paths.SEND_EMAIL)
     fun sendEmail(

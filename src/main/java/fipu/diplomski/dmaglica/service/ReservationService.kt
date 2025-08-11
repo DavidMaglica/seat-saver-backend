@@ -13,6 +13,7 @@ import fipu.diplomski.dmaglica.repo.VenueRepository
 import fipu.diplomski.dmaglica.repo.entity.ReservationEntity
 import fipu.diplomski.dmaglica.repo.entity.UserEntity
 import fipu.diplomski.dmaglica.util.getSurroundingHalfHours
+import fipu.diplomski.dmaglica.util.toDto
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Isolation
@@ -76,21 +77,21 @@ class ReservationService(
     }
 
     @Transactional(readOnly = true)
-    fun getAll(userId: Int): List<Reservation> {
+    fun getByUserId(userId: Int): List<Reservation> {
         userRepository.findById(userId).getOrElse { return emptyList() }
 
-        return reservationRepository.findByUserId(userId).map { it.toReservation() }
+        return reservationRepository.findByUserId(userId).map { it.toDto() }
     }
 
     @Transactional(readOnly = true)
-    fun getByOwner(ownerId: Int): List<ReservationEntity> {
+    fun getByOwnerId(ownerId: Int): List<Reservation> {
         val venues = venueRepository.findByOwnerId(ownerId)
 
         if (venues.isEmpty()) return emptyList()
 
         val venueIds = venues.map { it.id }
 
-        return reservationRepository.findByVenueIdIn(venueIds)
+        return reservationRepository.findByVenueIdIn(venueIds).map { it.toDto() }
     }
 
     @Transactional
@@ -151,14 +152,6 @@ class ReservationService(
         return BasicResponse(true, "Reservation deleted successfully.")
     }
 
-    private fun ReservationEntity.toReservation() = Reservation(
-        id = this.id,
-        userId = this.userId,
-        venueId = this.venueId,
-        datetime = this.datetime,
-        numberOfGuests = this.numberOfGuests
-    )
-
     private fun isRequestValid(request: UpdateReservationRequest): Boolean =
         (request.numberOfPeople?.let { it > 0 } == true) || request.reservationDate != null
 
@@ -167,6 +160,6 @@ class ReservationService(
         reservation: ReservationEntity,
     ): Boolean =
         (request.numberOfPeople != null && request.numberOfPeople != reservation.numberOfGuests) ||
-                (request.reservationDate != null && request.reservationDate != reservation.datetime) ||
+                (request.reservationDate != null && !request.reservationDate.isEqual(reservation.datetime)) ||
                 (request.numberOfPeople != null && request.numberOfPeople != reservation.numberOfGuests)
 }

@@ -10,6 +10,7 @@ import fipu.diplomski.dmaglica.repo.NotificationOptionsRepository
 import fipu.diplomski.dmaglica.repo.UserRepository
 import fipu.diplomski.dmaglica.repo.entity.NotificationOptionsEntity
 import fipu.diplomski.dmaglica.repo.entity.UserEntity
+import fipu.diplomski.dmaglica.util.toDto
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.stereotype.Service
@@ -87,13 +88,7 @@ class UserService(
     fun getNotificationOptions(userId: Int): NotificationOptions? {
         val user = userRepository.findById(userId).getOrElse { return null }
 
-        val notificationOptions = notificationOptionsRepository.findByUserId(user.id)
-
-        return NotificationOptions(
-            pushNotificationsTurnedOn = notificationOptions.pushNotificationsEnabled,
-            emailNotificationsTurnedOn = notificationOptions.emailNotificationsEnabled,
-            locationServicesTurnedOn = notificationOptions.locationServicesEnabled,
-        )
+        return notificationOptionsRepository.findByUserId(user.id).toDto()
     }
 
     @Transactional(readOnly = true)
@@ -250,9 +245,9 @@ class UserService(
 
         val notificationOptions = notificationOptionsRepository.findByUserId(user.id).let {
             NotificationOptions(
-                pushNotificationsTurnedOn = it.pushNotificationsEnabled,
-                emailNotificationsTurnedOn = it.emailNotificationsEnabled,
-                locationServicesTurnedOn = it.locationServicesEnabled,
+                isPushNotificationsEnabled = it.pushNotificationsEnabled,
+                isEmailNotificationsEnabled = it.emailNotificationsEnabled,
+                isLocationServicesEnabled = it.locationServicesEnabled,
             )
         }
 

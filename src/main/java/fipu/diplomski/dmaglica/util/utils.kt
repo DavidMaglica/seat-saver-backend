@@ -67,5 +67,3 @@ fun getSurroundingHalfHours(time: LocalDateTime): Pair<LocalDateTime, LocalDateT
 
     return previous to next
 }
-
-
