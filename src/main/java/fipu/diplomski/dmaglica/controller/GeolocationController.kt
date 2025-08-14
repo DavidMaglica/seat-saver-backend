@@ -3,7 +3,6 @@ package fipu.diplomski.dmaglica.controller
 import fipu.diplomski.dmaglica.service.GeolocationService
 import fipu.diplomski.dmaglica.util.Paths
 import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
@@ -17,7 +16,6 @@ import org.springframework.web.bind.annotation.RestController
  * @see GeolocationService for the underlying geolocation operations
  */
 @RestController
-@RequestMapping(Paths.GEOLOCATION)
 class GeolocationController(
     private val geolocationService: GeolocationService
 ) {

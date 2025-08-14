@@ -36,7 +36,7 @@ class UserService(
 
         val hashedPassword = passwordEncoder.encode(password)
 
-        val role = if (isOwner) Role.OWNER else Role.USER
+        val role = if (isOwner) Role.OWNER else Role.CUSTOMER
 
         val user = UserEntity().also {
             it.email = email
@@ -177,18 +177,18 @@ class UserService(
     @Transactional
     fun updateNotificationOptions(
         userId: Int,
-        pushNotificationsTurnedOn: Boolean,
-        emailNotificationsTurnedOn: Boolean,
-        locationServicesTurnedOn: Boolean
+        isPushNotificationsEnabled: Boolean,
+        isEmailNotificationsEnabled: Boolean,
+        isLocationServicesEnabled: Boolean
     ): BasicResponse {
         val user = userRepository.findById(userId).getOrElse {
             return BasicResponse(false, "User not found.")
         }
 
         val notificationOptions = notificationOptionsRepository.findByUserId(user.id).apply {
-            pushNotificationsEnabled = pushNotificationsTurnedOn
-            emailNotificationsEnabled = emailNotificationsTurnedOn
-            locationServicesEnabled = locationServicesTurnedOn
+            pushNotificationsEnabled = isPushNotificationsEnabled
+            emailNotificationsEnabled = isEmailNotificationsEnabled
+            locationServicesEnabled = isLocationServicesEnabled
         }
 
         try {
@@ -260,5 +260,26 @@ class UserService(
             lastKnownLatitude = user.lastKnownLatitude,
             lastKnownLongitude = user.lastKnownLongitude,
         )
+    }
+
+    @Transactional(readOnly = true)
+    fun getUsersByIds(userIds: List<Int>): List<User> {
+        if (userIds.isEmpty()) {
+            return emptyList()
+        }
+
+        val users: List<UserEntity> = userRepository.findByIdIn(userIds)
+
+        return users.map { user ->
+            User(
+                id = user.id,
+                username = user.username,
+                email = user.email,
+                notificationOptions = null,
+                role = Role.entries[user.roleId],
+                lastKnownLatitude = user.lastKnownLatitude,
+                lastKnownLongitude = user.lastKnownLongitude
+            )
+        }
     }
 }

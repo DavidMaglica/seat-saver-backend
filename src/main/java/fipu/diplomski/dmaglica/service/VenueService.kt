@@ -73,6 +73,13 @@ class VenueService(
         return venuesToPagedResponse(venues, lowerBound, upperBound)
     }
 
+    @Transactional(readOnly = true)
+    fun getByOwner(ownerId: Int, pageable: Pageable): PagedResponse<Venue> {
+        val (lowerBound, upperBound) = getSurroundingHalfHours(LocalDateTime.now())
+        val venues = venueRepository.findByOwnerId(ownerId, pageable)
+        return venuesToPagedResponse(venues, lowerBound, upperBound)
+    }
+
     /**
      * Retrieves venues near specified coordinates with real-time availability.
      *
@@ -313,7 +320,7 @@ class VenueService(
 
     @Transactional
     fun rate(venueId: Int, userRating: Double, userId: Int, comment: String?): BasicResponse {
-        if (userRating < 0.5 || userRating > 5.0) return BasicResponse(false, "Rating must be between 0.5 and 5.")
+        if (userRating !in 0.5..5.0) return BasicResponse(false, "Rating must be between 0.5 and 5.")
 
         val username = userRepository.findById(userId).getOrElse {
             logger.error { "User with id $userId not found." }
@@ -406,7 +413,6 @@ class VenueService(
     private fun validateCreateRequest(request: CreateVenueRequest): BasicResponse? = when {
         request.name.isBlank() -> BasicResponse(false, "Name cannot be empty.")
         request.location.isBlank() -> BasicResponse(false, "Location cannot be empty.")
-        request.description.isBlank() -> BasicResponse(false, "Description cannot be empty.")
         request.workingHours.isBlank() -> BasicResponse(false, "Working hours cannot be empty.")
         request.maximumCapacity <= 0 -> BasicResponse(false, "Maximum capacity must be positive.")
         request.typeId <= 0 -> BasicResponse(false, "Invalid venue type id.")

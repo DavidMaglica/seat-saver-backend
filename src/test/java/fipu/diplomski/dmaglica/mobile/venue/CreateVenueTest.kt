@@ -48,18 +48,6 @@ class CreateVenueTest : BaseVenueServiceTest() {
     }
 
     @Test
-    fun `should return failing response if venue description is empty`() {
-        val invalidRequest = request.copy(description = "")
-
-        val response = venueService.create(invalidRequest)
-
-        response.success `should be equal to` false
-        response.message `should be equal to` "Description cannot be empty."
-
-        verifyNoInteractions(venueRepository)
-    }
-
-    @Test
     fun `should return failing response if venue working hours are empty`() {
         val invalidRequest = request.copy(workingHours = "")
 

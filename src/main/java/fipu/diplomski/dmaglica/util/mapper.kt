@@ -26,7 +26,7 @@ fun VenueEntity.toDto() = Venue(
     availableCapacity = this.availableCapacity,
     averageRating = this.averageRating,
     venueTypeId = this.venueTypeId,
-    description = this.description,
+    description = this.description ?: "",
 )
 
 fun VenueRatingEntity.toDto() = VenueRating(

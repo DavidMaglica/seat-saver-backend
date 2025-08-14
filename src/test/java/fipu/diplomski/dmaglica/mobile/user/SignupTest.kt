@@ -84,7 +84,7 @@ class SignupTest : BaseUserServiceTest() {
         newUser.email `should be equal to` mockedUser.email
         newUser.username `should be equal to` mockedUser.username
         passwordEncoder.matches(mockedUser.password, newUser.password) `should be` true
-        newUser.roleId `should be equal to` Role.USER.ordinal
+        newUser.roleId `should be equal to` Role.CUSTOMER.ordinal
         newNotificationOptions.userId `should be equal to` mockedUser.id
         newNotificationOptions.emailNotificationsEnabled `should be equal to` mockedNotificationOptions.emailNotificationsEnabled
         newNotificationOptions.pushNotificationsEnabled `should be equal to` mockedNotificationOptions.pushNotificationsEnabled

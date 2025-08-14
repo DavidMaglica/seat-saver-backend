@@ -130,16 +130,13 @@ class ReservationService(
     }
 
     @Transactional
-    fun delete(userId: Int, reservationId: Int, venueId: Int): BasicResponse {
+    fun delete(userId: Int, reservationId: Int): BasicResponse {
         userRepository.findById(userId).orElseThrow {
             throw UserNotFoundException("User with id $userId not found.")
         }
 
         reservationRepository.findById(reservationId).orElseThrow {
             ReservationNotFoundException("Reservation with id $reservationId not found")
-        }
-        venueRepository.findById(venueId).orElseThrow {
-            VenueNotFoundException("Venue with id $venueId not found")
         }
 
         try {

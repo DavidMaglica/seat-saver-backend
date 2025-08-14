@@ -54,7 +54,7 @@ abstract class BaseUserServiceTest {
         password = "password"
         lastKnownLatitude = 0.0
         lastKnownLongitude = 0.0
-        roleId = Role.USER.ordinal
+        roleId = Role.CUSTOMER.ordinal
     }
 
     protected val mockedUserWithEncryptedPassword = UserEntity().apply {

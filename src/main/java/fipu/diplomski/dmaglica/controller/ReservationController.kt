@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.*
  * @property reservationService Service handling reservation business logic
  */
 @RestController
-@RequestMapping(Paths.RESERVATIONS)
 class ReservationController(private val reservationService: ReservationService) {
 
     /**
@@ -43,7 +42,7 @@ class ReservationController(private val reservationService: ReservationService) 
      * @throws fipu.diplomski.dmaglica.exception.VenueNotFoundException if venue doesn't exist
      *
      */
-    @PostMapping
+    @PostMapping(Paths.RESERVATIONS)
     fun createReservation(
         @RequestBody request: CreateReservationRequest
     ): BasicResponse = reservationService.create(request)
@@ -105,7 +104,7 @@ class ReservationController(private val reservationService: ReservationService) 
      * @throws fipu.diplomski.dmaglica.exception.VenueNotFoundException if venue doesn't exist
      *
      */
-    @PatchMapping
+    @PatchMapping(Paths.RESERVATIONS)
     fun updateReservation(
         @RequestBody request: UpdateReservationRequest
     ): BasicResponse = reservationService.update(request)
@@ -120,9 +119,8 @@ class ReservationController(private val reservationService: ReservationService) 
      *
      * @note: The reservation must belong to the user making the request.
      *
-     * @param userId id of the user making the cancellation request
+     * @param userId id of the user making the cancellation request (used for validation)
      * @param reservationId id of the reservation to cancel
-     * @param venueId id of the related venue (for validation)
      * @return BasicResponse with:
      *   - success: true if deletion succeeded
      *   - message: Detailed status including:
@@ -133,10 +131,9 @@ class ReservationController(private val reservationService: ReservationService) 
      * @throws fipu.diplomski.dmaglica.exception.VenueNotFoundException if venue doesn't exist
      *
      */
-    @DeleteMapping
+    @DeleteMapping(Paths.RESERVATIONS)
     fun deleteReservation(
         @RequestParam("userId") userId: Int,
         @RequestParam("reservationId") reservationId: Int,
-        @RequestParam("venueId") venueId: Int
-    ): BasicResponse = reservationService.delete(userId, reservationId, venueId)
+    ): BasicResponse = reservationService.delete(userId, reservationId)
 }

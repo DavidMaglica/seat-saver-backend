@@ -46,7 +46,6 @@ import org.springframework.web.multipart.MultipartFile
  * @see PagedResponse for pagination details
  */
 @RestController
-@RequestMapping(Paths.VENUES)
 class VenueController(
     private val venueService: VenueService
 ) {
@@ -99,11 +98,11 @@ class VenueController(
      * @apiNote The availability window is calculated as 30 minutes before/after current time
      *
      */
-    @GetMapping
+    @GetMapping(Paths.VENUES)
     fun getVenues(
-        @RequestParam("category", required = false) category: String?,
         @RequestParam("page", defaultValue = "0") page: Int,
         @RequestParam("size", defaultValue = "20") size: Int,
+        @RequestParam("category", required = false) category: String?,
         @RequestParam("searchQuery", required = false) searchQuery: String? = null,
         @RequestParam("typeIds", required = false) typeIds: List<Int>? = null,
         @RequestParam("latitude", required = false) latitude: Double? = null,
@@ -118,6 +117,13 @@ class VenueController(
             else -> throw IllegalArgumentException("Unsupported venue category.")
         }
     }
+
+    @GetMapping(Paths.VENUE_BY_OWNER)
+    fun getVenuesByOwner(
+        @PathVariable ownerId: Int,
+        @RequestParam("page", defaultValue = "0") page: Int,
+        @RequestParam("size", defaultValue = "20") size: Int,
+    ): PagedResponse<Venue> = venueService.getByOwner(ownerId, PageRequest.of(page, size))
 
     /**
      * Retrieves a venue type by its id.
@@ -224,7 +230,7 @@ class VenueController(
      * @warning This operation is transactional - failure will roll back all changes
      *
      */
-    @PostMapping
+    @PostMapping(Paths.VENUES)
     fun createVenue(
         @RequestBody request: CreateVenueRequest,
     ): BasicResponse = venueService.create(request)

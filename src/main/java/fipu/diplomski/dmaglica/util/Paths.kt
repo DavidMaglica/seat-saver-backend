@@ -8,6 +8,7 @@ class Paths {
         const val SIGNUP = "$USERS/signup"
         const val LOGIN = "$USERS/login"
         const val USER_BY_ID = "$USERS/{userId}"
+        const val USERS_BY_IDS = "$USERS/by-ids"
         const val USER_NOTIFICATIONS = "$USER_BY_ID/notifications"
         const val USER_LOCATION = "$USER_BY_ID/location"
         const val UPDATE_EMAIL = "$USER_BY_ID/email"
@@ -18,6 +19,7 @@ class Paths {
 
         const val VENUES = "$API_V1/venues"
         const val VENUE_BY_ID = "$VENUES/{venueId}"
+        const val VENUE_BY_OWNER = "$VENUES/owner/{ownerId}"
         const val VENUE_IMAGES = "$VENUE_BY_ID/venue-images"
         const val MENU_IMAGES = "$VENUE_BY_ID/menu-images"
         const val VENUE_AVERAGE_RATING = "$VENUE_BY_ID/average-rating"

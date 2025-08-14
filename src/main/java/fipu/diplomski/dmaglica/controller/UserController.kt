@@ -35,7 +35,6 @@ import org.springframework.web.bind.annotation.*
  * @see UserLocation for user location model details
  */
 @RestController
-@RequestMapping(Paths.USERS)
 class UserController(private val userService: UserService) {
 
     /**
@@ -210,9 +209,9 @@ class UserController(private val userService: UserService) {
      * Updates a user's notification preferences and service settings.
      *
      * @param userId The id of the user to update
-     * @param pushNotificationsTurnedOn Whether push notifications should be enabled
-     * @param emailNotificationsTurnedOn Whether email notifications should be enabled
-     * @param locationServicesTurnedOn Whether location services should be enabled
+     * @param isPushNotificationsEnabled Whether push notifications should be enabled
+     * @param isEmailNotificationsEnabled Whether email notifications should be enabled
+     * @param isLocationServicesEnabled Whether location services should be enabled
      * @return [BasicResponse] indicating operation status with success flag and message
      *
      * Update process:
@@ -232,14 +231,14 @@ class UserController(private val userService: UserService) {
     @PatchMapping(Paths.UPDATE_NOTIFICATIONS)
     fun updateUserNotificationOptions(
         @PathVariable userId: Int,
-        @RequestParam("pushNotificationsTurnedOn") pushNotificationsTurnedOn: Boolean,
-        @RequestParam("emailNotificationsTurnedOn") emailNotificationsTurnedOn: Boolean,
-        @RequestParam("locationServicesTurnedOn") locationServicesTurnedOn: Boolean
+        @RequestParam("isPushNotificationsEnabled") isPushNotificationsEnabled: Boolean,
+        @RequestParam("isEmailNotificationsEnabled") isEmailNotificationsEnabled: Boolean,
+        @RequestParam("isLocationServicesEnabled") isLocationServicesEnabled: Boolean
     ): BasicResponse = userService.updateNotificationOptions(
         userId,
-        pushNotificationsTurnedOn,
-        emailNotificationsTurnedOn,
-        locationServicesTurnedOn
+        isPushNotificationsEnabled,
+        isEmailNotificationsEnabled,
+        isLocationServicesEnabled
     )
 
     /**
@@ -301,5 +300,9 @@ class UserController(private val userService: UserService) {
      */
     @GetMapping(Paths.USER_BY_ID)
     fun getUser(@PathVariable userId: Int): User? = userService.getUser(userId)
+
+    @GetMapping(Paths.USERS_BY_IDS)
+    fun getUsersByIds(@RequestParam("userIds") userIds: List<Int>): List<User> =
+        userService.getUsersByIds(userIds)
 
 }

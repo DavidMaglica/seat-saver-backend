@@ -113,7 +113,7 @@ abstract class BaseVenueServiceTest {
             this.password = "password"
             this.lastKnownLatitude = 0.0
             this.lastKnownLongitude = 0.0
-            this.roleId = Role.USER.ordinal
+            this.roleId = Role.CUSTOMER.ordinal
         }
 
     protected fun createReservation(

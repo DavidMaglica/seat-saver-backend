@@ -9,5 +9,5 @@ data class Venue(
     val availableCapacity: Int,
     val averageRating: Double,
     val venueTypeId: Int,
-    val description: String,
+    val description: String?,
 )

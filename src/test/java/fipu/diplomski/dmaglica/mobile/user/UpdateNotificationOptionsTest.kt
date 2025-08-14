@@ -19,9 +19,9 @@ class UpdateNotificationOptionsTest : BaseUserServiceTest() {
 
         val response = userService.updateNotificationOptions(
             mockedUser.id,
-            pushNotificationsTurnedOn = true,
-            emailNotificationsTurnedOn = true,
-            locationServicesTurnedOn = true
+            isPushNotificationsEnabled = true,
+            isEmailNotificationsEnabled = true,
+            isLocationServicesEnabled = true
         )
 
         response.success `should be` false
@@ -40,9 +40,9 @@ class UpdateNotificationOptionsTest : BaseUserServiceTest() {
 
         val response = userService.updateNotificationOptions(
             mockedUser.id,
-            pushNotificationsTurnedOn = false,
-            emailNotificationsTurnedOn = false,
-            locationServicesTurnedOn = false
+            isPushNotificationsEnabled = false,
+            isEmailNotificationsEnabled = false,
+            isLocationServicesEnabled = false
         )
 
         response.success `should be` false
@@ -61,9 +61,9 @@ class UpdateNotificationOptionsTest : BaseUserServiceTest() {
 
         val response = userService.updateNotificationOptions(
             mockedUser.id,
-            pushNotificationsTurnedOn = true,
-            emailNotificationsTurnedOn = false,
-            locationServicesTurnedOn = false
+            isPushNotificationsEnabled = true,
+            isEmailNotificationsEnabled = false,
+            isLocationServicesEnabled = false
         )
 
         response.success `should be` true
@@ -88,9 +88,9 @@ class UpdateNotificationOptionsTest : BaseUserServiceTest() {
 
         val response = userService.updateNotificationOptions(
             mockedUser.id,
-            pushNotificationsTurnedOn = true,
-            emailNotificationsTurnedOn = true,
-            locationServicesTurnedOn = true
+            isPushNotificationsEnabled = true,
+            isEmailNotificationsEnabled = true,
+            isLocationServicesEnabled = true
         )
 
         response.success `should be` true

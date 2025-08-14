@@ -11,6 +11,7 @@ interface VenueRepository : JpaRepository<VenueEntity, Int> {
     fun findByLocation(location: String, pageable: Pageable): Page<VenueEntity>
     fun findByLocationIn(locations: List<String>, pageable: Pageable): Page<VenueEntity>
     fun findByOwnerId(ownerId: Int): List<VenueEntity>
+    fun findByOwnerId(ownerId: Int, pageable: Pageable): Page<VenueEntity>
 
     @Query(
         """
