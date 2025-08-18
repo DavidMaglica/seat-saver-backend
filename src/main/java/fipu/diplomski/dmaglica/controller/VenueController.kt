@@ -7,6 +7,7 @@ import fipu.diplomski.dmaglica.model.data.VenueType
 import fipu.diplomski.dmaglica.model.request.CreateVenueRequest
 import fipu.diplomski.dmaglica.model.request.UpdateVenueRequest
 import fipu.diplomski.dmaglica.model.response.BasicResponse
+import fipu.diplomski.dmaglica.model.response.DataResponse
 import fipu.diplomski.dmaglica.model.response.PagedResponse
 import fipu.diplomski.dmaglica.repo.entity.VenueEntity
 import fipu.diplomski.dmaglica.repo.entity.VenueRatingEntity
@@ -165,6 +166,21 @@ class VenueController(
         @PathVariable venueId: Int,
     ): List<VenueRating> = venueService.getAllRatings(venueId)
 
+    @GetMapping(Paths.OVERALL_RATING)
+    fun getOverallRating(
+        @PathVariable ownerId: Int,
+    ): Double = venueService.getOverallRating(ownerId)
+
+    @GetMapping(Paths.RATINGS_COUNT)
+    fun getRatingsCount(
+        @PathVariable ownerId: Int,
+    ): Int = venueService.getRatingsCount(ownerId)
+
+    @GetMapping(Paths.VENUE_UTILISATION_RATE)
+    fun getVenueUtilisationRate(
+        @PathVariable ownerId: Int,
+    ): Double = venueService.getVenueUtilisationRate(ownerId)
+
     /**
      * Retrieves all available venue types.
      *
@@ -174,6 +190,11 @@ class VenueController(
      */
     @GetMapping(Paths.ALL_VENUE_TYPES)
     fun getAllVenueTypes(): List<VenueType> = venueService.getAllTypes()
+
+    @GetMapping(Paths.VENUE_HEADER_IMAGE)
+    fun getVenueHeaderImage(
+        @PathVariable venueId: Int,
+    ): DataResponse<String?> = venueService.getVenueHeaderImage(venueId)
 
     /**
      * Retrieves all venue images for a specific venue as Base64 encoded strings.

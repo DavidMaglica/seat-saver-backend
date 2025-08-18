@@ -16,7 +16,16 @@ interface ReservationRepository : JpaRepository<ReservationEntity, Int> {
         first: LocalDateTime,
         second: LocalDateTime
     ): List<ReservationEntity>
+    fun findByVenueIdInAndDatetimeBetween(
+        venueIds: List<Int>,
+        first: LocalDateTime,
+        second: LocalDateTime
+    ): List<ReservationEntity>
+
     fun findByVenueIdIn(venueIds: List<Int>): List<ReservationEntity>
+    fun countByVenueId(venueId: Int): Int
+    fun countByVenueIdIn(venueIds: List<Int>): Int
+    fun countByVenueIdInAndDatetimeBetween(venueIds: List<Int>, first: LocalDateTime, second: LocalDateTime): Int
 
     @Query(
         """

@@ -8,6 +8,7 @@ import fipu.diplomski.dmaglica.repo.entity.ReservationEntity
 import fipu.diplomski.dmaglica.service.ReservationService
 import fipu.diplomski.dmaglica.util.Paths
 import org.springframework.web.bind.annotation.*
+import java.time.LocalDateTime
 
 /**
  * REST controller for managing venue reservations.
@@ -79,6 +80,19 @@ class ReservationController(private val reservationService: ReservationService) 
         @PathVariable ownerId: Int
     ): List<Reservation> = reservationService.getByOwnerId(ownerId)
 
+    @GetMapping(Paths.RESERVATION_BY_ID)
+    fun getReservationById(
+        @PathVariable reservationId: Int
+    ): Reservation? = reservationService.getById(reservationId)
+
+    @GetMapping(Paths.RESERVATIONS_COUNT)
+    fun getReservationsCount(
+        @PathVariable ownerId: Int,
+        @RequestParam(required = false, name = "venueId") venueId: Int? = null,
+        @RequestParam(required = false, name = "startDate") startDate: LocalDateTime? = null,
+        @RequestParam(required = false, name = "endDate") endDate: LocalDateTime? = null
+    ): Int = reservationService.getReservationsCount(ownerId, venueId, startDate, endDate)
+
     /**
      * Updates an existing reservation after validating the request.
      *
@@ -104,10 +118,11 @@ class ReservationController(private val reservationService: ReservationService) 
      * @throws fipu.diplomski.dmaglica.exception.VenueNotFoundException if venue doesn't exist
      *
      */
-    @PatchMapping(Paths.RESERVATIONS)
+    @PatchMapping(Paths.RESERVATION_BY_ID)
     fun updateReservation(
+        @PathVariable reservationId: Int,
         @RequestBody request: UpdateReservationRequest
-    ): BasicResponse = reservationService.update(request)
+    ): BasicResponse = reservationService.update(reservationId, request)
 
     /**
      * Cancels and deletes an existing reservation after validation.
@@ -119,7 +134,6 @@ class ReservationController(private val reservationService: ReservationService) 
      *
      * @note: The reservation must belong to the user making the request.
      *
-     * @param userId id of the user making the cancellation request (used for validation)
      * @param reservationId id of the reservation to cancel
      * @return BasicResponse with:
      *   - success: true if deletion succeeded
@@ -131,9 +145,8 @@ class ReservationController(private val reservationService: ReservationService) 
      * @throws fipu.diplomski.dmaglica.exception.VenueNotFoundException if venue doesn't exist
      *
      */
-    @DeleteMapping(Paths.RESERVATIONS)
+    @DeleteMapping(Paths.RESERVATION_BY_ID)
     fun deleteReservation(
-        @RequestParam("userId") userId: Int,
-        @RequestParam("reservationId") reservationId: Int,
-    ): BasicResponse = reservationService.delete(userId, reservationId)
+        @PathVariable reservationId: Int,
+    ): BasicResponse = reservationService.delete(reservationId)
 }

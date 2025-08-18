@@ -60,10 +60,7 @@ fun getSurroundingHalfHours(time: LocalDateTime): Pair<LocalDateTime, LocalDateT
         else -> truncated.withMinute(30)
     }
 
-    val next = when {
-        minute < 30 -> truncated.withMinute(30)
-        else -> truncated.plusHours(1).withMinute(0)
-    }
+    val next = previous.plusHours(1)
 
     return previous to next
 }

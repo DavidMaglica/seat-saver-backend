@@ -6,6 +6,7 @@ import fipu.diplomski.dmaglica.model.data.VenueType
 import fipu.diplomski.dmaglica.model.request.CreateVenueRequest
 import fipu.diplomski.dmaglica.model.request.UpdateVenueRequest
 import fipu.diplomski.dmaglica.model.response.BasicResponse
+import fipu.diplomski.dmaglica.model.response.DataResponse
 import fipu.diplomski.dmaglica.model.response.PagedResponse
 import fipu.diplomski.dmaglica.repo.*
 import fipu.diplomski.dmaglica.repo.entity.ReservationEntity
@@ -236,7 +237,44 @@ class VenueService(
         venueRatingRepository.findByVenueId(venueId).sortedByDescending { it.id }.map { it.toDto() }
 
     @Transactional(readOnly = true)
+    fun getOverallRating(ownerId: Int): Double {
+        val ratings = venueRepository.findByOwnerId(ownerId).map { it.averageRating }
+        if (ratings.isEmpty()) return 0.0
+
+        return ratings.average().takeIf { it.isFinite() } ?: 0.0
+    }
+
+    @Transactional(readOnly = true)
+    fun getRatingsCount(ownerId: Int): Int {
+        val venues = venueRepository.findByOwnerId(ownerId)
+        if (venues.isEmpty()) return 0
+
+        val venueIds = venues.map { it.id }
+        return venueRatingRepository.countByVenueIdIn(venueIds)
+    }
+
+    @Transactional(readOnly = true)
+    fun getVenueUtilisationRate(ownerId: Int): Double {
+        val currentTimestamp: LocalDateTime = LocalDateTime.now()
+        val (lowerBound, upperBound) = getSurroundingHalfHours(currentTimestamp)
+        val venues = venueRepository.findByOwnerId(ownerId)
+        if (venues.isEmpty()) return 0.0
+
+        val venueIds = venues.map { it.id }
+        val totalReservations =
+            reservationRepository.findByVenueIdInAndDatetimeBetween(venueIds, lowerBound, upperBound)
+                .sumOf { it.numberOfGuests }
+
+        if (totalReservations == 0) return 0.0
+
+        val totalCapacity = venues.sumOf { it.maximumCapacity }
+        return (totalReservations.toDouble() / totalCapacity) * 100
+    }
+
+    @Transactional(readOnly = true)
     fun getAllTypes(): List<VenueType> = venueTypeRepository.findAll().map { it.toDto() }
+
+    fun getVenueHeaderImage(venueId: Int): DataResponse<String?> = imageService.getVenueHeaderImage(venueId)
 
     fun getVenueImages(venueId: Int): List<String> = imageService.getVenueImages(venueId)
 
