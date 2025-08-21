@@ -381,7 +381,7 @@ class VenueService(
     fun rate(venueId: Int, userRating: Double, userId: Int, comment: String?): BasicResponse {
         if (userRating !in LOWEST_ALLOWED_RATING..HIGHEST_ALLOWED_RATING) return BasicResponse(
             false,
-            "Rating must be between 1.0 and 5."
+            "Rating must be between 1.0 and 5.0."
         )
 
         val username = userRepository.findById(userId).getOrElse {
