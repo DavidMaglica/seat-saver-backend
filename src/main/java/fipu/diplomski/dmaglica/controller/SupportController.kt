@@ -4,7 +4,6 @@ import fipu.diplomski.dmaglica.model.response.BasicResponse
 import fipu.diplomski.dmaglica.service.SupportService
 import fipu.diplomski.dmaglica.util.Paths
 import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
@@ -17,7 +16,6 @@ import org.springframework.web.bind.annotation.RestController
  * @property supportService The service handling support-related business logic
  */
 @RestController
-@RequestMapping(Paths.SUPPORT)
 class SupportController(
     private val supportService: SupportService
 ) {
@@ -35,9 +33,6 @@ class SupportController(
      * @return BasicResponse with:
      *   - success: true if email was queued successfully
      *   - message: Delivery status notification
-     *
-     * Example:
-     * POST /api/support/email?userEmail=user@example.com&subject=Help&body=Problem
      *
      */
     @PostMapping(Paths.SEND_EMAIL)

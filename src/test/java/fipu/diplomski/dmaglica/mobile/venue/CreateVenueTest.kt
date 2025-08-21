@@ -1,5 +1,6 @@
 package fipu.diplomski.dmaglica.mobile.venue
 
+import fipu.diplomski.dmaglica.model.data.Role
 import fipu.diplomski.dmaglica.model.request.CreateVenueRequest
 import org.amshove.kluent.`should be equal to`
 import org.junit.jupiter.api.Test
@@ -8,13 +9,17 @@ import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.test.context.ActiveProfiles
+import java.util.*
 
 @ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
 class CreateVenueTest : BaseVenueServiceTest() {
 
     private val venue = createVenue()
+    private val user = createUser()
+    private val owner = createUser().also { it.roleId = Role.OWNER.ordinal }
     private val request = CreateVenueRequest(
+        venue.ownerId,
         venue.name,
         venue.location,
         venue.description,
@@ -43,18 +48,6 @@ class CreateVenueTest : BaseVenueServiceTest() {
 
         response.success `should be equal to` false
         response.message `should be equal to` "Location cannot be empty."
-
-        verifyNoInteractions(venueRepository)
-    }
-
-    @Test
-    fun `should return failing response if venue description is empty`() {
-        val invalidRequest = request.copy(description = "")
-
-        val response = venueService.create(invalidRequest)
-
-        response.success `should be equal to` false
-        response.message `should be equal to` "Description cannot be empty."
 
         verifyNoInteractions(venueRepository)
     }
@@ -96,7 +89,52 @@ class CreateVenueTest : BaseVenueServiceTest() {
     }
 
     @Test
+    fun `should return failing response if user doesn't exist`() {
+        `when`(userRepository.findById(venue.ownerId)).thenReturn(Optional.empty())
+
+        val response = venueService.create(request)
+
+        response.success `should be equal to` false
+        response.message `should be equal to` "User does not exist."
+
+        verify(userRepository).findById(venue.ownerId)
+        verifyNoMoreInteractions(userRepository)
+        verifyNoInteractions(venueRepository)
+    }
+
+    @Test
+    fun `should return failing response if user is not owner`() {
+        `when`(userRepository.findById(venue.ownerId)).thenReturn(Optional.of(user))
+
+        val response = venueService.create(request)
+
+        response.success `should be equal to` false
+        response.message `should be equal to` "User is not a valid owner."
+
+        verify(userRepository).findById(venue.ownerId)
+        verifyNoMoreInteractions(userRepository)
+        verifyNoInteractions(venueRepository)
+    }
+
+    @Test
+    fun `should return failing response if venue with same name already exists for owner`() {
+        `when`(userRepository.findById(venue.ownerId)).thenReturn(Optional.of(owner))
+        `when`(venueRepository.existsByOwnerIdAndNameIgnoreCase(venue.ownerId, venue.name)).thenReturn(true)
+
+        val response = venueService.create(request)
+
+        response.success `should be equal to` false
+        response.message `should be equal to` "Venue with name '${request.name}' already exists for this owner."
+
+        verify(userRepository).findById(venue.ownerId)
+        verify(venueRepository).existsByOwnerIdAndNameIgnoreCase(venue.ownerId, venue.name)
+        verifyNoMoreInteractions(userRepository, venueRepository)
+    }
+
+    @Test
     fun `should throw if unable to save venue`() {
+        `when`(userRepository.findById(venue.ownerId)).thenReturn(Optional.of(owner))
+        `when`(venueRepository.existsByOwnerIdAndNameIgnoreCase(venue.ownerId, venue.name)).thenReturn(false)
         `when`(venueRepository.save(any())).thenThrow(RuntimeException("Unable to save venue"))
 
         val response = venueService.create(request)
@@ -104,19 +142,26 @@ class CreateVenueTest : BaseVenueServiceTest() {
         response.success `should be equal to` false
         response.message `should be equal to` "Error while creating venue. Please try again later."
 
+        verify(userRepository).findById(venue.ownerId)
+        verify(venueRepository).existsByOwnerIdAndNameIgnoreCase(venue.ownerId, venue.name)
         verify(venueRepository).save(venueArgumentCaptor.capture())
-        verifyNoMoreInteractions(venueRepository)
+        verifyNoMoreInteractions(userRepository, venueRepository)
     }
 
     @Test
     fun `should save venue`() {
+        `when`(userRepository.findById(venue.ownerId)).thenReturn(Optional.of(owner))
+        `when`(venueRepository.existsByOwnerIdAndNameIgnoreCase(venue.ownerId, venue.name)).thenReturn(false)
         `when`(venueRepository.save(any())).thenReturn(venue)
 
         val response = venueService.create(request)
 
         response.success `should be equal to` true
         response.message `should be equal to` "Venue ${venue.name} created successfully."
+        response.data `should be equal to` venue.id
 
+        verify(userRepository).findById(venue.ownerId)
+        verify(venueRepository).existsByOwnerIdAndNameIgnoreCase(venue.ownerId, venue.name)
         verify(venueRepository).save(venueArgumentCaptor.capture())
         val savedVenue = venueArgumentCaptor.value
         savedVenue.name `should be equal to` venue.name
@@ -127,7 +172,6 @@ class CreateVenueTest : BaseVenueServiceTest() {
         savedVenue.maximumCapacity `should be equal to` venue.maximumCapacity
         savedVenue.availableCapacity `should be equal to` venue.maximumCapacity
 
-        verify(venueRepository, times(1)).save(any())
-        verifyNoMoreInteractions(venueRepository)
+        verifyNoMoreInteractions(userRepository, venueRepository)
     }
 }

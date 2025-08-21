@@ -21,7 +21,7 @@ class CreateReservationTest : BaseReservationServiceTest() {
             userId = 1,
             venueId = 1,
             reservationDate = LocalDateTime.now(),
-            numberOfPeople = 2,
+            numberOfGuests = 2,
         )
     }
 
@@ -32,7 +32,7 @@ class CreateReservationTest : BaseReservationServiceTest() {
         val response = reservationService.create(mockedRequest)
 
         response.success `should be equal to` false
-        response.message `should be equal to` "User not found."
+        response.message `should be equal to` "User not found. Please try again later."
 
         verify(userRepository, times(1)).findById(mockedUser.id)
         verifyNoInteractions(venueRepository)
@@ -132,7 +132,7 @@ class CreateReservationTest : BaseReservationServiceTest() {
         reservation.userId `should be equal to` mockedUser.id
         reservation.venueId `should be equal to` mockedRequest.venueId
         reservation.datetime `should be equal to` mockedRequest.reservationDate
-        reservation.numberOfGuests `should be equal to` mockedRequest.numberOfPeople
+        reservation.numberOfGuests `should be equal to` mockedRequest.numberOfGuests
 
         verify(userRepository, times(1)).findById(mockedUser.id)
         verify(venueRepository, times(1)).findById(mockedVenue.id)
@@ -153,10 +153,7 @@ class CreateReservationTest : BaseReservationServiceTest() {
             else -> truncated.withMinute(30)
         }
 
-        val next = when {
-            minute < 30 -> truncated.withMinute(30)
-            else -> truncated.plusHours(1).withMinute(0)
-        }
+        val next = previous.plusHours(1)
 
         return previous to next
     }

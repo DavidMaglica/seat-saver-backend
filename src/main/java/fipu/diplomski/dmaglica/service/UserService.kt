@@ -10,6 +10,7 @@ import fipu.diplomski.dmaglica.repo.NotificationOptionsRepository
 import fipu.diplomski.dmaglica.repo.UserRepository
 import fipu.diplomski.dmaglica.repo.entity.NotificationOptionsEntity
 import fipu.diplomski.dmaglica.repo.entity.UserEntity
+import fipu.diplomski.dmaglica.util.toDto
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.stereotype.Service
@@ -28,18 +29,20 @@ class UserService(
     }
 
     @Transactional
-    fun signup(email: String, username: String, password: String): DataResponse<Int> {
+    fun signup(email: String, username: String, password: String, isOwner: Boolean): DataResponse<Int> {
         userRepository.findByEmail(email)?.let {
             return DataResponse(false, "User with email $email already exists")
         }
 
         val hashedPassword = passwordEncoder.encode(password)
 
+        val role = if (isOwner) Role.OWNER else Role.CUSTOMER
+
         val user = UserEntity().also {
             it.email = email
             it.username = username
             it.password = hashedPassword
-            it.roleId = Role.USER.ordinal
+            it.roleId = role.ordinal
         }
 
         try {
@@ -85,13 +88,7 @@ class UserService(
     fun getNotificationOptions(userId: Int): NotificationOptions? {
         val user = userRepository.findById(userId).getOrElse { return null }
 
-        val notificationOptions = notificationOptionsRepository.findByUserId(user.id)
-
-        return NotificationOptions(
-            pushNotificationsTurnedOn = notificationOptions.pushNotificationsEnabled,
-            emailNotificationsTurnedOn = notificationOptions.emailNotificationsEnabled,
-            locationServicesTurnedOn = notificationOptions.locationServicesEnabled,
-        )
+        return notificationOptionsRepository.findByUserId(user.id).toDto()
     }
 
     @Transactional(readOnly = true)
@@ -128,7 +125,7 @@ class UserService(
             return BasicResponse(false, "Error while updating email. Please try again later.")
         }
 
-        return BasicResponse(true, "Email updated to $newEmail successfully.")
+        return BasicResponse(true, "Email successfully updated to $newEmail.")
     }
 
     @Transactional
@@ -150,7 +147,7 @@ class UserService(
             return BasicResponse(false, "Error while updating username. Please try again later.")
         }
 
-        return BasicResponse(true, "Username successfully updated.")
+        return BasicResponse(true, "Username successfully updated to $newUsername.")
     }
 
     @Transactional
@@ -180,18 +177,18 @@ class UserService(
     @Transactional
     fun updateNotificationOptions(
         userId: Int,
-        pushNotificationsTurnedOn: Boolean,
-        emailNotificationsTurnedOn: Boolean,
-        locationServicesTurnedOn: Boolean
+        isPushNotificationsEnabled: Boolean,
+        isEmailNotificationsEnabled: Boolean,
+        isLocationServicesEnabled: Boolean
     ): BasicResponse {
         val user = userRepository.findById(userId).getOrElse {
             return BasicResponse(false, "User not found.")
         }
 
         val notificationOptions = notificationOptionsRepository.findByUserId(user.id).apply {
-            pushNotificationsEnabled = pushNotificationsTurnedOn
-            emailNotificationsEnabled = emailNotificationsTurnedOn
-            locationServicesEnabled = locationServicesTurnedOn
+            pushNotificationsEnabled = isPushNotificationsEnabled
+            emailNotificationsEnabled = isEmailNotificationsEnabled
+            locationServicesEnabled = isLocationServicesEnabled
         }
 
         try {
@@ -248,9 +245,9 @@ class UserService(
 
         val notificationOptions = notificationOptionsRepository.findByUserId(user.id).let {
             NotificationOptions(
-                pushNotificationsTurnedOn = it.pushNotificationsEnabled,
-                emailNotificationsTurnedOn = it.emailNotificationsEnabled,
-                locationServicesTurnedOn = it.locationServicesEnabled,
+                isPushNotificationsEnabled = it.pushNotificationsEnabled,
+                isEmailNotificationsEnabled = it.emailNotificationsEnabled,
+                isLocationServicesEnabled = it.locationServicesEnabled,
             )
         }
 
@@ -263,5 +260,26 @@ class UserService(
             lastKnownLatitude = user.lastKnownLatitude,
             lastKnownLongitude = user.lastKnownLongitude,
         )
+    }
+
+    @Transactional(readOnly = true)
+    fun getUsersByIds(userIds: List<Int>): List<User> {
+        if (userIds.isEmpty()) {
+            return emptyList()
+        }
+
+        val users: List<UserEntity> = userRepository.findByIdIn(userIds)
+
+        return users.map { user ->
+            User(
+                id = user.id,
+                username = user.username,
+                email = user.email,
+                notificationOptions = null,
+                role = Role.entries[user.roleId],
+                lastKnownLatitude = user.lastKnownLatitude,
+                lastKnownLongitude = user.lastKnownLongitude
+            )
+        }
     }
 }

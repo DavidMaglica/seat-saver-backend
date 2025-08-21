@@ -25,5 +25,5 @@ class VenueEntity {
 
     var venueTypeId: Int = 0
 
-    var description: String = ""
+    var description: String? = ""
 }

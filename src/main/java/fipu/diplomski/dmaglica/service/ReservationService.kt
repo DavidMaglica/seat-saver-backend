@@ -1,7 +1,6 @@
 package fipu.diplomski.dmaglica.service
 
 import fipu.diplomski.dmaglica.exception.ReservationNotFoundException
-import fipu.diplomski.dmaglica.exception.UserNotFoundException
 import fipu.diplomski.dmaglica.exception.VenueNotFoundException
 import fipu.diplomski.dmaglica.model.data.Reservation
 import fipu.diplomski.dmaglica.model.request.CreateReservationRequest
@@ -13,12 +12,14 @@ import fipu.diplomski.dmaglica.repo.VenueRepository
 import fipu.diplomski.dmaglica.repo.entity.ReservationEntity
 import fipu.diplomski.dmaglica.repo.entity.UserEntity
 import fipu.diplomski.dmaglica.util.getSurroundingHalfHours
+import fipu.diplomski.dmaglica.util.toDto
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Isolation
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 import kotlin.jvm.optionals.getOrElse
+import kotlin.jvm.optionals.getOrNull
 
 @Service
 class ReservationService(
@@ -33,8 +34,14 @@ class ReservationService(
 
     @Transactional(isolation = Isolation.SERIALIZABLE)
     fun create(request: CreateReservationRequest): BasicResponse {
-        val user: UserEntity = userRepository.findById(request.userId).getOrElse {
-            return BasicResponse(false, "User not found.")
+        val user: UserEntity? = when {
+            request.userId != null -> userRepository.findById(request.userId).orElse(null)
+            request.userEmail != null -> userRepository.findByEmail(request.userEmail)
+            else -> null
+        }
+
+        if (user == null) {
+            return BasicResponse(false, "User not found. Please try again later.")
         }
 
         val venue = venueRepository.findById(request.venueId).orElseThrow {
@@ -50,10 +57,9 @@ class ReservationService(
 
         if (reservations.isNotEmpty()) {
             val currentNumberOfGuests = reservations.sumOf { it.numberOfGuests }
-            if (currentNumberOfGuests + request.numberOfPeople > venue.maximumCapacity) {
+            if (currentNumberOfGuests + request.numberOfGuests > venue.maximumCapacity) {
                 return BasicResponse(
-                    false,
-                    "The venue is fully booked for the selected time. Please choose a different time."
+                    false, "The venue is fully booked for the selected time. Please choose a different time."
                 )
             }
         }
@@ -62,7 +68,7 @@ class ReservationService(
             userId = user.id
             venueId = request.venueId
             datetime = request.reservationDate
-            numberOfGuests = request.numberOfPeople
+            numberOfGuests = request.numberOfGuests
         }
 
         try {
@@ -76,19 +82,58 @@ class ReservationService(
     }
 
     @Transactional(readOnly = true)
-    fun getAll(userId: Int): List<Reservation> {
+    fun getByUserId(userId: Int): List<Reservation> {
         userRepository.findById(userId).getOrElse { return emptyList() }
 
-        return reservationRepository.findByUserId(userId).map { it.toReservation() }
+        return reservationRepository.findByUserId(userId).map { it.toDto() }
+    }
+
+    @Transactional(readOnly = true)
+    fun getByOwnerId(ownerId: Int): List<Reservation> {
+        val venues = venueRepository.findByOwnerId(ownerId)
+
+        if (venues.isEmpty()) return emptyList()
+
+        val venueIds = venues.map { it.id }
+
+        return reservationRepository.findByVenueIdIn(venueIds).map { it.toDto() }
+    }
+
+    @Transactional(readOnly = true)
+    fun getByVenueId(venueId: Int): List<Reservation> {
+        venueRepository.findById(venueId).getOrElse { return emptyList() }
+
+        return reservationRepository.findByVenueId(venueId).map { it.toDto() }
+    }
+
+    @Transactional(readOnly = true)
+    fun getById(reservationId: Int): Reservation? = reservationRepository.findById(reservationId).getOrNull()?.toDto()
+
+    @Transactional(readOnly = true)
+    fun getReservationsCount(
+        ownerId: Int,
+        venueId: Int? = null,
+        startDate: LocalDateTime? = null,
+        endDate: LocalDateTime?
+    ): Int {
+        if (venueId != null) {
+            return reservationRepository.countByVenueId(venueId)
+        }
+
+        val venueIds = venueRepository.findByOwnerId(ownerId).map { it.id }
+        if (venueIds.isEmpty()) return 0
+
+        if (startDate != null && endDate != null) {
+            return reservationRepository.countByVenueIdInAndDatetimeBetween(venueIds, startDate, endDate)
+        }
+
+        return reservationRepository.countByVenueIdIn(venueIds)
+
     }
 
     @Transactional
-    fun update(request: UpdateReservationRequest): BasicResponse {
-        userRepository.findById(request.userId).orElseThrow {
-            throw UserNotFoundException("User with id ${request.userId} not found.")
-        }
-
-        val reservation = reservationRepository.findById(request.reservationId).orElseThrow {
+    fun update(reservationId: Int, request: UpdateReservationRequest): BasicResponse {
+        val reservation = reservationRepository.findById(reservationId).orElseThrow {
             ReservationNotFoundException("Reservation not found")
         }
 
@@ -98,19 +143,15 @@ class ReservationService(
             "No modifications found. Please change at least one field."
         )
 
-        venueRepository.findById(request.venueId).orElseThrow {
-            VenueNotFoundException("Venue with id ${request.venueId} not found")
-        }
-
         reservation.apply {
-            numberOfGuests = request.numberOfPeople ?: reservation.numberOfGuests
+            numberOfGuests = request.numberOfGuests ?: reservation.numberOfGuests
             datetime = request.reservationDate ?: reservation.datetime
         }
 
         try {
             reservationRepository.save(reservation)
         } catch (e: Exception) {
-            logger.error { "Error while updating reservation with id ${request.reservationId}: ${e.message}" }
+            logger.error { "Error while updating reservation with id ${reservationId}: ${e.message}" }
             return BasicResponse(false, "Error while updating reservation. Please try again later.")
         }
 
@@ -118,16 +159,9 @@ class ReservationService(
     }
 
     @Transactional
-    fun delete(userId: Int, reservationId: Int, venueId: Int): BasicResponse {
-        userRepository.findById(userId).orElseThrow {
-            throw UserNotFoundException("User with id $userId not found.")
-        }
-
+    fun delete(reservationId: Int): BasicResponse {
         reservationRepository.findById(reservationId).orElseThrow {
             ReservationNotFoundException("Reservation with id $reservationId not found")
-        }
-        venueRepository.findById(venueId).orElseThrow {
-            VenueNotFoundException("Venue with id $venueId not found")
         }
 
         try {
@@ -140,22 +174,13 @@ class ReservationService(
         return BasicResponse(true, "Reservation deleted successfully.")
     }
 
-    private fun ReservationEntity.toReservation() = Reservation(
-        id = this.id,
-        userId = this.userId,
-        venueId = this.venueId,
-        datetime = this.datetime,
-        numberOfGuests = this.numberOfGuests
-    )
-
     private fun isRequestValid(request: UpdateReservationRequest): Boolean =
-        (request.numberOfPeople?.let { it > 0 } == true) || request.reservationDate != null
+        (request.numberOfGuests?.let { it > 0 } == true) || request.reservationDate != null
 
     private fun containsReservationChanges(
         request: UpdateReservationRequest,
         reservation: ReservationEntity,
     ): Boolean =
-        (request.numberOfPeople != null && request.numberOfPeople != reservation.numberOfGuests) ||
-                (request.reservationDate != null && request.reservationDate != reservation.datetime) ||
-                (request.numberOfPeople != null && request.numberOfPeople != reservation.numberOfGuests)
+        (request.reservationDate != null && !request.reservationDate.isEqual(reservation.datetime)) ||
+                (request.numberOfGuests != null && request.numberOfGuests != reservation.numberOfGuests)
 }

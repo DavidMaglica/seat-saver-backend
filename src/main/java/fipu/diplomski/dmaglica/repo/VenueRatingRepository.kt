@@ -6,4 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository
 interface VenueRatingRepository : JpaRepository<VenueRatingEntity, Int> {
     fun findByVenueId(venueId: Int): List<VenueRatingEntity>
     fun findByVenueIdIn(venueIds: List<Int>): List<VenueRatingEntity>
+    fun countByVenueIdIn(venueIds: List<Int>): Int
 }

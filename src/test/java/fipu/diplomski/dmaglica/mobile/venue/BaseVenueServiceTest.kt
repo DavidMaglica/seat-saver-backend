@@ -77,7 +77,8 @@ abstract class BaseVenueServiceTest {
         ArgumentCaptor.forClass(VenueRatingEntity::class.java)
 
     protected fun createVenue(
-        id: Int = 1,
+        id: Int = 0,
+        ownerId: Int = 1,
         name: String = "Test Venue",
         venueTypeId: Int = 1,
         location: String = "Test Location",
@@ -88,6 +89,7 @@ abstract class BaseVenueServiceTest {
         averageRating: Double = 0.0
     ): VenueEntity = VenueEntity().apply {
         this.id = id
+        this.ownerId = ownerId
         this.name = name
         this.venueTypeId = venueTypeId
         this.location = location
@@ -113,7 +115,7 @@ abstract class BaseVenueServiceTest {
             this.password = "password"
             this.lastKnownLatitude = 0.0
             this.lastKnownLongitude = 0.0
-            this.roleId = Role.USER.ordinal
+            this.roleId = Role.CUSTOMER.ordinal
         }
 
     protected fun createReservation(
@@ -141,10 +143,7 @@ abstract class BaseVenueServiceTest {
             else -> truncated.withMinute(30)
         }
 
-        val next = when {
-            minute < 30 -> truncated.withMinute(30)
-            else -> truncated.plusHours(1).withMinute(0)
-        }
+        val next = previous.plusHours(1)
 
         return previous to next
     }

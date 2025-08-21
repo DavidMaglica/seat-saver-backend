@@ -35,7 +35,6 @@ import org.springframework.web.bind.annotation.*
  * @see UserLocation for user location model details
  */
 @RestController
-@RequestMapping(Paths.USER)
 class UserController(private val userService: UserService) {
 
     /**
@@ -44,6 +43,7 @@ class UserController(private val userService: UserService) {
      * @param email The user's email address (must be unique)
      * @param username The desired username
      * @param password The user's password (will be hashed before storage)
+     * @param isOwner Indicates if the user is an owner (default false)
      * @return [DataResponse] containing:
      *         - success: Boolean indicating operation status
      *         - message: Descriptive status message
@@ -61,14 +61,16 @@ class UserController(private val userService: UserService) {
      *
      * @note Passwords are hashed using BCrypt before storage
      * @note Notification options are initialized with all services disabled
+     * @note The `isOwner` flag allows distinguishing between regular users and venue owners, also owners can only be created on the web application, all mobile users are registered as regular users
      *
      */
     @PostMapping(Paths.SIGNUP)
     fun signup(
         @RequestParam("email") email: String,
         @RequestParam("username") username: String,
-        @RequestParam("password") password: String
-    ): DataResponse<Int> = userService.signup(email, username, password)
+        @RequestParam("password") password: String,
+        @RequestParam("isOwner") isOwner: Boolean = false,
+    ): DataResponse<Int> = userService.signup(email, username, password, isOwner)
 
     /**
      * Authenticates a user and initiates a login session.
@@ -115,8 +117,8 @@ class UserController(private val userService: UserService) {
      *
      * @note Notification options are automatically created with all services disabled during user registration
      */
-    @GetMapping(Paths.GET_NOTIFICATION_OPTIONS)
-    fun getUserNotificationOptions(@RequestParam("userId") userId: Int): NotificationOptions? =
+    @GetMapping(Paths.USER_NOTIFICATIONS)
+    fun getUserNotificationOptions(@PathVariable userId: Int): NotificationOptions? =
         userService.getNotificationOptions(userId)
 
     /**
@@ -133,8 +135,8 @@ class UserController(private val userService: UserService) {
      * @note Coordinates are in WGS84 decimal degree format
      * @warning Location data may be outdated if user hasn't recently updated their position
      */
-    @GetMapping(Paths.GET_LOCATION)
-    fun getUserLocation(@RequestParam("userId") userId: Int): UserLocation? = userService.getLocation(userId)
+    @GetMapping(Paths.USER_LOCATION)
+    fun getUserLocation(@PathVariable userId: Int): UserLocation? = userService.getLocation(userId)
 
     /**
      * Updates a user's email address.
@@ -155,8 +157,8 @@ class UserController(private val userService: UserService) {
      */
     @PatchMapping(Paths.UPDATE_EMAIL)
     fun updateUserEmail(
-        @RequestParam("userId") userId: Int,
-        @RequestParam("newEmail") newEmail: String
+        @PathVariable userId: Int,
+        @RequestParam("newEmail") newEmail: String,
     ): BasicResponse = userService.updateEmail(userId, newEmail)
 
     /**
@@ -176,7 +178,7 @@ class UserController(private val userService: UserService) {
      */
     @PatchMapping(Paths.UPDATE_USERNAME)
     fun updateUserUsername(
-        @RequestParam("userId") userId: Int,
+        @PathVariable userId: Int,
         @RequestParam("newUsername") newUsername: String
     ): BasicResponse = userService.updateUsername(userId, newUsername)
 
@@ -199,7 +201,7 @@ class UserController(private val userService: UserService) {
      */
     @PatchMapping(Paths.UPDATE_PASSWORD)
     fun updateUserPassword(
-        @RequestParam("userId") userId: Int,
+        @PathVariable userId: Int,
         @RequestParam("newPassword") newPassword: String
     ): BasicResponse = userService.updatePassword(userId, newPassword)
 
@@ -207,9 +209,9 @@ class UserController(private val userService: UserService) {
      * Updates a user's notification preferences and service settings.
      *
      * @param userId The id of the user to update
-     * @param pushNotificationsTurnedOn Whether push notifications should be enabled
-     * @param emailNotificationsTurnedOn Whether email notifications should be enabled
-     * @param locationServicesTurnedOn Whether location services should be enabled
+     * @param isPushNotificationsEnabled Whether push notifications should be enabled
+     * @param isEmailNotificationsEnabled Whether email notifications should be enabled
+     * @param isLocationServicesEnabled Whether location services should be enabled
      * @return [BasicResponse] indicating operation status with success flag and message
      *
      * Update process:
@@ -226,17 +228,17 @@ class UserController(private val userService: UserService) {
      *
      * @note Changes take effect immediately
      */
-    @PatchMapping(Paths.UPDATE_NOTIFICATION_OPTIONS)
+    @PatchMapping(Paths.UPDATE_NOTIFICATIONS)
     fun updateUserNotificationOptions(
-        @RequestParam("userId") userId: Int,
-        @RequestParam("pushNotificationsTurnedOn") pushNotificationsTurnedOn: Boolean,
-        @RequestParam("emailNotificationsTurnedOn") emailNotificationsTurnedOn: Boolean,
-        @RequestParam("locationServicesTurnedOn") locationServicesTurnedOn: Boolean
+        @PathVariable userId: Int,
+        @RequestParam("isPushNotificationsEnabled") isPushNotificationsEnabled: Boolean,
+        @RequestParam("isEmailNotificationsEnabled") isEmailNotificationsEnabled: Boolean,
+        @RequestParam("isLocationServicesEnabled") isLocationServicesEnabled: Boolean
     ): BasicResponse = userService.updateNotificationOptions(
         userId,
-        pushNotificationsTurnedOn,
-        emailNotificationsTurnedOn,
-        locationServicesTurnedOn
+        isPushNotificationsEnabled,
+        isEmailNotificationsEnabled,
+        isLocationServicesEnabled
     )
 
     /**
@@ -254,14 +256,12 @@ class UserController(private val userService: UserService) {
      * 2. Updates both latitude and longitude coordinates
      * 3. Persists changes to database
      *
-     * Example request:
-     * PATCH /api/user/location?userId=123&latitude=40.7128&longitude=-74.0060
-     *
      * @note Coordinates are stored in WGS84 decimal degree format
+     *
      */
     @PatchMapping(Paths.UPDATE_LOCATION)
     fun updateUserLocation(
-        @RequestParam("userId") userId: Int,
+        @PathVariable userId: Int,
         @RequestParam("latitude") latitude: Double,
         @RequestParam("longitude") longitude: Double
     ): BasicResponse = userService.updateLocation(userId, latitude, longitude)
@@ -279,13 +279,11 @@ class UserController(private val userService: UserService) {
      * 2. Attempts to delete user record
      * 3. Returns appropriate status message
      *
-     * Example request:
-     * DELETE /api/user/delete?userId=123
-     *
      * @warning This operation is permanent and cannot be undone
+     *
      */
-    @DeleteMapping(Paths.DELETE_USER)
-    fun deleteUser(@RequestParam("userId") userId: Int): BasicResponse = userService.delete(userId)
+    @DeleteMapping(Paths.USER_BY_ID)
+    fun deleteUser(@PathVariable userId: Int): BasicResponse = userService.delete(userId)
 
     /**
      * Retrieves user details by id.
@@ -299,11 +297,12 @@ class UserController(private val userService: UserService) {
      * - Role information
      * - Last known location (if available)
      *
-     * Example request:
-     * GET /api/user/get?userId=123
-     *
      */
-    @GetMapping(Paths.GET_USER)
-    fun getUser(@RequestParam("userId") userId: Int): User? = userService.getUser(userId)
+    @GetMapping(Paths.USER_BY_ID)
+    fun getUser(@PathVariable userId: Int): User? = userService.getUser(userId)
+
+    @GetMapping(Paths.USERS_BY_IDS)
+    fun getUsersByIds(@RequestParam("userIds") userIds: List<Int>): List<User> =
+        userService.getUsersByIds(userIds)
 
 }

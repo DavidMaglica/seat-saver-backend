@@ -1,15 +1,20 @@
 package fipu.diplomski.dmaglica.service
 
+import fipu.diplomski.dmaglica.model.data.Role
+import fipu.diplomski.dmaglica.model.data.Venue
+import fipu.diplomski.dmaglica.model.data.VenueRating
+import fipu.diplomski.dmaglica.model.data.VenueType
 import fipu.diplomski.dmaglica.model.request.CreateVenueRequest
 import fipu.diplomski.dmaglica.model.request.UpdateVenueRequest
 import fipu.diplomski.dmaglica.model.response.BasicResponse
+import fipu.diplomski.dmaglica.model.response.DataResponse
 import fipu.diplomski.dmaglica.model.response.PagedResponse
 import fipu.diplomski.dmaglica.repo.*
 import fipu.diplomski.dmaglica.repo.entity.ReservationEntity
 import fipu.diplomski.dmaglica.repo.entity.VenueEntity
 import fipu.diplomski.dmaglica.repo.entity.VenueRatingEntity
-import fipu.diplomski.dmaglica.repo.entity.VenueTypeEntity
 import fipu.diplomski.dmaglica.util.getSurroundingHalfHours
+import fipu.diplomski.dmaglica.util.toDto
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.persistence.EntityNotFoundException
 import org.springframework.data.domain.*
@@ -32,10 +37,13 @@ class VenueService(
 
     companion object {
         private val logger = KotlinLogging.logger(VenueService::class.java.name)
+
+        private const val LOWEST_ALLOWED_RATING = 1.0
+        private const val HIGHEST_ALLOWED_RATING = 5.0
     }
 
     @Transactional(readOnly = true)
-    fun get(venueId: Int): VenueEntity {
+    fun get(venueId: Int): Venue {
         val venue: VenueEntity = venueRepository.findById(venueId).orElseThrow {
             EntityNotFoundException("Venue with id: $venueId not found.")
         }
@@ -56,11 +64,11 @@ class VenueService(
             venue.availableCapacity = venue.maximumCapacity
         }
 
-        return venue
+        return venue.toDto()
     }
 
     @Transactional(readOnly = true)
-    fun getAll(pageable: Pageable, searchQuery: String?, typeIds: List<Int>?): PagedResponse<VenueEntity> {
+    fun getAll(pageable: Pageable, searchQuery: String?, typeIds: List<Int>?): PagedResponse<Venue> {
         val (lowerBound, upperBound) = getSurroundingHalfHours(LocalDateTime.now())
         val venues = venueRepository.findFilteredVenues(
             pageable = pageable,
@@ -68,6 +76,18 @@ class VenueService(
             typeIds = typeIds,
         )
         return venuesToPagedResponse(venues, lowerBound, upperBound)
+    }
+
+    @Transactional(readOnly = true)
+    fun getByOwner(ownerId: Int, pageable: Pageable): PagedResponse<Venue> {
+        val (lowerBound, upperBound) = getSurroundingHalfHours(LocalDateTime.now())
+        val venues = venueRepository.findByOwnerId(ownerId, pageable)
+        return venuesToPagedResponse(venues, lowerBound, upperBound)
+    }
+
+    @Transactional(readOnly = true)
+    fun getCountByOwner(ownerId: Int): Int {
+        return venueRepository.countByOwnerId(ownerId)
     }
 
     /**
@@ -92,7 +112,7 @@ class VenueService(
      *
      */
     @Transactional(readOnly = true)
-    fun getNearbyVenues(pageable: Pageable, latitude: Double?, longitude: Double?): PagedResponse<VenueEntity> {
+    fun getNearbyVenues(pageable: Pageable, latitude: Double?, longitude: Double?): PagedResponse<Venue> {
         val currentTimestamp: LocalDateTime = LocalDateTime.now()
         val defaultLocation = "Zagreb"
         val (lowerBound, upperBound) = getSurroundingHalfHours(currentTimestamp)
@@ -135,7 +155,7 @@ class VenueService(
      *
      */
     @Transactional(readOnly = true)
-    fun getNewVenues(pageable: Pageable): PagedResponse<VenueEntity> {
+    fun getNewVenues(pageable: Pageable): PagedResponse<Venue> {
         val sortedPageable = PageRequest.of(
             pageable.pageNumber,
             pageable.pageSize,
@@ -168,7 +188,7 @@ class VenueService(
      *
      */
     @Transactional(readOnly = true)
-    fun getTrendingVenues(pageable: Pageable): PagedResponse<VenueEntity> {
+    fun getTrendingVenues(pageable: Pageable): PagedResponse<Venue> {
         val currentTimestamp: LocalDateTime = LocalDateTime.now()
         val (lowerBound, upperBound) = getSurroundingHalfHours(currentTimestamp)
 
@@ -205,7 +225,7 @@ class VenueService(
      *
      */
     @Transactional(readOnly = true)
-    fun getSuggestedVenues(pageable: Pageable): PagedResponse<VenueEntity> {
+    fun getSuggestedVenues(pageable: Pageable): PagedResponse<Venue> {
         val currentTimestamp: LocalDateTime = LocalDateTime.now()
         val (lowerBound, upperBound) = getSurroundingHalfHours(currentTimestamp)
 
@@ -218,25 +238,63 @@ class VenueService(
     fun getType(typeId: Int): String = venueTypeRepository.getReferenceById(typeId).type
 
     @Transactional(readOnly = true)
-    fun getVenueRating(venueId: Int): Double = venueRepository.findById(venueId)
+    fun getVenueAverageRating(venueId: Int): Double = venueRepository.findById(venueId)
         .orElseThrow { EntityNotFoundException("Venue with id: $venueId not found.") }.averageRating
 
     @Transactional(readOnly = true)
-    fun getAllRatings(venueId: Int): List<VenueRatingEntity> =
-        venueRatingRepository.findByVenueId(venueId).sortedByDescending { it.id }
+    fun getAllRatings(venueId: Int): List<VenueRating> =
+        venueRatingRepository.findByVenueId(venueId).sortedByDescending { it.id }.map { it.toDto() }
 
     @Transactional(readOnly = true)
-    fun getAllTypes(): List<VenueTypeEntity> = venueTypeRepository.findAll()
+    fun getOverallRating(ownerId: Int): Double {
+        val ratings = venueRepository.findByOwnerId(ownerId).map { it.averageRating }
+        if (ratings.isEmpty()) return 0.0
+
+        return ratings.average().takeIf { it.isFinite() } ?: 0.0
+    }
+
+    @Transactional(readOnly = true)
+    fun getRatingsCount(ownerId: Int): Int {
+        val venues = venueRepository.findByOwnerId(ownerId)
+        if (venues.isEmpty()) return 0
+
+        val venueIds = venues.map { it.id }
+        return venueRatingRepository.countByVenueIdIn(venueIds)
+    }
+
+    @Transactional(readOnly = true)
+    fun getVenueUtilisationRate(ownerId: Int): Double {
+        val currentTimestamp: LocalDateTime = LocalDateTime.now()
+        val (lowerBound, upperBound) = getSurroundingHalfHours(currentTimestamp)
+        val venues = venueRepository.findByOwnerId(ownerId)
+        if (venues.isEmpty()) return 0.0
+
+        val venueIds = venues.map { it.id }
+        val totalReservations =
+            reservationRepository.findByVenueIdInAndDatetimeBetween(venueIds, lowerBound, upperBound)
+                .sumOf { it.numberOfGuests }
+
+        if (totalReservations == 0) return 0.0
+
+        val totalCapacity = venues.sumOf { it.maximumCapacity }
+        return (totalReservations.toDouble() / totalCapacity) * 100
+    }
+
+    @Transactional(readOnly = true)
+    fun getAllTypes(): List<VenueType> = venueTypeRepository.findAll().map { it.toDto() }
+
+    fun getVenueHeaderImage(venueId: Int): DataResponse<String?> = imageService.getVenueHeaderImage(venueId)
 
     fun getVenueImages(venueId: Int): List<String> = imageService.getVenueImages(venueId)
 
     fun getMenuImages(venueId: Int): List<String> = imageService.getMenuImages(venueId)
 
     @Transactional
-    fun create(request: CreateVenueRequest): BasicResponse {
+    fun create(request: CreateVenueRequest): DataResponse<Int> {
         validateCreateRequest(request)?.let { return it }
 
         val venue = VenueEntity().apply {
+            ownerId = request.ownerId
             name = request.name
             location = request.location
             description = request.description
@@ -247,14 +305,25 @@ class VenueService(
             averageRating = 0.0
         }
 
+        val user = userRepository.findById(request.ownerId).getOrElse {
+            return DataResponse<Int>(false, "User does not exist.")
+        }
+        if (user.roleId != Role.OWNER.ordinal) {
+            return DataResponse(false, "User is not a valid owner.")
+        }
+
+        if (venueRepository.existsByOwnerIdAndNameIgnoreCase(request.ownerId, request.name)) {
+            return DataResponse(false, "Venue with name '${request.name}' already exists for this owner.")
+        }
+
         try {
             venueRepository.save(venue)
         } catch (e: Exception) {
             logger.error(e) { "Error while creating venue: ${e.message}" }
-            return BasicResponse(false, "Error while creating venue. Please try again later.")
+            return DataResponse(false, "Error while creating venue. Please try again later.")
         }
 
-        return BasicResponse(true, "Venue ${request.name} created successfully.")
+        return DataResponse(true, "Venue ${request.name} created successfully.", venue.id)
     }
 
     fun uploadVenueImage(venueId: Int, image: MultipartFile): BasicResponse =
@@ -310,7 +379,10 @@ class VenueService(
 
     @Transactional
     fun rate(venueId: Int, userRating: Double, userId: Int, comment: String?): BasicResponse {
-        if (userRating < 0.5 || userRating > 5.0) return BasicResponse(false, "Rating must be between 0.5 and 5.")
+        if (userRating !in LOWEST_ALLOWED_RATING..HIGHEST_ALLOWED_RATING) return BasicResponse(
+            false,
+            "Rating must be between 1.0 and 5.0."
+        )
 
         val username = userRepository.findById(userId).getOrElse {
             logger.error { "User with id $userId not found." }
@@ -375,7 +447,7 @@ class VenueService(
         page: Page<VenueEntity>,
         lowerBound: LocalDateTime,
         upperBound: LocalDateTime
-    ): PagedResponse<VenueEntity> {
+    ): PagedResponse<Venue> {
         if (page.isEmpty) return PagedResponse(
             content = emptyList(),
             page = page.number,
@@ -390,8 +462,9 @@ class VenueService(
             upperBound,
             page.content
         )
+        val mappedVenues = enrichedVenues.map { it.toDto() }
         return PagedResponse(
-            content = enrichedVenues,
+            content = mappedVenues,
             page = page.number,
             size = page.size,
             totalElements = page.totalElements,
@@ -399,13 +472,12 @@ class VenueService(
         )
     }
 
-    private fun validateCreateRequest(request: CreateVenueRequest): BasicResponse? = when {
-        request.name.isBlank() -> BasicResponse(false, "Name cannot be empty.")
-        request.location.isBlank() -> BasicResponse(false, "Location cannot be empty.")
-        request.description.isBlank() -> BasicResponse(false, "Description cannot be empty.")
-        request.workingHours.isBlank() -> BasicResponse(false, "Working hours cannot be empty.")
-        request.maximumCapacity <= 0 -> BasicResponse(false, "Maximum capacity must be positive.")
-        request.typeId <= 0 -> BasicResponse(false, "Invalid venue type id.")
+    private fun validateCreateRequest(request: CreateVenueRequest): DataResponse<Int>? = when {
+        request.name.isBlank() -> DataResponse(false, "Name cannot be empty.")
+        request.location.isBlank() -> DataResponse(false, "Location cannot be empty.")
+        request.workingHours.isBlank() -> DataResponse(false, "Working hours cannot be empty.")
+        request.maximumCapacity <= 0 -> DataResponse(false, "Maximum capacity must be positive.")
+        request.typeId <= 0 -> DataResponse(false, "Invalid venue type id.")
         else -> null
     }
 

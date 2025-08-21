@@ -3,8 +3,9 @@ package fipu.diplomski.dmaglica.model.request
 import java.time.LocalDateTime
 
 data class CreateReservationRequest(
-    val userId: Int,
+    val userId: Int? = null,
+    val userEmail: String? = null,
     val venueId: Int,
     val reservationDate: LocalDateTime,
-    val numberOfPeople: Int
+    val numberOfGuests: Int
 )

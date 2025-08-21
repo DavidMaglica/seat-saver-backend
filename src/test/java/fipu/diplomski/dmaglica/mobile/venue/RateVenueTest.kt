@@ -25,7 +25,7 @@ class RateVenueTest : BaseVenueServiceTest() {
         val response = venueService.rate(venue.id, 6.0, 1, null)
 
         response.success `should be` false
-        response.message `should be equal to` "Rating must be between 0.5 and 5."
+        response.message `should be equal to` "Rating must be between 1.0 and 5.0."
 
         verifyNoInteractions(userRepository, venueRatingRepository, venueRepository)
     }
@@ -41,7 +41,7 @@ class RateVenueTest : BaseVenueServiceTest() {
 
         exception.message?.let { it `should be equal to` "Venue with id ${venue.id} not found" }
 
-        verify(userRepository, times(1)).findById(venue.id)
+        verify(userRepository, times(1)).findById(user.id)
         verify(venueRepository, times(1)).findById(venue.id)
         verifyNoMoreInteractions(userRepository, venueRepository)
         verifyNoInteractions(venueRatingRepository)

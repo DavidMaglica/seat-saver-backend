@@ -62,7 +62,7 @@ class UpdateUsernameTest : BaseUserServiceTest() {
         val response = userService.updateUsername(mockedUser.id, NEW_USERNAME)
 
         response.success `should be` true
-        response.message `should be equal to` "Username successfully updated."
+        response.message `should be equal to` "Username successfully updated to $NEW_USERNAME."
 
         verify(userRepository).save(userEntityArgumentCaptor.capture())
         val updatedUser = userEntityArgumentCaptor.value

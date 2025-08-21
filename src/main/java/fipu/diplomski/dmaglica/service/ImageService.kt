@@ -1,7 +1,7 @@
 package fipu.diplomski.dmaglica.service
 
-import fipu.diplomski.dmaglica.exception.ImageDataException
 import fipu.diplomski.dmaglica.model.response.BasicResponse
+import fipu.diplomski.dmaglica.model.response.DataResponse
 import fipu.diplomski.dmaglica.repo.MenuImageRepository
 import fipu.diplomski.dmaglica.repo.VenueImageRepository
 import fipu.diplomski.dmaglica.repo.entity.MenuImageEntity
@@ -23,6 +23,27 @@ class ImageService(
 
     companion object {
         private val logger = KotlinLogging.logger(ImageService::class.java.name)
+
+        private val allowedTypes = listOf("image/jpeg", "image/png", "image/jpg")
+    }
+
+    @Transactional(readOnly = true)
+    fun getVenueHeaderImage(venueId: Int): DataResponse<String?> {
+        val venueImages = venueImageRepository.findByVenueId(venueId)
+
+        if (venueImages.isEmpty()) {
+            return DataResponse(
+                false,
+                "No venue images found for venue id: $venueId",
+                null
+            )
+        }
+
+        return DataResponse(
+            true,
+            "Venue header image retrieved successfully.",
+            Base64.getEncoder().encodeToString(decompressImage(venueImages.first().imageData))
+        )
     }
 
     @Transactional(readOnly = true)
@@ -55,7 +76,7 @@ class ImageService(
 
     @Transactional
     fun uploadVenueImage(venueId: Int, file: MultipartFile): BasicResponse {
-        validateImage(file)
+        validateImage(file)?.let { return it }
 
         try {
             val venueImageEntity = VenueImageEntity().apply {
@@ -77,7 +98,7 @@ class ImageService(
 
     @Transactional
     fun uploadMenuImage(venueId: Int, file: MultipartFile): BasicResponse {
-        validateImage(file)
+        validateImage(file)?.let { return it }
 
         try {
             val menuImageEntity = MenuImageEntity().apply {
@@ -97,16 +118,19 @@ class ImageService(
         return BasicResponse(true, "Image '${file.originalFilename}' uploaded successfully.")
     }
 
-    private fun validateImage(file: MultipartFile) {
-        if (file.isEmpty) throw ImageDataException("File is empty", null)
+    private fun validateImage(file: MultipartFile): BasicResponse? {
+        if (file.isEmpty) return BasicResponse(false, "File is empty.")
 
-        if (file.size > 5 * 1024 * 1024) throw ImageDataException("File size exceeds the limit of 5MB", null)
+        if (file.size > 5 * 1024 * 1024) return BasicResponse(false, "File size exceeds the limit of 5MB.")
 
-        if (file.contentType != "image/jpeg" && file.contentType != "image/png") throw ImageDataException(
-            "Invalid file type. Only JPEG and PNG are allowed",
-            null
-        )
+        if (file.contentType !in allowedTypes) return BasicResponse(
+            false,
+            "Invalid file type. Only JPEG and PNG are allowed.",
 
-        if (file.originalFilename == null) throw ImageDataException("File name is null", null)
+            )
+
+        if (file.originalFilename == null) return BasicResponse(false, "File name is null.")
+
+        return null
     }
 }

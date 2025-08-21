@@ -80,7 +80,7 @@ class GetVenueTest : BaseVenueServiceTest() {
             venueService.get(venue.id)
         }
 
-        exception.message `should be equal to` "Venue with id: 1 not found."
+        exception.message `should be equal to` "Venue with id: 0 not found."
         verify(venueRepository).findById(venue.id)
         verifyNoInteractions(venueRatingRepository, reservationRepository)
     }
