@@ -1,5 +1,6 @@
 package fipu.diplomski.dmaglica.service
 
+import fipu.diplomski.dmaglica.model.data.Role
 import fipu.diplomski.dmaglica.model.data.Venue
 import fipu.diplomski.dmaglica.model.data.VenueRating
 import fipu.diplomski.dmaglica.model.data.VenueType
@@ -289,10 +290,11 @@ class VenueService(
     fun getMenuImages(venueId: Int): List<String> = imageService.getMenuImages(venueId)
 
     @Transactional
-    fun create(request: CreateVenueRequest): BasicResponse {
+    fun create(request: CreateVenueRequest): DataResponse<Int> {
         validateCreateRequest(request)?.let { return it }
 
         val venue = VenueEntity().apply {
+            ownerId = request.ownerId
             name = request.name
             location = request.location
             description = request.description
@@ -303,14 +305,25 @@ class VenueService(
             averageRating = 0.0
         }
 
+        val user = userRepository.findById(request.ownerId).getOrElse {
+            return DataResponse<Int>(false, "User does not exist.")
+        }
+        if (user.roleId != Role.OWNER.ordinal) {
+            return DataResponse(false, "User is not a valid owner.")
+        }
+
+        if (venueRepository.existsByOwnerIdAndNameIgnoreCase(request.ownerId, request.name)) {
+            return DataResponse(false, "Venue with name '${request.name}' already exists for this owner.")
+        }
+
         try {
             venueRepository.save(venue)
         } catch (e: Exception) {
             logger.error(e) { "Error while creating venue: ${e.message}" }
-            return BasicResponse(false, "Error while creating venue. Please try again later.")
+            return DataResponse(false, "Error while creating venue. Please try again later.")
         }
 
-        return BasicResponse(true, "Venue ${request.name} created successfully.")
+        return DataResponse(true, "Venue ${request.name} created successfully.", venue.id)
     }
 
     fun uploadVenueImage(venueId: Int, image: MultipartFile): BasicResponse =
@@ -459,12 +472,12 @@ class VenueService(
         )
     }
 
-    private fun validateCreateRequest(request: CreateVenueRequest): BasicResponse? = when {
-        request.name.isBlank() -> BasicResponse(false, "Name cannot be empty.")
-        request.location.isBlank() -> BasicResponse(false, "Location cannot be empty.")
-        request.workingHours.isBlank() -> BasicResponse(false, "Working hours cannot be empty.")
-        request.maximumCapacity <= 0 -> BasicResponse(false, "Maximum capacity must be positive.")
-        request.typeId <= 0 -> BasicResponse(false, "Invalid venue type id.")
+    private fun validateCreateRequest(request: CreateVenueRequest): DataResponse<Int>? = when {
+        request.name.isBlank() -> DataResponse(false, "Name cannot be empty.")
+        request.location.isBlank() -> DataResponse(false, "Location cannot be empty.")
+        request.workingHours.isBlank() -> DataResponse(false, "Working hours cannot be empty.")
+        request.maximumCapacity <= 0 -> DataResponse(false, "Maximum capacity must be positive.")
+        request.typeId <= 0 -> DataResponse(false, "Invalid venue type id.")
         else -> null
     }
 

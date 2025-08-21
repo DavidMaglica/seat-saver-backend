@@ -259,7 +259,7 @@ class VenueController(
     @PostMapping(Paths.VENUES)
     fun createVenue(
         @RequestBody request: CreateVenueRequest,
-    ): BasicResponse = venueService.create(request)
+    ): DataResponse<Int> = venueService.create(request)
 
     /**
      * Uploads and stores a venue image for the specified venue.
