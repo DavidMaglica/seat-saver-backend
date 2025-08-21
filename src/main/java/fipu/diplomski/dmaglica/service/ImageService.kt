@@ -23,6 +23,8 @@ class ImageService(
 
     companion object {
         private val logger = KotlinLogging.logger(ImageService::class.java.name)
+
+        private val allowedTypes = listOf("image/jpeg", "image/png", "image/jpg")
     }
 
     @Transactional(readOnly = true)
@@ -119,11 +121,9 @@ class ImageService(
     private fun validateImage(file: MultipartFile): BasicResponse? {
         if (file.isEmpty) return BasicResponse(false, "File is empty.")
 
-        println("File size: ${file.size}, Content Type: ${file.contentType}, Original Filename: ${file.originalFilename}")
-
         if (file.size > 5 * 1024 * 1024) return BasicResponse(false, "File size exceeds the limit of 5MB.")
 
-        if (file.contentType != "image/jpeg" && file.contentType != "image/png" && file.contentType != "image/jpg") return BasicResponse(
+        if (file.contentType !in allowedTypes) return BasicResponse(
             false,
             "Invalid file type. Only JPEG and PNG are allowed.",
 

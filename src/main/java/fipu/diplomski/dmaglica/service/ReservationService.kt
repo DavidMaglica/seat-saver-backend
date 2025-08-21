@@ -181,7 +181,6 @@ class ReservationService(
         request: UpdateReservationRequest,
         reservation: ReservationEntity,
     ): Boolean =
-        (request.numberOfGuests != null && request.numberOfGuests != reservation.numberOfGuests) ||
-                (request.reservationDate != null && !request.reservationDate.isEqual(reservation.datetime)) ||
+        (request.reservationDate != null && !request.reservationDate.isEqual(reservation.datetime)) ||
                 (request.numberOfGuests != null && request.numberOfGuests != reservation.numberOfGuests)
 }

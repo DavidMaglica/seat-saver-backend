@@ -36,6 +36,9 @@ class VenueService(
 
     companion object {
         private val logger = KotlinLogging.logger(VenueService::class.java.name)
+
+        private const val LOWEST_ALLOWED_RATING = 1.0
+        private const val HIGHEST_ALLOWED_RATING = 5.0
     }
 
     @Transactional(readOnly = true)
@@ -358,7 +361,10 @@ class VenueService(
 
     @Transactional
     fun rate(venueId: Int, userRating: Double, userId: Int, comment: String?): BasicResponse {
-        if (userRating !in 0.5..5.0) return BasicResponse(false, "Rating must be between 0.5 and 5.")
+        if (userRating !in LOWEST_ALLOWED_RATING..HIGHEST_ALLOWED_RATING) return BasicResponse(
+            false,
+            "Rating must be between 1.0 and 5."
+        )
 
         val username = userRepository.findById(userId).getOrElse {
             logger.error { "User with id $userId not found." }
