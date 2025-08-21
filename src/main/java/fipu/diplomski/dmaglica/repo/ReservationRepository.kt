@@ -10,6 +10,7 @@ import java.time.LocalDateTime
 
 interface ReservationRepository : JpaRepository<ReservationEntity, Int> {
     fun findByUserId(userId: Int): List<ReservationEntity>
+    fun findByVenueId(venueId: Int): List<ReservationEntity>
     fun findByDatetimeBetween(first: LocalDateTime, second: LocalDateTime): List<ReservationEntity>
     fun findByVenueIdAndDatetimeBetween(
         venueId: Int,

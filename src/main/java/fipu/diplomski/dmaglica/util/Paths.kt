@@ -36,6 +36,7 @@ class Paths {
         const val RESERVATION_BY_ID = "$RESERVATIONS/{reservationId}"
         const val USER_RESERVATIONS = "$RESERVATIONS/user/{userId}"
         const val OWNER_RESERVATIONS = "$RESERVATIONS/owner/{ownerId}"
+        const val RESERVATION_BY_VENUE = "$RESERVATIONS/venue/{venueId}"
         const val RESERVATIONS_COUNT = "$RESERVATIONS/count/{ownerId}"
 
         const val GEOLOCATION = "$API_V1/geolocation"

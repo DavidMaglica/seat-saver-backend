@@ -80,6 +80,11 @@ class ReservationController(private val reservationService: ReservationService) 
         @PathVariable ownerId: Int
     ): List<Reservation> = reservationService.getByOwnerId(ownerId)
 
+    @GetMapping(Paths.RESERVATION_BY_VENUE)
+    fun getReservationsByVenue(
+        @PathVariable venueId: Int
+    ): List<Reservation> = reservationService.getByVenueId(venueId)
+
     @GetMapping(Paths.RESERVATION_BY_ID)
     fun getReservationById(
         @PathVariable reservationId: Int

@@ -100,6 +100,13 @@ class ReservationService(
     }
 
     @Transactional(readOnly = true)
+    fun getByVenueId(venueId: Int): List<Reservation> {
+        venueRepository.findById(venueId).getOrElse { return emptyList() }
+
+        return reservationRepository.findByVenueId(venueId).map { it.toDto() }
+    }
+
+    @Transactional(readOnly = true)
     fun getById(reservationId: Int): Reservation? = reservationRepository.findById(reservationId).getOrNull()?.toDto()
 
     @Transactional(readOnly = true)
