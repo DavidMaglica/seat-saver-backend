@@ -126,6 +126,11 @@ class VenueController(
         @RequestParam("size", defaultValue = "20") size: Int,
     ): PagedResponse<Venue> = venueService.getByOwner(ownerId, PageRequest.of(page, size))
 
+    @GetMapping(Paths.VENUES_BY_OWNER_COUNT)
+    fun getVenuesCountByOwner(
+        @PathVariable ownerId: Int,
+    ): Int = venueService.getCountByOwner(ownerId)
+
     /**
      * Retrieves a venue type by its id.
      *

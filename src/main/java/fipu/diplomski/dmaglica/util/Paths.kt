@@ -20,6 +20,7 @@ class Paths {
         const val VENUES = "$API_V1/venues"
         const val VENUE_BY_ID = "$VENUES/{venueId}"
         const val VENUE_BY_OWNER = "$VENUES/owner/{ownerId}"
+        const val VENUES_BY_OWNER_COUNT = "$VENUES/owner/{ownerId}/count"
         const val VENUE_HEADER_IMAGE = "$VENUE_BY_ID/header-image"
         const val VENUE_IMAGES = "$VENUE_BY_ID/venue-images"
         const val MENU_IMAGES = "$VENUE_BY_ID/menu-images"

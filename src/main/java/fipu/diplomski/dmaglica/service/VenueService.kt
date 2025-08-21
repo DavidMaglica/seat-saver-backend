@@ -84,6 +84,11 @@ class VenueService(
         return venuesToPagedResponse(venues, lowerBound, upperBound)
     }
 
+    @Transactional(readOnly = true)
+    fun getCountByOwner(ownerId: Int): Int {
+        return venueRepository.countByOwnerId(ownerId)
+    }
+
     /**
      * Retrieves venues near specified coordinates with real-time availability.
      *
