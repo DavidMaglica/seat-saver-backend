@@ -2,10 +2,7 @@ package fipu.diplomski.dmaglica.mobile.venue
 
 import fipu.diplomski.dmaglica.model.data.Role
 import fipu.diplomski.dmaglica.repo.*
-import fipu.diplomski.dmaglica.repo.entity.ReservationEntity
-import fipu.diplomski.dmaglica.repo.entity.UserEntity
-import fipu.diplomski.dmaglica.repo.entity.VenueEntity
-import fipu.diplomski.dmaglica.repo.entity.VenueRatingEntity
+import fipu.diplomski.dmaglica.repo.entity.*
 import fipu.diplomski.dmaglica.service.GeolocationService
 import fipu.diplomski.dmaglica.service.ImageService
 import fipu.diplomski.dmaglica.service.VenueService
@@ -39,6 +36,9 @@ abstract class BaseVenueServiceTest {
     protected lateinit var userRepository: UserRepository
 
     @Mock
+    protected lateinit var workingDaysRepository: WorkingDaysRepository
+
+    @Mock
     protected lateinit var geolocationService: GeolocationService
 
     @Mock
@@ -53,6 +53,7 @@ abstract class BaseVenueServiceTest {
             venueRatingRepository,
             venueTypeRepository,
             reservationRepository,
+            workingDaysRepository,
             imageService,
             geolocationService,
             userRepository,
@@ -66,13 +67,16 @@ abstract class BaseVenueServiceTest {
             venueRatingRepository,
             venueTypeRepository,
             reservationRepository,
+            userRepository,
+            workingDaysRepository,
             imageService,
             geolocationService,
-            userRepository,
         )
     }
 
     protected val venueArgumentCaptor: ArgumentCaptor<VenueEntity> = ArgumentCaptor.forClass(VenueEntity::class.java)
+    protected val workingDaysCaptor =
+        ArgumentCaptor.forClass(List::class.java) as ArgumentCaptor<List<WorkingDaysEntity>>
     protected val venueRatingArgumentCaptor: ArgumentCaptor<VenueRatingEntity> =
         ArgumentCaptor.forClass(VenueRatingEntity::class.java)
 
@@ -85,7 +89,7 @@ abstract class BaseVenueServiceTest {
         workingHours: String = "9AM-5PM",
         description: String = "Test Description",
         maximumCapacity: Int = 100,
-        availableCapacity: Int = 50,
+        availableCapacity: Int = 100,
         averageRating: Double = 0.0
     ): VenueEntity = VenueEntity().apply {
         this.id = id
@@ -99,6 +103,15 @@ abstract class BaseVenueServiceTest {
         this.averageRating = averageRating
         this.description = description
     }
+
+    protected fun createWorkingDays(venueId: Int, daysOfTheWeek: List<Int>): List<WorkingDaysEntity> =
+        daysOfTheWeek.mapIndexed { index, dayOfTheWeek ->
+            WorkingDaysEntity().apply {
+                this.id = index + 1
+                this.venueId = venueId
+                this.dayOfWeek = dayOfTheWeek
+            }
+        }
 
     protected fun createRating(id: Int = 1, venueId: Int, rating: Double): VenueRatingEntity =
         VenueRatingEntity().apply {

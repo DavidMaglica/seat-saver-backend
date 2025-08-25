@@ -1,11 +1,16 @@
 package fipu.diplomski.dmaglica.mobile.venue
 
 import org.amshove.kluent.`should be equal to`
+import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mockito.*
+import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
+import org.springframework.test.context.ActiveProfiles
 import kotlin.test.Test
 
+@ExtendWith(MockitoExtension::class)
+@ActiveProfiles("test")
 class GetNearbyTest : BaseVenueServiceTest() {
 
     private val pageable: PageRequest = PageRequest.of(0, 10)

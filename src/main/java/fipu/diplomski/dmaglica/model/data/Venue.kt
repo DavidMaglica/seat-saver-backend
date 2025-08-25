@@ -4,6 +4,7 @@ data class Venue(
     val id: Int,
     val name: String,
     val location: String,
+    val workingDays: List<Int>,
     val workingHours: String,
     val maximumCapacity: Int,
     val availableCapacity: Int,

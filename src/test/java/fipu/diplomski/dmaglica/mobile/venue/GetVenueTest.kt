@@ -4,16 +4,22 @@ import fipu.diplomski.dmaglica.repo.entity.ReservationEntity
 import jakarta.persistence.EntityNotFoundException
 import org.amshove.kluent.`should be equal to`
 import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.Mockito.*
+import org.mockito.junit.jupiter.MockitoExtension
+import org.springframework.test.context.ActiveProfiles
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.test.Test
 
+@ExtendWith(MockitoExtension::class)
+@ActiveProfiles("test")
 class GetVenueTest : BaseVenueServiceTest() {
 
     private val venue = createVenue()
+    private val workingDays = createWorkingDays(venue.id, listOf(0, 1, 2, 4, 5, 6))
 
     @Test
     fun `should return venue with calculated rating and capacity when found`() {
@@ -72,8 +78,6 @@ class GetVenueTest : BaseVenueServiceTest() {
 
     @Test
     fun `should throw EntityNotFoundException when venue not found`() {
-        val venue = createVenue()
-
         `when`(venueRepository.findById(any())).thenReturn(Optional.empty())
 
         val exception = assertThrows<EntityNotFoundException> {
@@ -88,7 +92,6 @@ class GetVenueTest : BaseVenueServiceTest() {
     @Test
     fun `should handle zero ratings by setting average to zero`() {
         val (lowerBound, upperBound) = getSurroundingHalfHours(LocalDateTime.now())
-        val venue = createVenue()
 
         `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(venue))
         `when`(venueRatingRepository.findByVenueId(anyInt())).thenReturn(emptyList())
@@ -99,5 +102,18 @@ class GetVenueTest : BaseVenueServiceTest() {
         val result = venueService.get(venue.id)
 
         result.averageRating `should be equal to` 0.0
+    }
+
+    @Test
+    fun `should return venue with working days`() {
+        `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(venue))
+        `when`(workingDaysRepository.findAllByVenueId(venue.id)).thenReturn(workingDays)
+
+        val result = venueService.get(venue.id)
+        result.workingDays `should be equal to` listOf(0, 1, 2, 4, 5, 6)
+
+        verify(workingDaysRepository).findAllByVenueId(venue.id)
+        verify(venueRepository).findById(venue.id)
+        verifyNoMoreInteractions(workingDaysRepository, venueRepository)
     }
 }

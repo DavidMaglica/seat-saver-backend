@@ -114,7 +114,7 @@ class ReservationService(
         ownerId: Int,
         venueId: Int? = null,
         startDate: LocalDateTime? = null,
-        endDate: LocalDateTime?
+        endDate: LocalDateTime? = null,
     ): Int {
         if (venueId != null) {
             return reservationRepository.countByVenueId(venueId)
