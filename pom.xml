@@ -48,6 +48,7 @@
         <xmlunit.version>2.10.1</xmlunit.version>
         <klogging.version>7.0.7</klogging.version>
         <commons-net.version>3.11.1</commons-net.version>
+        <caffeine.version>3.2.2</caffeine.version>
     </properties>
 
     <dependencies>
@@ -133,6 +134,12 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-core</artifactId>
             <version>${logback.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+            <version>3.2.2</version>
         </dependency>
 
         <dependency>

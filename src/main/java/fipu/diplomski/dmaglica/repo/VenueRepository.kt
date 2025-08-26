@@ -4,12 +4,12 @@ import fipu.diplomski.dmaglica.repo.entity.VenueEntity
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor
 import org.springframework.data.jpa.repository.Query
 
-interface VenueRepository : JpaRepository<VenueEntity, Int> {
+interface VenueRepository : JpaRepository<VenueEntity, Int>, JpaSpecificationExecutor<VenueEntity> {
     override fun findAll(pageable: Pageable): Page<VenueEntity>
     fun findByLocationContaining(location: String, pageable: Pageable): Page<VenueEntity>
-    fun findByLocationIn(locations: List<String>, pageable: Pageable): Page<VenueEntity>
     fun findByOwnerId(ownerId: Int): List<VenueEntity>
     fun findByOwnerId(ownerId: Int, pageable: Pageable): Page<VenueEntity>
     fun countByOwnerId(ownerId: Int): Int
@@ -26,9 +26,13 @@ interface VenueRepository : JpaRepository<VenueEntity, Int> {
 
     @Query(
         """
-        SELECT v FROM VenueEntity v
-        WHERE (:searchQuery IS NULL OR LOWER(v.name) LIKE LOWER(CONCAT('%', :searchQuery, '%')))
-        AND (:typeIds IS NULL OR v.venueTypeId IN :typeIds)
+        SELECT v
+        FROM VenueEntity v
+        WHERE (:searchQuery IS NULL OR
+               LOWER(v.name) LIKE LOWER(CONCAT('%', :searchQuery, '%'))
+            OR LOWER(v.location) LIKE LOWER(CONCAT('%', :searchQuery, '%'))
+            )
+          AND (:typeIds IS NULL OR v.venueTypeId IN :typeIds)
         ORDER BY v.name ASC
     """
     )

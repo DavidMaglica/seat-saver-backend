@@ -19,6 +19,7 @@ import fipu.diplomski.dmaglica.util.toDto
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.persistence.EntityNotFoundException
 import org.springframework.data.domain.*
+import org.springframework.data.jpa.domain.Specification
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
@@ -42,6 +43,8 @@ class VenueService(
 
         private const val LOWEST_ALLOWED_RATING = 1.0
         private const val HIGHEST_ALLOWED_RATING = 5.0
+
+        private const val VENUE_LOCATION_FIELD = "location"
     }
 
     @Transactional(readOnly = true)
@@ -130,14 +133,14 @@ class VenueService(
         val currentCity = geolocationService.getGeolocation(latitude, longitude)
         val nearbyCities = geolocationService.getNearbyCities(latitude, longitude)
 
-        if (nearbyCities.isNullOrEmpty()) {
+        if (nearbyCities.isEmpty()) {
             val venues = venueRepository.findByLocationContaining(currentCity, pageable)
             return venuesToPagedResponse(venues, lowerBound, upperBound)
         }
 
         nearbyCities.add(currentCity)
 
-        val venues = venueRepository.findByLocationIn(nearbyCities, pageable)
+        val venues = findByCitiesContaining(nearbyCities, pageable)
 
         return venuesToPagedResponse(venues, lowerBound, upperBound)
     }
@@ -646,5 +649,18 @@ class VenueService(
             }
         }
         return null
+    }
+
+    fun findByCitiesContaining(locations: List<String>, pageable: Pageable): Page<VenueEntity> {
+        val spec = Specification<VenueEntity> { root, _, criteriaBuilder ->
+            val predicates = locations.map { city ->
+                criteriaBuilder.like(
+                    criteriaBuilder.lower(criteriaBuilder.coalesce(root.get(VENUE_LOCATION_FIELD), "")),
+                    "%${city.lowercase()}%"
+                )
+            }
+            criteriaBuilder.or(*predicates.toTypedArray())
+        }
+        return venueRepository.findAll(spec, pageable)
     }
 }
