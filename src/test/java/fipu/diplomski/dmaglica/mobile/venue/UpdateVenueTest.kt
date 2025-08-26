@@ -199,7 +199,6 @@ class UpdateVenueTest : BaseVenueServiceTest() {
     @Test
     fun `should return early if unable to save new working days`() {
         `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(venue))
-        `when`(workingDaysRepository.saveAll(anyList())).thenReturn(workingDaysEntity)
         `when`(workingDaysRepository.saveAll(anyList())).thenThrow(RuntimeException("Save failed"))
 
         val response = venueService.update(
@@ -363,7 +362,7 @@ class UpdateVenueTest : BaseVenueServiceTest() {
         val toAdd = newDays - oldDays
         val newEntities = toAdd.map { day ->
             WorkingDaysEntity().apply {
-                this.venueId = venueId
+                this.venueId = venue.id
                 this.dayOfWeek = day
             }
         }

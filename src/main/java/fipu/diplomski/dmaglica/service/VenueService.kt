@@ -536,8 +536,7 @@ class VenueService(
         request.workingHours?.isBlank() == true ->
             BasicResponse(false, "Working hours are not valid.")
 
-        request.maximumCapacity?.let
-        { it <= 0 } == true ->
+        request.maximumCapacity?.let { it <= 0 } == true ->
             BasicResponse(false, "Maximum capacity is not valid.")
 
         else -> null
