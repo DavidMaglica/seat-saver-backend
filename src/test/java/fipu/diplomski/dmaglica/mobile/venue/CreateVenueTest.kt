@@ -150,7 +150,7 @@ class CreateVenueTest : BaseVenueServiceTest() {
     fun `should return failing response if unable to save venue`() {
         `when`(userRepository.findById(venue.ownerId)).thenReturn(Optional.of(owner))
         `when`(venueRepository.existsByOwnerIdAndNameIgnoreCase(venue.ownerId, venue.name)).thenReturn(false)
-        `when`(venueRepository.save(any())).thenThrow(RuntimeException("Unable to save venue"))
+        `when`(venueRepository.saveAndFlush(any())).thenThrow(RuntimeException("Unable to save venue"))
 
         val response = venueService.create(request)
 
@@ -159,7 +159,7 @@ class CreateVenueTest : BaseVenueServiceTest() {
 
         verify(userRepository).findById(venue.ownerId)
         verify(venueRepository).existsByOwnerIdAndNameIgnoreCase(venue.ownerId, venue.name)
-        verify(venueRepository).save(venueArgumentCaptor.capture())
+        verify(venueRepository).saveAndFlush(venueArgumentCaptor.capture())
         verifyNoMoreInteractions(userRepository, venueRepository)
         verifyNoInteractions(workingDaysRepository)
     }
@@ -178,7 +178,7 @@ class CreateVenueTest : BaseVenueServiceTest() {
 
         verify(userRepository).findById(venue.ownerId)
         verify(venueRepository).existsByOwnerIdAndNameIgnoreCase(venue.ownerId, venue.name)
-        verify(venueRepository).save(any())
+        verify(venueRepository).saveAndFlush(any())
         verify(workingDaysRepository).saveAll(anyList())
         verifyNoMoreInteractions(userRepository, venueRepository, workingDaysRepository)
     }
@@ -198,7 +198,7 @@ class CreateVenueTest : BaseVenueServiceTest() {
 
         verify(userRepository).findById(venue.ownerId)
         verify(venueRepository).existsByOwnerIdAndNameIgnoreCase(venue.ownerId, venue.name)
-        verify(venueRepository).save(venueArgumentCaptor.capture())
+        verify(venueRepository).saveAndFlush(venueArgumentCaptor.capture())
         val savedVenue = venueArgumentCaptor.value
         savedVenue.name `should be equal to` venue.name
         savedVenue.location `should be equal to` venue.location

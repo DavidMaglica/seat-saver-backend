@@ -123,7 +123,7 @@ class VenueService(
         val (lowerBound, upperBound) = getSurroundingHalfHours(currentTimestamp)
 
         if (latitude == null || longitude == null) {
-            val venues = venueRepository.findByLocation(defaultLocation, pageable)
+            val venues = venueRepository.findByLocationContaining(defaultLocation, pageable)
             return venuesToPagedResponse(venues, lowerBound, upperBound)
         }
 
@@ -131,7 +131,7 @@ class VenueService(
         val nearbyCities = geolocationService.getNearbyCities(latitude, longitude)
 
         if (nearbyCities.isNullOrEmpty()) {
-            val venues = venueRepository.findByLocation(currentCity, pageable)
+            val venues = venueRepository.findByLocationContaining(currentCity, pageable)
             return venuesToPagedResponse(venues, lowerBound, upperBound)
         }
 
@@ -321,15 +321,15 @@ class VenueService(
             return DataResponse(false, "Venue with name '${request.name}' already exists for this owner.")
         }
 
-        val workingDaysEntities = request.workingDays.distinct().map { dayOfWeek ->
-            WorkingDaysEntity().apply {
-                this.venueId = venue.id
-                this.dayOfWeek = dayOfWeek
-            }
-        }
-
         try {
-            venueRepository.save(venue)
+            venueRepository.saveAndFlush(venue)
+
+            val workingDaysEntities = request.workingDays.distinct().map { dayOfWeek ->
+                WorkingDaysEntity().apply {
+                    this.venueId = venue.id
+                    this.dayOfWeek = dayOfWeek
+                }
+            }
             workingDaysRepository.saveAll(workingDaysEntities)
         } catch (e: Exception) {
             logger.error(e) { "Error while creating venue: ${e.message}" }
