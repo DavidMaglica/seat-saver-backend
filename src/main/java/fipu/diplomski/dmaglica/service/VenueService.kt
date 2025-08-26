@@ -19,6 +19,7 @@ import fipu.diplomski.dmaglica.util.toDto
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.persistence.EntityNotFoundException
 import org.springframework.data.domain.*
+import org.springframework.data.jpa.domain.Specification
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
@@ -137,7 +138,7 @@ class VenueService(
 
         nearbyCities.add(currentCity)
 
-        val venues = venueRepository.findByLocationIn(nearbyCities, pageable)
+        val venues = findByCitiesContaining(nearbyCities, pageable)
 
         return venuesToPagedResponse(venues, lowerBound, upperBound)
     }
@@ -646,5 +647,15 @@ class VenueService(
             }
         }
         return null
+    }
+
+    fun findByCitiesContaining(locations: List<String>, pageable: Pageable): Page<VenueEntity> {
+        val spec = Specification<VenueEntity> { root, _, cb ->
+            val predicates = locations.map { city ->
+                cb.like(cb.lower(root.get("location")), "%${city.lowercase()}%")
+            }
+            cb.or(*predicates.toTypedArray())
+        }
+        return venueRepository.findAll(spec, pageable)
     }
 }

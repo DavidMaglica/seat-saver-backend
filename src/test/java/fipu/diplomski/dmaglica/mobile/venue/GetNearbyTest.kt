@@ -1,11 +1,13 @@
 package fipu.diplomski.dmaglica.mobile.venue
 
+import fipu.diplomski.dmaglica.repo.entity.VenueEntity
 import org.amshove.kluent.`should be equal to`
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
+import org.springframework.data.jpa.domain.Specification
 import org.springframework.test.context.ActiveProfiles
 import kotlin.test.Test
 
@@ -66,7 +68,7 @@ class GetNearbyTest : BaseVenueServiceTest() {
 
         `when`(geolocationService.getGeolocation(anyDouble(), anyDouble())).thenReturn(currentCity)
         `when`(geolocationService.getNearbyCities(anyDouble(), anyDouble())).thenReturn(nearbyCities)
-        `when`(venueRepository.findByLocationIn(listOf("Porec", "Crikvenica", currentCity), pageable))
+        `when`(venueRepository.findAll(any<Specification<VenueEntity>>(), eq(pageable)))
             .thenReturn(PageImpl(allVenues))
 
         val result = venueService.getNearbyVenues(pageable, 45.33, 14.44)
@@ -76,7 +78,7 @@ class GetNearbyTest : BaseVenueServiceTest() {
 
         verify(geolocationService).getGeolocation(45.33, 14.44)
         verify(geolocationService).getNearbyCities(45.33, 14.44)
-        verify(venueRepository).findByLocationIn(listOf("Porec", "Crikvenica", currentCity), pageable)
+        verify(venueRepository).findAll(any<Specification<VenueEntity>>(), eq(pageable))
         verifyNoMoreInteractions(geolocationService, venueRepository)
     }
 
