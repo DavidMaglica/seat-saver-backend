@@ -16,6 +16,8 @@ import java.util.*
 class CreateVenueTest : BaseVenueServiceTest() {
 
     private val venue = createVenue()
+    private val workingDays = listOf(0, 1, 2, 5, 6)
+    private val workingDaysEntity = createWorkingDays(venue.id, workingDays)
     private val user = createUser()
     private val owner = createUser().also { it.roleId = Role.OWNER.ordinal }
     private val request = CreateVenueRequest(
@@ -24,6 +26,7 @@ class CreateVenueTest : BaseVenueServiceTest() {
         venue.location,
         venue.description,
         venue.venueTypeId,
+        workingDays,
         venue.workingHours,
         venue.maximumCapacity,
     )
@@ -37,7 +40,7 @@ class CreateVenueTest : BaseVenueServiceTest() {
         response.success `should be equal to` false
         response.message `should be equal to` "Name cannot be empty."
 
-        verifyNoInteractions(venueRepository)
+        verifyNoInteractions(venueRepository, userRepository, workingDaysRepository)
     }
 
     @Test
@@ -49,7 +52,19 @@ class CreateVenueTest : BaseVenueServiceTest() {
         response.success `should be equal to` false
         response.message `should be equal to` "Location cannot be empty."
 
-        verifyNoInteractions(venueRepository)
+        verifyNoInteractions(venueRepository, userRepository, workingDaysRepository)
+    }
+
+    @Test
+    fun `should return failing response if venue working days are empty`() {
+        val invalidRequest = request.copy(workingDays = emptyList())
+
+        val response = venueService.create(invalidRequest)
+
+        response.success `should be equal to` false
+        response.message `should be equal to` "Working days cannot be empty."
+
+        verifyNoInteractions(venueRepository, userRepository, workingDaysRepository)
     }
 
     @Test
@@ -61,7 +76,7 @@ class CreateVenueTest : BaseVenueServiceTest() {
         response.success `should be equal to` false
         response.message `should be equal to` "Working hours cannot be empty."
 
-        verifyNoInteractions(venueRepository)
+        verifyNoInteractions(venueRepository, userRepository, workingDaysRepository)
     }
 
     @Test
@@ -73,7 +88,7 @@ class CreateVenueTest : BaseVenueServiceTest() {
         response.success `should be equal to` false
         response.message `should be equal to` "Maximum capacity must be positive."
 
-        verifyNoInteractions(venueRepository)
+        verifyNoInteractions(venueRepository, userRepository, workingDaysRepository)
     }
 
     @Test
@@ -85,7 +100,7 @@ class CreateVenueTest : BaseVenueServiceTest() {
         response.success `should be equal to` false
         response.message `should be equal to` "Invalid venue type id."
 
-        verifyNoInteractions(venueRepository)
+        verifyNoInteractions(venueRepository, userRepository, workingDaysRepository)
     }
 
     @Test
@@ -99,7 +114,7 @@ class CreateVenueTest : BaseVenueServiceTest() {
 
         verify(userRepository).findById(venue.ownerId)
         verifyNoMoreInteractions(userRepository)
-        verifyNoInteractions(venueRepository)
+        verifyNoInteractions(venueRepository, workingDaysRepository)
     }
 
     @Test
@@ -113,7 +128,7 @@ class CreateVenueTest : BaseVenueServiceTest() {
 
         verify(userRepository).findById(venue.ownerId)
         verifyNoMoreInteractions(userRepository)
-        verifyNoInteractions(venueRepository)
+        verifyNoInteractions(venueRepository, workingDaysRepository)
     }
 
     @Test
@@ -128,14 +143,14 @@ class CreateVenueTest : BaseVenueServiceTest() {
 
         verify(userRepository).findById(venue.ownerId)
         verify(venueRepository).existsByOwnerIdAndNameIgnoreCase(venue.ownerId, venue.name)
-        verifyNoMoreInteractions(userRepository, venueRepository)
+        verifyNoMoreInteractions(userRepository, venueRepository, workingDaysRepository)
     }
 
     @Test
-    fun `should throw if unable to save venue`() {
+    fun `should return failing response if unable to save venue`() {
         `when`(userRepository.findById(venue.ownerId)).thenReturn(Optional.of(owner))
         `when`(venueRepository.existsByOwnerIdAndNameIgnoreCase(venue.ownerId, venue.name)).thenReturn(false)
-        `when`(venueRepository.save(any())).thenThrow(RuntimeException("Unable to save venue"))
+        `when`(venueRepository.saveAndFlush(any())).thenThrow(RuntimeException("Unable to save venue"))
 
         val response = venueService.create(request)
 
@@ -144,8 +159,28 @@ class CreateVenueTest : BaseVenueServiceTest() {
 
         verify(userRepository).findById(venue.ownerId)
         verify(venueRepository).existsByOwnerIdAndNameIgnoreCase(venue.ownerId, venue.name)
-        verify(venueRepository).save(venueArgumentCaptor.capture())
+        verify(venueRepository).saveAndFlush(venueArgumentCaptor.capture())
         verifyNoMoreInteractions(userRepository, venueRepository)
+        verifyNoInteractions(workingDaysRepository)
+    }
+
+    @Test
+    fun `should return failing response if unable to save working hours`() {
+        `when`(userRepository.findById(venue.ownerId)).thenReturn(Optional.of(owner))
+        `when`(venueRepository.existsByOwnerIdAndNameIgnoreCase(venue.ownerId, venue.name)).thenReturn(false)
+        `when`(venueRepository.save(any())).thenReturn(venue)
+        `when`(workingDaysRepository.saveAll(listOf())).thenThrow(RuntimeException("Unable to save venue"))
+
+        val response = venueService.create(request)
+
+        response.success `should be equal to` false
+        response.message `should be equal to` "Error while creating venue. Please try again later."
+
+        verify(userRepository).findById(venue.ownerId)
+        verify(venueRepository).existsByOwnerIdAndNameIgnoreCase(venue.ownerId, venue.name)
+        verify(venueRepository).saveAndFlush(any())
+        verify(workingDaysRepository).saveAll(anyList())
+        verifyNoMoreInteractions(userRepository, venueRepository, workingDaysRepository)
     }
 
     @Test
@@ -153,6 +188,7 @@ class CreateVenueTest : BaseVenueServiceTest() {
         `when`(userRepository.findById(venue.ownerId)).thenReturn(Optional.of(owner))
         `when`(venueRepository.existsByOwnerIdAndNameIgnoreCase(venue.ownerId, venue.name)).thenReturn(false)
         `when`(venueRepository.save(any())).thenReturn(venue)
+        `when`(workingDaysRepository.saveAll(anyList())).thenReturn(workingDaysEntity)
 
         val response = venueService.create(request)
 
@@ -162,7 +198,7 @@ class CreateVenueTest : BaseVenueServiceTest() {
 
         verify(userRepository).findById(venue.ownerId)
         verify(venueRepository).existsByOwnerIdAndNameIgnoreCase(venue.ownerId, venue.name)
-        verify(venueRepository).save(venueArgumentCaptor.capture())
+        verify(venueRepository).saveAndFlush(venueArgumentCaptor.capture())
         val savedVenue = venueArgumentCaptor.value
         savedVenue.name `should be equal to` venue.name
         savedVenue.location `should be equal to` venue.location
@@ -172,6 +208,14 @@ class CreateVenueTest : BaseVenueServiceTest() {
         savedVenue.maximumCapacity `should be equal to` venue.maximumCapacity
         savedVenue.availableCapacity `should be equal to` venue.maximumCapacity
 
-        verifyNoMoreInteractions(userRepository, venueRepository)
+        verify(workingDaysRepository).saveAll(workingDaysCaptor.capture())
+        val savedWorkingDays = workingDaysCaptor.value
+        savedWorkingDays.size `should be equal to` workingDays.size
+        for (i in workingDays.indices) {
+            savedWorkingDays[i].venueId `should be equal to` venue.id
+            savedWorkingDays[i].dayOfWeek `should be equal to` workingDays[i]
+        }
+
+        verifyNoMoreInteractions(userRepository, venueRepository, workingDaysRepository)
     }
 }

@@ -17,10 +17,11 @@ fun ReservationEntity.toDto() = Reservation(
     numberOfGuests = this.numberOfGuests,
 )
 
-fun VenueEntity.toDto() = Venue(
+fun VenueEntity.toDto(workingDays: List<Int>) = Venue(
     id = this.id,
     name = this.name,
     location = this.location,
+    workingDays = workingDays,
     workingHours = this.workingHours,
     maximumCapacity = this.maximumCapacity,
     availableCapacity = this.availableCapacity,

@@ -13,6 +13,7 @@ import fipu.diplomski.dmaglica.repo.*
 import fipu.diplomski.dmaglica.repo.entity.ReservationEntity
 import fipu.diplomski.dmaglica.repo.entity.VenueEntity
 import fipu.diplomski.dmaglica.repo.entity.VenueRatingEntity
+import fipu.diplomski.dmaglica.repo.entity.WorkingDaysEntity
 import fipu.diplomski.dmaglica.util.getSurroundingHalfHours
 import fipu.diplomski.dmaglica.util.toDto
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -30,6 +31,7 @@ class VenueService(
     private val venueRatingRepository: VenueRatingRepository,
     private val venueTypeRepository: VenueTypeRepository,
     private val reservationRepository: ReservationRepository,
+    private val workingDaysRepository: WorkingDaysRepository,
     private val imageService: ImageService,
     private val geolocationService: GeolocationService,
     private val userRepository: UserRepository,
@@ -64,7 +66,10 @@ class VenueService(
             venue.availableCapacity = venue.maximumCapacity
         }
 
-        return venue.toDto()
+        val workingDaysEntities = workingDaysRepository.findAllByVenueId(venueId)
+        val workingDays = workingDaysEntities.map { it.dayOfWeek }
+
+        return venue.toDto(workingDays)
     }
 
     @Transactional(readOnly = true)
@@ -118,7 +123,7 @@ class VenueService(
         val (lowerBound, upperBound) = getSurroundingHalfHours(currentTimestamp)
 
         if (latitude == null || longitude == null) {
-            val venues = venueRepository.findByLocation(defaultLocation, pageable)
+            val venues = venueRepository.findByLocationContaining(defaultLocation, pageable)
             return venuesToPagedResponse(venues, lowerBound, upperBound)
         }
 
@@ -126,7 +131,7 @@ class VenueService(
         val nearbyCities = geolocationService.getNearbyCities(latitude, longitude)
 
         if (nearbyCities.isNullOrEmpty()) {
-            val venues = venueRepository.findByLocation(currentCity, pageable)
+            val venues = venueRepository.findByLocationContaining(currentCity, pageable)
             return venuesToPagedResponse(venues, lowerBound, upperBound)
         }
 
@@ -317,7 +322,15 @@ class VenueService(
         }
 
         try {
-            venueRepository.save(venue)
+            venueRepository.saveAndFlush(venue)
+
+            val workingDaysEntities = request.workingDays.distinct().map { dayOfWeek ->
+                WorkingDaysEntity().apply {
+                    this.venueId = venue.id
+                    this.dayOfWeek = dayOfWeek
+                }
+            }
+            workingDaysRepository.saveAll(workingDaysEntities)
         } catch (e: Exception) {
             logger.error(e) { "Error while creating venue: ${e.message}" }
             return DataResponse(false, "Error while creating venue. Please try again later.")
@@ -340,7 +353,9 @@ class VenueService(
 
         validateUpdateRequest(request)?.let { return it }
 
-        if (!containsVenueChanges(request, venue)) return BasicResponse(
+        val workingDays: List<WorkingDaysEntity> = workingDaysRepository.findAllByVenueId(venueId)
+
+        if (!containsVenueChanges(request, venue, workingDays)) return BasicResponse(
             false,
             "No modifications found. Please change at least one field."
         )
@@ -356,6 +371,17 @@ class VenueService(
                 else -> newMaxCapacity - currentReservations
             }
         }
+
+        if (!request?.workingDays.isNullOrEmpty()) {
+            val oldDays = workingDays.map { it.dayOfWeek }.toSet()
+            val newDays = request.workingDays.toSet()
+
+            val toAdd = newDays - oldDays
+            val toRemove = oldDays - newDays
+
+            syncWorkingDays(venueId, workingDays, toAdd, toRemove)?.let { return it }
+        }
+
 
         venue.apply {
             name = request?.name ?: venue.name
@@ -462,7 +488,11 @@ class VenueService(
             upperBound,
             page.content
         )
-        val mappedVenues = enrichedVenues.map { it.toDto() }
+        val workingDaysEntities = workingDaysRepository.findAllByVenueIdIn(venueIds).groupBy { it.venueId }
+        val mappedVenues = enrichedVenues.map { venueEntity ->
+            val workingDays = workingDaysEntities[venueEntity.id]?.map { it.dayOfWeek } ?: emptyList()
+            venueEntity.toDto(workingDays)
+        }
         return PagedResponse(
             content = mappedVenues,
             page = page.number,
@@ -476,6 +506,7 @@ class VenueService(
         request.name.isBlank() -> DataResponse(false, "Name cannot be empty.")
         request.location.isBlank() -> DataResponse(false, "Location cannot be empty.")
         request.workingHours.isBlank() -> DataResponse(false, "Working hours cannot be empty.")
+        request.workingDays.isEmpty() -> DataResponse(false, "Working days cannot be empty.")
         request.maximumCapacity <= 0 -> DataResponse(false, "Maximum capacity must be positive.")
         request.typeId <= 0 -> DataResponse(false, "Invalid venue type id.")
         else -> null
@@ -497,6 +528,11 @@ class VenueService(
         request.typeId?.let { it <= 0 } == true ->
             BasicResponse(false, "Invalid venue type id.")
 
+        request.workingDays?.let {
+            it.any { day -> day !in 0..6 }
+        } == true ->
+            BasicResponse(false, "Working days must be between Monday and Sunday.")
+
         request.workingHours?.isBlank() == true ->
             BasicResponse(false, "Working hours are not valid.")
 
@@ -506,12 +542,17 @@ class VenueService(
         else -> null
     }
 
-    private fun containsVenueChanges(request: UpdateVenueRequest?, venue: VenueEntity): Boolean {
+    private fun containsVenueChanges(
+        request: UpdateVenueRequest?,
+        venue: VenueEntity,
+        workingDays: List<WorkingDaysEntity>
+    ): Boolean {
         if (request == null) return false
 
         return listOf(
             request.name?.takeIf { it != venue.name },
             request.location?.takeIf { it != venue.location },
+            request.workingDays?.takeIf { it.sorted() != workingDays.map { wd -> wd.dayOfWeek }.sorted() },
             request.workingHours?.takeIf { it != venue.workingHours },
             request.maximumCapacity?.takeIf { it != venue.maximumCapacity },
             request.typeId?.takeIf { it != venue.venueTypeId },
@@ -572,5 +613,38 @@ class VenueService(
         }
 
         return venues
+    }
+
+    private fun syncWorkingDays(
+        venueId: Int,
+        workingDays: List<WorkingDaysEntity>,
+        toAdd: Set<Int>,
+        toRemove: Set<Int>
+    ): BasicResponse? {
+        if (toRemove.isNotEmpty()) {
+            try {
+                workingDaysRepository.deleteAll(
+                    workingDays.filter { it.dayOfWeek in toRemove }
+                )
+            } catch (e: Exception) {
+                logger.error { "Error while removing working days for venue with id $venueId: ${e.message}" }
+                return BasicResponse(false, "Error while updating working days. Please try again later.")
+            }
+        }
+        if (toAdd.isNotEmpty()) {
+            val newEntities = toAdd.map { day ->
+                WorkingDaysEntity().apply {
+                    this.venueId = venueId
+                    this.dayOfWeek = day
+                }
+            }
+            try {
+                workingDaysRepository.saveAll(newEntities)
+            } catch (e: Exception) {
+                logger.error { "Error while updating working days for venue with id $venueId: ${e.message}" }
+                return BasicResponse(false, "Error while updating working days. Please try again later.")
+            }
+        }
+        return null
     }
 }

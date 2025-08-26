@@ -2,12 +2,17 @@ package fipu.diplomski.dmaglica.mobile.venue
 
 import fipu.diplomski.dmaglica.repo.entity.VenueEntity
 import org.amshove.kluent.`should be equal to`
+import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mockito.*
+import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
+import org.springframework.test.context.ActiveProfiles
 import java.time.LocalDateTime
 import kotlin.test.Test
 
+@ExtendWith(MockitoExtension::class)
+@ActiveProfiles("test")
 class GetSuggestedTest : BaseVenueServiceTest() {
 
     private val pageable = PageRequest.of(0, 10)
