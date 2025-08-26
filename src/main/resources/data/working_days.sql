@@ -6,3 +6,6 @@ CREATE TABLE IF NOT EXISTS working_days
     CONSTRAINT fk_venue FOREIGN KEY (venue_id) REFERENCES venues (id) ON DELETE CASCADE,
     CONSTRAINT uq_venue_day UNIQUE (venue_id, day_of_week)
 );
+
+INSERT INTO working_days (venue_id, day_of_week)
+VALUES (1, 0);

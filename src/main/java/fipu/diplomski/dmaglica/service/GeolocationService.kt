@@ -10,6 +10,7 @@ import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
+import java.util.concurrent.ConcurrentHashMap
 
 
 @Service
@@ -23,6 +24,8 @@ class GeolocationService(
         private val objectMapper = ObjectMapper()
         private val logger = KotlinLogging.logger(GeolocationService::class.java.name)
     }
+
+    private val cache = ConcurrentHashMap<Pair<Double, Double>, List<String>>() // Needed to avoid rate limits
 
 
     fun getGeolocation(latitude: Double, longitude: Double): String {
@@ -51,6 +54,8 @@ class GeolocationService(
         val limit = 10
         val radius = 100
         val minPopulation = 1000
+        val key = latitude to longitude
+        cache[key]?.let { return it.toMutableList() }
 
         val request: HttpRequest? = HttpRequest.newBuilder()
             .uri(URI.create("https://wft-geo-db.p.rapidapi.com/v1/geo/locations/$latitude%2B$longitude/nearbyCities?radius=$radius&limit=$limit&minPopulation=$minPopulation"))
@@ -66,8 +71,14 @@ class GeolocationService(
         }
 
         val responseBody = objectMapper.readTree(response.body())
-        val cities = responseBody["data"].mapNotNull { it["city"]?.asText() }
+        val dataNode = responseBody["data"]
+        if (dataNode == null || !dataNode.isArray) {
+            logger.error { "Nearby cities response does not contain expected 'data' array: $responseBody" }
+            return mutableListOf()
+        }
 
+        val cities = dataNode.mapNotNull { it["city"]?.asText() }
+        cache[key] = cities
         return cities.toMutableList()
     }
 }

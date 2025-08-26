@@ -650,11 +650,14 @@ class VenueService(
     }
 
     fun findByCitiesContaining(locations: List<String>, pageable: Pageable): Page<VenueEntity> {
-        val spec = Specification<VenueEntity> { root, _, cb ->
+        val spec = Specification<VenueEntity> { root, _, criteriaBuilder ->
             val predicates = locations.map { city ->
-                cb.like(cb.lower(root.get("location")), "%${city.lowercase()}%")
+                criteriaBuilder.like(
+                    criteriaBuilder.lower(criteriaBuilder.coalesce(root.get("location"), "")),
+                    "%${city.lowercase()}%"
+                )
             }
-            cb.or(*predicates.toTypedArray())
+            criteriaBuilder.or(*predicates.toTypedArray())
         }
         return venueRepository.findAll(spec, pageable)
     }

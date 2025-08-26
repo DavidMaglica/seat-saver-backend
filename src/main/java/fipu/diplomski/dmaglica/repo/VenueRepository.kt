@@ -26,9 +26,13 @@ interface VenueRepository : JpaRepository<VenueEntity, Int>, JpaSpecificationExe
 
     @Query(
         """
-        SELECT v FROM VenueEntity v
-        WHERE (:searchQuery IS NULL OR LOWER(v.name) LIKE LOWER(CONCAT('%', :searchQuery, '%')))
-        AND (:typeIds IS NULL OR v.venueTypeId IN :typeIds)
+        SELECT v
+        FROM VenueEntity v
+        WHERE (:searchQuery IS NULL OR
+               LOWER(v.name) LIKE LOWER(CONCAT('%', :searchQuery, '%'))
+            OR LOWER(v.location) LIKE LOWER(CONCAT('%', :searchQuery, '%'))
+            )
+          AND (:typeIds IS NULL OR v.venueTypeId IN :typeIds)
         ORDER BY v.name ASC
     """
     )

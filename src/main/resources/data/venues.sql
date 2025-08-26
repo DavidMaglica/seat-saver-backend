@@ -12,3 +12,7 @@ CREATE TABLE IF NOT EXISTS venues
     description        VARCHAR(500) DEFAULT NULL,
     CONSTRAINT venue_type_fk FOREIGN KEY (venue_type_id) REFERENCES venue_types (id)
 );
+
+INSERT INTO venues (owner_id, name, location, working_hours, maximum_capacity, available_capacity, average_rating,
+                    venue_type_id, description)
+VALUES (1, 'Grand Hall', '123 Main St, Poreč', '09:00-22:00', 500, 500, 4.5, 1, 'A spacious venue for large events.');
