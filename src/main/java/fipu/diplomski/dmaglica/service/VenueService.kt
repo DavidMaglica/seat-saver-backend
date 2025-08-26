@@ -43,6 +43,8 @@ class VenueService(
 
         private const val LOWEST_ALLOWED_RATING = 1.0
         private const val HIGHEST_ALLOWED_RATING = 5.0
+
+        private const val VENUE_LOCATION_FIELD = "location"
     }
 
     @Transactional(readOnly = true)
@@ -131,7 +133,7 @@ class VenueService(
         val currentCity = geolocationService.getGeolocation(latitude, longitude)
         val nearbyCities = geolocationService.getNearbyCities(latitude, longitude)
 
-        if (nearbyCities.isNullOrEmpty()) {
+        if (nearbyCities.isEmpty()) {
             val venues = venueRepository.findByLocationContaining(currentCity, pageable)
             return venuesToPagedResponse(venues, lowerBound, upperBound)
         }
@@ -653,7 +655,7 @@ class VenueService(
         val spec = Specification<VenueEntity> { root, _, criteriaBuilder ->
             val predicates = locations.map { city ->
                 criteriaBuilder.like(
-                    criteriaBuilder.lower(criteriaBuilder.coalesce(root.get("location"), "")),
+                    criteriaBuilder.lower(criteriaBuilder.coalesce(root.get(VENUE_LOCATION_FIELD), "")),
                     "%${city.lowercase()}%"
                 )
             }

@@ -1,6 +1,7 @@
 package fipu.diplomski.dmaglica.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.github.benmanes.caffeine.cache.Caffeine
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -10,7 +11,7 @@ import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
-import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
 
 
 @Service
@@ -25,7 +26,10 @@ class GeolocationService(
         private val logger = KotlinLogging.logger(GeolocationService::class.java.name)
     }
 
-    private val cache = ConcurrentHashMap<Pair<Double, Double>, List<String>>() // Needed to avoid rate limits
+    private val cache = Caffeine.newBuilder()
+        .maximumSize(1000)
+        .expireAfterWrite(1, TimeUnit.HOURS)
+        .build<Pair<Double, Double>, List<String>>() // Needed to avoid rate limits
 
 
     fun getGeolocation(latitude: Double, longitude: Double): String {
@@ -50,35 +54,42 @@ class GeolocationService(
         return defaultLocation
     }
 
-    fun getNearbyCities(latitude: Double, longitude: Double): MutableList<String>? {
+    fun getNearbyCities(latitude: Double, longitude: Double): MutableList<String> {
         val limit = 10
         val radius = 100
         val minPopulation = 1000
         val key = latitude to longitude
-        cache[key]?.let { return it.toMutableList() }
 
-        val request: HttpRequest? = HttpRequest.newBuilder()
-            .uri(URI.create("https://wft-geo-db.p.rapidapi.com/v1/geo/locations/$latitude%2B$longitude/nearbyCities?radius=$radius&limit=$limit&minPopulation=$minPopulation"))
-            .header("x-rapidapi-key", apiKey)
-            .header("x-rapidapi-host", "wft-geo-db.p.rapidapi.com")
-            .method("GET", HttpRequest.BodyPublishers.noBody())
-            .build()
-        val response: HttpResponse<String?> = try {
-            HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString())
-        } catch (e: Exception) {
-            logger.error { "Failed to fetch geolocation. Error: ${e.message}" }
-            return mutableListOf()
-        }
+        return cache.get(key) {
+            try {
+                val request = HttpRequest.newBuilder()
+                    .uri(
+                        URI.create(
+                            "https://wft-geo-db.p.rapidapi.com/v1/geo/locations/$latitude%2B$longitude/nearbyCities" +
+                                    "?radius=$radius&limit=$limit&minPopulation=$minPopulation"
+                        )
+                    )
+                    .header("x-rapidapi-key", apiKey)
+                    .header("x-rapidapi-host", "wft-geo-db.p.rapidapi.com")
+                    .GET()
+                    .build()
 
-        val responseBody = objectMapper.readTree(response.body())
-        val dataNode = responseBody["data"]
-        if (dataNode == null || !dataNode.isArray) {
-            logger.error { "Nearby cities response does not contain expected 'data' array: $responseBody" }
-            return mutableListOf()
-        }
+                val response: HttpResponse<String> =
+                    HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString())
 
-        val cities = dataNode.mapNotNull { it["city"]?.asText() }
-        cache[key] = cities
-        return cities.toMutableList()
+                val responseBody = objectMapper.readTree(response.body())
+                val dataNode = responseBody["data"]
+
+                if (dataNode == null || !dataNode.isArray) {
+                    logger.error { "Nearby cities response does not contain expected 'data' array: $responseBody" }
+                    emptyList()
+                } else {
+                    dataNode.mapNotNull { it["city"]?.asText() }
+                }
+            } catch (e: Exception) {
+                logger.error(e) { "Failed to fetch nearby cities. Error: ${e.message}" }
+                emptyList()
+            }
+        }.toMutableList()
     }
 }
