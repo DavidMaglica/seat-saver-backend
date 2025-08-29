@@ -25,7 +25,7 @@ class GeolocationController(
      *
      * @param latitude The latitude coordinate (decimal degrees)
      * @param longitude The longitude coordinate (decimal degrees)
-     * @return List of city names within 100km radius, or null if error occurs
+     * @return List of 10 items (API limit) with city names within 100km radius, minimum population of 10_000 or null if error occurs
      * @apiNote Uses RapidAPI's GeoDB Cities API
      */
     @GetMapping(Paths.GET_NEARBY_CITIES)

@@ -26,4 +26,19 @@ class VenueEntity {
     var venueTypeId: Int = 0
 
     var description: String? = ""
+
+    @OneToMany(mappedBy = "venueId", cascade = [CascadeType.ALL], orphanRemoval = true)
+    val workingDays: MutableList<WorkingDaysEntity> = mutableListOf()
+
+    @OneToMany(mappedBy = "venueId", cascade = [CascadeType.ALL], orphanRemoval = true)
+    val reservations: MutableList<ReservationEntity> = mutableListOf()
+
+    @OneToMany(mappedBy = "venueId", cascade = [CascadeType.ALL], orphanRemoval = true)
+    val venueImages: MutableList<VenueImageEntity> = mutableListOf()
+
+    @OneToMany(mappedBy = "venueId", cascade = [CascadeType.ALL], orphanRemoval = true)
+    val menuImages: MutableList<MenuImageEntity> = mutableListOf()
+
+    @OneToMany(mappedBy = "venueId", cascade = [CascadeType.ALL], orphanRemoval = true)
+    val venueRatings: MutableList<VenueRatingEntity> = mutableListOf()
 }

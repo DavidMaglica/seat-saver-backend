@@ -20,4 +20,8 @@ class UserEntity {
     var lastKnownLongitude: Double? = null
 
     var roleId: Int = 0
+
+    @OneToMany(mappedBy = "userId", cascade = [CascadeType.ALL], orphanRemoval = true)
+    val reservations: MutableList<ReservationEntity> = mutableListOf()
+
 }
