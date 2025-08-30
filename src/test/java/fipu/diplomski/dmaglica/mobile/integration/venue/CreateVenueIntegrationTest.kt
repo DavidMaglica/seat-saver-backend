@@ -18,7 +18,7 @@ class CreateVenueIntegrationTest : AbstractVenueIntegrationTest() {
             name = "Owner Venue",
             location = "Main Street",
             description = "A test venue",
-            workingHours = "9:00 - 17:00",
+            workingHours = "09:00 - 17:00",
             maximumCapacity = 50,
             typeId = 1,
             workingDays = listOf(1, 2, 3)
@@ -64,7 +64,7 @@ class CreateVenueIntegrationTest : AbstractVenueIntegrationTest() {
             name = "Customer Venue",
             location = "Fail Street",
             description = "Should fail",
-            workingHours = "9:00 - 17:00",
+            workingHours = "09:00 - 17:00",
             maximumCapacity = 30,
             typeId = 1,
             workingDays = listOf(1)

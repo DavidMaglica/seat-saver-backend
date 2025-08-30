@@ -61,7 +61,7 @@ abstract class AbstractReservationIntegrationTest {
         name: String = "Test Venue",
         venueTypeId: Int = 1,
         location: String = "Test Location",
-        workingHours: String = "9:00 - 17:00",
+        workingHours: String = "09:00 - 17:00",
         description: String = "Test Description",
         maximumCapacity: Int = 100,
         availableCapacity: Int = 100,

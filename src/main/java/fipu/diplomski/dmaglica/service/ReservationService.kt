@@ -205,8 +205,9 @@ class ReservationService(
         workingHours: String,
         reservationDateTime: LocalDateTime
     ): BasicResponse? {
-        val timeFormatter = DateTimeFormatter.ofPattern("H:mm")
-        val (openingTime, closingTime) = workingHours.split(" - ").map { time ->
+        val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
+        val times = workingHours.split(Regex("\\s*-\\s*"))
+        val (openingTime, closingTime) = times.map { time ->
             LocalDateTime.of(reservationDateTime.toLocalDate(), java.time.LocalTime.parse(time, timeFormatter))
         }
         if (reservationDateTime.isBefore(openingTime) || reservationDateTime.isAfter(closingTime)) {

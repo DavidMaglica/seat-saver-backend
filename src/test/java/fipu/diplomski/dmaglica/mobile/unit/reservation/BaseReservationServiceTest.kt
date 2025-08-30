@@ -71,7 +71,7 @@ abstract class BaseReservationServiceTest {
         name = "Test Venue"
         location = "Test Location"
         description = "Test Description"
-        workingHours = "9:00 - 17:00"
+        workingHours = "09:00 - 17:00"
         maximumCapacity = 100
         availableCapacity = 98
         averageRating = 0.0
