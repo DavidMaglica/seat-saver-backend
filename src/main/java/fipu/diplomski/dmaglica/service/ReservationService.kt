@@ -9,15 +9,18 @@ import fipu.diplomski.dmaglica.model.response.BasicResponse
 import fipu.diplomski.dmaglica.repo.ReservationRepository
 import fipu.diplomski.dmaglica.repo.UserRepository
 import fipu.diplomski.dmaglica.repo.VenueRepository
+import fipu.diplomski.dmaglica.repo.WorkingDaysRepository
 import fipu.diplomski.dmaglica.repo.entity.ReservationEntity
 import fipu.diplomski.dmaglica.repo.entity.UserEntity
 import fipu.diplomski.dmaglica.util.getSurroundingHalfHours
 import fipu.diplomski.dmaglica.util.toDto
 import io.github.oshai.kotlinlogging.KotlinLogging
+import jakarta.persistence.EntityNotFoundException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Isolation
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import kotlin.jvm.optionals.getOrElse
 import kotlin.jvm.optionals.getOrNull
 
@@ -26,6 +29,7 @@ class ReservationService(
     private val reservationRepository: ReservationRepository,
     private val userRepository: UserRepository,
     private val venueRepository: VenueRepository,
+    private val workingDaysRepository: WorkingDaysRepository,
 ) {
 
     companion object {
@@ -48,8 +52,12 @@ class ReservationService(
             VenueNotFoundException("Venue with id ${request.venueId} not found")
         }
 
-        val currentTimestamp: LocalDateTime = request.reservationDate
-        val (lowerBound, upperBound) = getSurroundingHalfHours(currentTimestamp)
+        val reservationDateTime: LocalDateTime = request.reservationDate
+        val (lowerBound, upperBound) = getSurroundingHalfHours(reservationDateTime)
+
+
+        checkWorkingHours(venue.workingHours, request.reservationDate)?.let { return it }
+        checkWorkingDays(venue.id, request.reservationDate)?.let { return it }
 
         val reservations = reservationRepository.findByVenueIdAndDatetimeBetween(
             request.venueId, lowerBound, upperBound
@@ -143,6 +151,15 @@ class ReservationService(
             "No modifications found. Please change at least one field."
         )
 
+        val venue = venueRepository.findById(reservation.venueId).orElseThrow {
+            EntityNotFoundException("Venue with id ${reservation.venueId} not found")
+        }
+
+        if (request.reservationDate != null) {
+            checkWorkingHours(venue.workingHours, request.reservationDate)?.let { return it }
+            checkWorkingDays(venue.id, request.reservationDate)?.let { return it }
+        }
+
         reservation.apply {
             numberOfGuests = request.numberOfGuests ?: reservation.numberOfGuests
             datetime = request.reservationDate ?: reservation.datetime
@@ -183,4 +200,28 @@ class ReservationService(
     ): Boolean =
         (request.reservationDate != null && !request.reservationDate.isEqual(reservation.datetime)) ||
                 (request.numberOfGuests != null && request.numberOfGuests != reservation.numberOfGuests)
+
+    private fun checkWorkingHours(
+        workingHours: String,
+        reservationDateTime: LocalDateTime
+    ): BasicResponse? {
+        val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
+        val times = workingHours.split(Regex("\\s*-\\s*"))
+        val (openingTime, closingTime) = times.map { time ->
+            LocalDateTime.of(reservationDateTime.toLocalDate(), java.time.LocalTime.parse(time, timeFormatter))
+        }
+        if (reservationDateTime.isBefore(openingTime) || reservationDateTime.isAfter(closingTime)) {
+            return BasicResponse(false, "The venue is closed at the selected time. Please choose a different time.")
+        }
+        return null
+    }
+
+    private fun checkWorkingDays(venueId: Int, reservationDateTime: LocalDateTime): BasicResponse? {
+        val workingDays = workingDaysRepository.findAllByVenueId(venueId)
+        val dayOfWeek = (reservationDateTime.dayOfWeek.value - 1) % 7
+        if (workingDays.none { it.dayOfWeek == dayOfWeek }) {
+            return BasicResponse(false, "The venue is closed on the selected day. Please choose a different day.")
+        }
+        return null
+    }
 }

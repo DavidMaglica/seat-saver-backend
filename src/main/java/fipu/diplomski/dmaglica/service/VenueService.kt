@@ -510,6 +510,11 @@ class VenueService(
         request.location.isBlank() -> DataResponse(false, "Location cannot be empty.")
         request.workingHours.isBlank() -> DataResponse(false, "Working hours cannot be empty.")
         request.workingDays.isEmpty() -> DataResponse(false, "Working days cannot be empty.")
+        request.workingDays.any { it !in 0..6 } -> DataResponse(
+            false,
+            "Working days must be between Monday and Sunday."
+        )
+
         request.maximumCapacity <= 0 -> DataResponse(false, "Maximum capacity must be positive.")
         request.typeId <= 0 -> DataResponse(false, "Invalid venue type id.")
         else -> null

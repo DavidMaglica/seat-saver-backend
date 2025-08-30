@@ -26,12 +26,37 @@ class GeolocationService(
         private val logger = KotlinLogging.logger(GeolocationService::class.java.name)
     }
 
+    /**
+     * In-memory cache for nearby cities lookups to reduce calls to the external
+     * GeoDB Cities API and avoid hitting rate limits.
+     *
+     * - Keys are pairs of latitude/longitude coordinates.
+     * - Values are lists of nearby city names returned by the API.
+     * - Cache entries expire 1 hour after being written.
+     * - Maximum cache size is limited to 1000 entries to prevent unbounded memory usage.
+     */
     private val cache = Caffeine.newBuilder()
         .maximumSize(1000)
         .expireAfterWrite(1, TimeUnit.HOURS)
-        .build<Pair<Double, Double>, List<String>>() // Needed to avoid rate limits
+        .build<Pair<Double, Double>, List<String>>()
 
 
+    /**
+     * Performs a reverse geocoding lookup to resolve a human-readable city name
+     * for the given latitude and longitude.
+     *
+     * Uses the [BigDataCloud Reverse Geocode API](https://www.bigdatacloud.com/geocoding-apis/reverse-geocode-to-city-api)
+     * via a simple REST call.
+     *
+     * @param latitude The latitude of the location to resolve.
+     * @param longitude The longitude of the location to resolve.
+     * @return The city name for the given coordinates, or `"Zagreb"` if the lookup fails
+     *         or the API does not return a valid city field.
+     *
+     * Error handling:
+     * - Logs an error if the request fails or the API response is invalid.
+     * - Returns the default `"Zagreb"` as a fallback to ensure a non-null result.
+     */
     fun getGeolocation(latitude: Double, longitude: Double): String {
         val defaultLocation = "Zagreb"
         val baseUrl = "https://api-bdc.net/data/reverse-geocode-client"

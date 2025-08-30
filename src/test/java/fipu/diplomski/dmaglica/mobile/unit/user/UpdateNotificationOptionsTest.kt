@@ -1,0 +1,110 @@
+package fipu.diplomski.dmaglica.mobile.unit.user
+
+import org.amshove.kluent.`should be`
+import org.amshove.kluent.`should be equal to`
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.Mockito.*
+import org.mockito.junit.jupiter.MockitoExtension
+import org.springframework.test.context.ActiveProfiles
+import java.util.*
+
+@ExtendWith(MockitoExtension::class)
+@ActiveProfiles("test")
+class UpdateNotificationOptionsTest : BaseUserServiceTest() {
+
+    @Test
+    fun `should return failure response if user not found`() {
+        `when`(userRepository.findById(anyInt())).thenReturn(Optional.empty())
+
+        val response = userService.updateNotificationOptions(
+            mockedUser.id,
+            isPushNotificationsEnabled = true,
+            isEmailNotificationsEnabled = true,
+            isLocationServicesEnabled = true
+        )
+
+        response.success `should be` false
+        response.message `should be equal to` "User not found."
+
+        verify(userRepository, times(1)).findById(mockedUser.id)
+        verifyNoMoreInteractions(userRepository)
+        verifyNoInteractions(notificationOptionsRepository)
+    }
+
+    @Test
+    fun `should return failure response if can't update notification options`() {
+        `when`(userRepository.findById(anyInt())).thenReturn(Optional.of(mockedUser))
+        `when`(notificationOptionsRepository.findByUserId(anyInt())).thenReturn(mockedNotificationOptions)
+        `when`(notificationOptionsRepository.save(any())).thenThrow(RuntimeException())
+
+        val response = userService.updateNotificationOptions(
+            mockedUser.id,
+            isPushNotificationsEnabled = false,
+            isEmailNotificationsEnabled = false,
+            isLocationServicesEnabled = false
+        )
+
+        response.success `should be` false
+        response.message `should be equal to` "Error while updating notification options. Please try again later."
+
+        verify(userRepository, times(1)).findById(mockedUser.id)
+        verify(notificationOptionsRepository, times(1)).findByUserId(mockedUser.id)
+        verify(notificationOptionsRepository, times(1)).save(any())
+        verifyNoMoreInteractions(userRepository, notificationOptionsRepository)
+    }
+
+    @Test
+    fun `should update only push notifications`() {
+        `when`(userRepository.findById(anyInt())).thenReturn(Optional.of(mockedUser))
+        `when`(notificationOptionsRepository.findByUserId(anyInt())).thenReturn(mockedNotificationOptions)
+
+        val response = userService.updateNotificationOptions(
+            mockedUser.id,
+            isPushNotificationsEnabled = true,
+            isEmailNotificationsEnabled = false,
+            isLocationServicesEnabled = false
+        )
+
+        response.success `should be` true
+        response.message `should be equal to` "Notification options successfully updated."
+
+        verify(notificationOptionsRepository).save(notificationOptionsArgumentCaptor.capture())
+        val updatedNotificationOptions = notificationOptionsArgumentCaptor.value
+        updatedNotificationOptions.locationServicesEnabled `should be equal to` false
+        updatedNotificationOptions.pushNotificationsEnabled `should be equal to` true
+        updatedNotificationOptions.emailNotificationsEnabled `should be equal to` false
+
+        verify(userRepository, times(1)).findById(mockedUser.id)
+        verify(notificationOptionsRepository, times(1)).findByUserId(mockedUser.id)
+        verify(notificationOptionsRepository, times(1)).save(any())
+        verifyNoMoreInteractions(userRepository, notificationOptionsRepository)
+    }
+
+    @Test
+    fun `should update notification options`() {
+        `when`(userRepository.findById(anyInt())).thenReturn(Optional.of(mockedUser))
+        `when`(notificationOptionsRepository.findByUserId(anyInt())).thenReturn(mockedNotificationOptions)
+
+        val response = userService.updateNotificationOptions(
+            mockedUser.id,
+            isPushNotificationsEnabled = true,
+            isEmailNotificationsEnabled = true,
+            isLocationServicesEnabled = true
+        )
+
+        response.success `should be` true
+        response.message `should be equal to` "Notification options successfully updated."
+
+        verify(notificationOptionsRepository).save(notificationOptionsArgumentCaptor.capture())
+        val updatedNotificationOptions = notificationOptionsArgumentCaptor.value
+        updatedNotificationOptions.locationServicesEnabled `should be equal to` true
+        updatedNotificationOptions.pushNotificationsEnabled `should be equal to` true
+        updatedNotificationOptions.emailNotificationsEnabled `should be equal to` true
+
+        verify(userRepository, times(1)).findById(mockedUser.id)
+        verify(notificationOptionsRepository, times(1)).findByUserId(mockedUser.id)
+        verify(notificationOptionsRepository, times(1)).save(any())
+        verifyNoMoreInteractions(userRepository, notificationOptionsRepository)
+    }
+}
