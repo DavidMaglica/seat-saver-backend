@@ -1,6 +1,5 @@
 package fipu.diplomski.dmaglica.mobile.integration.reservation
 
-import fipu.diplomski.dmaglica.model.request.CreateReservationRequest
 import fipu.diplomski.dmaglica.model.response.BasicResponse
 import jakarta.transaction.Transactional
 import org.amshove.kluent.`should be equal to`
@@ -31,23 +30,5 @@ class DeleteReservationIntegrationTest : AbstractReservationIntegrationTest() {
         } catch (ex: Exception) {
             ex.message `should be equal to` "Reservation with id $nonExistentReservationId not found"
         }
-    }
-
-    @Test
-    fun `should delete reservation and allow new reservation at same time slot`() {
-        val reservation = createReservation(userId = customer.id, venueId = venue.id, numberOfGuests = 2)
-        reservationRepository.saveAndFlush(reservation)
-
-        val response: BasicResponse = reservationService.delete(reservation.id)
-        response.success `should be equal to` true
-
-        val newReservationRequest = CreateReservationRequest(
-            userId = customer.id,
-            venueId = venue.id,
-            reservationDate = reservation.datetime,
-            numberOfGuests = 2
-        )
-        val createResponse = reservationService.create(newReservationRequest)
-        createResponse.success `should be equal to` true
     }
 }

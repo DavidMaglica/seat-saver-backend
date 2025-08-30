@@ -4,9 +4,11 @@ import fipu.diplomski.dmaglica.model.data.Role
 import fipu.diplomski.dmaglica.repo.ReservationRepository
 import fipu.diplomski.dmaglica.repo.UserRepository
 import fipu.diplomski.dmaglica.repo.VenueRepository
+import fipu.diplomski.dmaglica.repo.WorkingDaysRepository
 import fipu.diplomski.dmaglica.repo.entity.ReservationEntity
 import fipu.diplomski.dmaglica.repo.entity.UserEntity
 import fipu.diplomski.dmaglica.repo.entity.VenueEntity
+import fipu.diplomski.dmaglica.repo.entity.WorkingDaysEntity
 import fipu.diplomski.dmaglica.service.ReservationService
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -31,6 +33,9 @@ abstract class BaseReservationServiceTest {
     @Mock
     protected lateinit var venueRepository: VenueRepository
 
+    @Mock
+    protected lateinit var workingDaysRepository: WorkingDaysRepository
+
     protected lateinit var reservationService: ReservationService
 
     @BeforeEach
@@ -38,7 +43,8 @@ abstract class BaseReservationServiceTest {
         reservationService = ReservationService(
             reservationRepository,
             userRepository,
-            venueRepository
+            venueRepository,
+            workingDaysRepository
         )
     }
 
@@ -79,4 +85,12 @@ abstract class BaseReservationServiceTest {
         datetime = LocalDateTime.now()
         numberOfGuests = 2
     }
+
+    protected fun createWorkingDays(venueId: Int, daysOfTheWeek: List<Int>): List<WorkingDaysEntity> =
+        daysOfTheWeek.map { dayOfTheWeek ->
+            WorkingDaysEntity().apply {
+                this.venueId = venueId
+                this.dayOfWeek = dayOfTheWeek
+            }
+        }
 }

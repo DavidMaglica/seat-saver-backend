@@ -2,6 +2,7 @@ package fipu.diplomski.dmaglica.mobile.unit.reservation
 
 import fipu.diplomski.dmaglica.exception.VenueNotFoundException
 import fipu.diplomski.dmaglica.model.request.CreateReservationRequest
+import fipu.diplomski.dmaglica.repo.entity.WorkingDaysEntity
 import org.amshove.kluent.`should be equal to`
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -20,10 +21,27 @@ class CreateReservationTest : BaseReservationServiceTest() {
         private val mockedRequest = CreateReservationRequest(
             userId = 1,
             venueId = 1,
-            reservationDate = LocalDateTime.now(),
+            reservationDate = LocalDateTime.now().withHour(12),
+            numberOfGuests = 2,
+        )
+
+        private val requestOutsideWorkingHours = CreateReservationRequest(
+            userId = 1,
+            venueId = 1,
+            reservationDate = LocalDateTime.now().withHour(23),
+            numberOfGuests = 2,
+        )
+
+        private val requestOnNonWorkingDay = CreateReservationRequest(
+            userId = 1,
+            venueId = 1,
+            reservationDate = LocalDateTime.of(2025, 12, 30, 12, 0),
             numberOfGuests = 2,
         )
     }
+
+    private val allWorkingDays = createWorkingDays(mockedVenue.id, listOf(0, 1, 2, 3, 4, 5, 6))
+    private val noWorkingDays = emptyList<WorkingDaysEntity>()
 
     @Test
     fun `should return failure response if user does not exist`() {
@@ -35,8 +53,7 @@ class CreateReservationTest : BaseReservationServiceTest() {
         response.message `should be equal to` "User not found. Please try again later."
 
         verify(userRepository, times(1)).findById(mockedUser.id)
-        verifyNoInteractions(venueRepository)
-        verifyNoInteractions(reservationRepository)
+        verifyNoInteractions(venueRepository, reservationRepository, workingDaysRepository)
         verifyNoMoreInteractions(userRepository)
     }
 
@@ -53,8 +70,42 @@ class CreateReservationTest : BaseReservationServiceTest() {
 
         verify(userRepository, times(1)).findById(mockedUser.id)
         verify(venueRepository, times(1)).findById(mockedVenue.id)
-        verifyNoInteractions(reservationRepository)
+        verifyNoInteractions(reservationRepository, workingDaysRepository)
         verifyNoMoreInteractions(userRepository, venueRepository)
+    }
+
+    @Test
+    fun `should return failure response when request is outside working hours`() {
+        `when`(userRepository.findById(anyInt())).thenReturn(Optional.of(mockedUser))
+        `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
+        `when`(reservationRepository.save(any())).thenReturn(mockedReservation)
+
+        val response = reservationService.create(requestOutsideWorkingHours)
+
+        response.success `should be equal to` false
+        response.message `should be equal to` "The venue is closed at the selected time. Please choose a different time."
+
+        verify(userRepository, times(1)).findById(mockedUser.id)
+        verify(venueRepository, times(1)).findById(mockedVenue.id)
+        verifyNoMoreInteractions(userRepository, venueRepository, reservationRepository)
+        verifyNoInteractions(workingDaysRepository)
+    }
+
+    @Test
+    fun `should return failure response when request is on non-working day`() {
+        `when`(userRepository.findById(anyInt())).thenReturn(Optional.of(mockedUser))
+        `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
+        `when`(workingDaysRepository.findAllByVenueId(mockedVenue.id)).thenReturn(noWorkingDays)
+
+        val response = reservationService.create(requestOnNonWorkingDay)
+
+        response.success `should be equal to` false
+        response.message `should be equal to` "The venue is closed on the selected day. Please choose a different day."
+
+        verify(userRepository, times(1)).findById(mockedUser.id)
+        verify(venueRepository, times(1)).findById(mockedVenue.id)
+        verify(workingDaysRepository, times(1)).findAllByVenueId(mockedVenue.id)
+        verifyNoMoreInteractions(userRepository, venueRepository, reservationRepository, workingDaysRepository)
     }
 
     @Test
@@ -63,6 +114,7 @@ class CreateReservationTest : BaseReservationServiceTest() {
 
         `when`(userRepository.findById(anyInt())).thenReturn(Optional.of(mockedUser))
         `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
+        `when`(workingDaysRepository.findAllByVenueId(mockedVenue.id)).thenReturn(allWorkingDays)
         `when`(
             reservationRepository.findByVenueIdAndDatetimeBetween(
                 mockedRequest.venueId, lowerBound, upperBound
@@ -88,6 +140,7 @@ class CreateReservationTest : BaseReservationServiceTest() {
 
         `when`(userRepository.findById(anyInt())).thenReturn(Optional.of(mockedUser))
         `when`(venueRepository.findById(anyInt())).thenReturn(Optional.of(mockedVenue))
+        `when`(workingDaysRepository.findAllByVenueId(mockedVenue.id)).thenReturn(allWorkingDays)
         `when`(
             reservationRepository.findByVenueIdAndDatetimeBetween(
                 mockedRequest.venueId, lowerBound, upperBound
@@ -120,6 +173,7 @@ class CreateReservationTest : BaseReservationServiceTest() {
                 mockedRequest.venueId, lowerBound, upperBound
             )
         ).thenReturn(emptyList())
+        `when`(workingDaysRepository.findAllByVenueId(mockedVenue.id)).thenReturn(allWorkingDays)
         `when`(reservationRepository.save(any())).thenReturn(mockedReservation)
 
         val response = reservationService.create(mockedRequest)

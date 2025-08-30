@@ -5,6 +5,7 @@ import fipu.diplomski.dmaglica.repo.*
 import fipu.diplomski.dmaglica.repo.entity.ReservationEntity
 import fipu.diplomski.dmaglica.repo.entity.UserEntity
 import fipu.diplomski.dmaglica.repo.entity.VenueEntity
+import fipu.diplomski.dmaglica.repo.entity.WorkingDaysEntity
 import fipu.diplomski.dmaglica.service.ReservationService
 import fipu.diplomski.dmaglica.service.UserService
 import fipu.diplomski.dmaglica.service.VenueService
@@ -108,4 +109,12 @@ abstract class AbstractReservationIntegrationTest {
         this.datetime = datetime
         this.numberOfGuests = numberOfGuests
     }
+
+    protected fun createWorkingDays(venueId: Int, daysOfTheWeek: List<Int>): List<WorkingDaysEntity> =
+        daysOfTheWeek.map { dayOfTheWeek ->
+            WorkingDaysEntity().apply {
+                this.venueId = venueId
+                this.dayOfWeek = dayOfTheWeek
+            }
+        }
 }

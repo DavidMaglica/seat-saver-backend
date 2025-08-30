@@ -13,6 +13,9 @@ class CreateReservationIntegrationTest : AbstractReservationIntegrationTest() {
 
     @Test
     fun `should create reservation successfully with valid user and venue`() {
+        val workingDays = createWorkingDays(venue.id, listOf(0, 1, 2, 3, 4, 5, 6))
+        workingDaysRepository.saveAllAndFlush(workingDays)
+
         val request = CreateReservationRequest(
             userId = customer.id,
             venueId = venue.id,
@@ -70,8 +73,9 @@ class CreateReservationIntegrationTest : AbstractReservationIntegrationTest() {
 
     @Test
     fun `should fail when venue is fully booked`() {
-        val dateTime = LocalDateTime.now().plusDays(1)
-
+        val workingDays = createWorkingDays(venue.id, listOf(0, 1, 2, 3, 4, 5, 6))
+        workingDaysRepository.saveAllAndFlush(workingDays)
+        val dateTime = LocalDateTime.now().withHour(12)
         reservationRepository.save(
             createReservation(
                 userId = customer.id,
@@ -96,10 +100,13 @@ class CreateReservationIntegrationTest : AbstractReservationIntegrationTest() {
 
     @Test
     fun `should allow creation with user email instead of userId`() {
+        val workingDays = createWorkingDays(venue.id, listOf(0, 1, 2, 3, 4, 5, 6))
+        workingDaysRepository.saveAllAndFlush(workingDays)
+
         val request = CreateReservationRequest(
             userEmail = customer.email,
             venueId = venue.id,
-            reservationDate = LocalDateTime.now().plusDays(2),
+            reservationDate = LocalDateTime.now().withHour(12),
             numberOfGuests = 3
         )
 
@@ -107,5 +114,41 @@ class CreateReservationIntegrationTest : AbstractReservationIntegrationTest() {
 
         response.success `should be equal to` true
         response.message `should be equal to` "Reservation created successfully."
+    }
+
+    @Test
+    fun `should fail when non working hours`() {
+        val workingDays = createWorkingDays(venue.id, listOf(0, 1, 2, 3, 4, 5, 6))
+        workingDaysRepository.saveAllAndFlush(workingDays)
+
+        val request = CreateReservationRequest(
+            userId = customer.id,
+            venueId = venue.id,
+            reservationDate = LocalDateTime.now().withHour(18).withMinute(0),
+            numberOfGuests = 2
+        )
+
+        val response: BasicResponse = reservationService.create(request)
+
+        response.success `should be equal to` false
+        response.message `should be equal to` "The venue is closed at the selected time. Please choose a different time."
+    }
+
+    @Test
+    fun `should fail when non working day`() {
+        val workingDays = createWorkingDays(venue.id, emptyList())
+        workingDaysRepository.saveAllAndFlush(workingDays)
+
+        val request = CreateReservationRequest(
+            userId = customer.id,
+            venueId = venue.id,
+            reservationDate = LocalDateTime.now().withHour(10).withMinute(0),
+            numberOfGuests = 2
+        )
+
+        val response: BasicResponse = reservationService.create(request)
+
+        response.success `should be equal to` false
+        response.message `should be equal to` "The venue is closed on the selected day. Please choose a different day."
     }
 }
