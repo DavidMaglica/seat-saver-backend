@@ -34,8 +34,10 @@ class UpdateReservationIntegrationTest : AbstractReservationIntegrationTest() {
     fun `should update reservation successfully with new date`() {
         val existingReservation = createReservation(userId = customer.id, venueId = venue.id, numberOfGuests = 2)
         reservationRepository.saveAndFlush(existingReservation)
+        val workingDays = createWorkingDays(venueId = venue.id, listOf(0, 1, 2, 3, 4, 5, 6))
+        workingDaysRepository.saveAll(workingDays)
 
-        val newDate = LocalDateTime.now().plusDays(2)
+        val newDate = LocalDateTime.now().withHour(12).plusDays(2)
         val request = UpdateReservationRequest(
             numberOfGuests = null,
             reservationDate = newDate

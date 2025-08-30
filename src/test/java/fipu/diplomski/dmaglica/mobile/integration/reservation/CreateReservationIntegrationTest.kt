@@ -19,7 +19,7 @@ class CreateReservationIntegrationTest : AbstractReservationIntegrationTest() {
         val request = CreateReservationRequest(
             userId = customer.id,
             venueId = venue.id,
-            reservationDate = LocalDateTime.now().plusDays(1),
+            reservationDate = LocalDateTime.now().withHour(12).plusDays(1),
             numberOfGuests = 2
         )
 

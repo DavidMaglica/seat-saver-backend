@@ -156,8 +156,8 @@ class ReservationService(
         }
 
         if (request.reservationDate != null) {
-            checkWorkingHours(venue.workingHours, request.reservationDate)
-            checkWorkingDays(venue.id, request.reservationDate)
+            checkWorkingHours(venue.workingHours, request.reservationDate)?.let { return it }
+            checkWorkingDays(venue.id, request.reservationDate)?.let { return it }
         }
 
         reservation.apply {

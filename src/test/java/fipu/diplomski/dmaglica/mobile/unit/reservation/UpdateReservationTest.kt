@@ -2,6 +2,8 @@ package fipu.diplomski.dmaglica.mobile.unit.reservation
 
 import fipu.diplomski.dmaglica.exception.ReservationNotFoundException
 import fipu.diplomski.dmaglica.model.request.UpdateReservationRequest
+import fipu.diplomski.dmaglica.repo.entity.WorkingDaysEntity
+import jakarta.persistence.EntityNotFoundException
 import org.amshove.kluent.`should be`
 import org.amshove.kluent.`should be equal to`
 import org.junit.jupiter.api.Test
@@ -21,7 +23,7 @@ class UpdateReservationTest : BaseReservationServiceTest() {
     companion object {
         private const val MOCK_RESERVATION_ID = 1
         private val mockedRequest = UpdateReservationRequest(
-            reservationDate = LocalDateTime.now(),
+            reservationDate = LocalDateTime.now().withHour(12),
             numberOfGuests = 3,
         )
         private val invalidRequest = UpdateReservationRequest(
@@ -32,6 +34,13 @@ class UpdateReservationTest : BaseReservationServiceTest() {
             reservationDate = null,
             numberOfGuests = 2,
         )
+    }
+
+    private val allWorkingDays = IntRange(0, 6).map {
+        WorkingDaysEntity().apply {
+            venueId = mockedVenue.id
+            dayOfWeek = it
+        }
     }
 
     @Test
@@ -76,8 +85,59 @@ class UpdateReservationTest : BaseReservationServiceTest() {
     }
 
     @Test
+    fun `should throw if venue does not exist`() {
+        `when`(reservationRepository.findById(anyInt())).thenReturn(Optional.of(mockedReservation))
+        `when`(venueRepository.findById(mockedReservation.id)).thenReturn(Optional.empty())
+
+        val exception = assertThrows<EntityNotFoundException> {
+            reservationService.update(mockedReservation.id, mockedRequest)
+        }
+
+        exception.message `should be equal to` "Venue with id ${mockedVenue.id} not found"
+        verify(reservationRepository, times(1)).findById(mockedReservation.id)
+        verify(venueRepository, times(1)).findById(mockedReservation.venueId)
+        verifyNoMoreInteractions(reservationRepository, venueRepository)
+    }
+
+    @Test
+    fun `should return early if new reservation time is outside working hours`() {
+        `when`(reservationRepository.findById(anyInt())).thenReturn(Optional.of(mockedReservation))
+        `when`(venueRepository.findById(mockedReservation.id)).thenReturn(Optional.of(mockedVenue))
+        val invalidTimeRequest = mockedRequest.copy(reservationDate = LocalDateTime.of(2025, 12, 30, 18, 0))
+
+        val response = reservationService.update(MOCK_RESERVATION_ID, invalidTimeRequest)
+
+        response.success `should be` false
+        response.message `should be equal to` "The venue is closed at the selected time. Please choose a different time."
+
+        verify(reservationRepository, times(1)).findById(mockedReservation.id)
+        verify(venueRepository, times(1)).findById(mockedReservation.venueId)
+        verifyNoMoreInteractions(reservationRepository, venueRepository)
+        verifyNoInteractions(workingDaysRepository)
+    }
+
+    @Test
+    fun `should return early if new reservation time is outside working days`() {
+        `when`(reservationRepository.findById(anyInt())).thenReturn(Optional.of(mockedReservation))
+        `when`(venueRepository.findById(mockedReservation.id)).thenReturn(Optional.of(mockedVenue))
+        `when`(workingDaysRepository.findAllByVenueId(mockedVenue.id)).thenReturn(emptyList())
+
+        val response = reservationService.update(MOCK_RESERVATION_ID, mockedRequest)
+
+        response.success `should be` false
+        response.message `should be equal to` "The venue is closed on the selected day. Please choose a different day."
+
+        verify(reservationRepository, times(1)).findById(mockedReservation.id)
+        verify(venueRepository, times(1)).findById(mockedReservation.venueId)
+        verify(workingDaysRepository, times(1)).findAllByVenueId(mockedVenue.id)
+        verifyNoMoreInteractions(reservationRepository, venueRepository, workingDaysRepository)
+    }
+
+    @Test
     fun `should throw if unable to update reservation`() {
         `when`(reservationRepository.findById(anyInt())).thenReturn(Optional.of(mockedReservation))
+        `when`(venueRepository.findById(mockedReservation.id)).thenReturn(Optional.of(mockedVenue))
+        `when`(workingDaysRepository.findAllByVenueId(mockedVenue.id)).thenReturn(allWorkingDays)
         `when`(reservationRepository.save(any())).thenThrow(RuntimeException())
 
         val response = reservationService.update(MOCK_RESERVATION_ID, mockedRequest)
@@ -86,13 +146,16 @@ class UpdateReservationTest : BaseReservationServiceTest() {
         response.message `should be equal to` "Error while updating reservation. Please try again later."
 
         verify(reservationRepository, times(1)).findById(mockedReservation.id)
+        verify(venueRepository, times(1)).findById(mockedReservation.venueId)
         verify(reservationRepository, times(1)).save(any())
-        verifyNoMoreInteractions(reservationRepository)
+        verifyNoMoreInteractions(reservationRepository, venueRepository)
     }
 
     @Test
     fun `should update reservation`() {
         `when`(reservationRepository.findById(anyInt())).thenReturn(Optional.of(mockedReservation))
+        `when`(venueRepository.findById(mockedReservation.id)).thenReturn(Optional.of(mockedVenue))
+        `when`(workingDaysRepository.findAllByVenueId(mockedVenue.id)).thenReturn(allWorkingDays)
 
         val response = reservationService.update(MOCK_RESERVATION_ID, mockedRequest)
 
@@ -107,7 +170,8 @@ class UpdateReservationTest : BaseReservationServiceTest() {
         updatedReservation.datetime `should be equal to` mockedRequest.reservationDate
 
         verify(reservationRepository, times(1)).findById(mockedReservation.id)
+        verify(venueRepository, times(1)).findById(mockedReservation.venueId)
         verify(reservationRepository, times(1)).save(reservationArgumentCaptor.capture())
-        verifyNoMoreInteractions(reservationRepository)
+        verifyNoMoreInteractions(reservationRepository, venueRepository)
     }
 }
